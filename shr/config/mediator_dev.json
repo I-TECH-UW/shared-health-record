@@ -1,0 +1,177 @@
+{
+  "urn": "urn:uuid:4bc42b2f-b5a8-473d-8207-5dd5c61f0c4b",
+  "version": "0.0.1",
+  "name": "Haiti SHR",
+  "description": "Haiti Shared Health Record",
+  "config": {
+      "fhirServer": {
+          "username": "shr",
+          "password": "shr123",
+          "baseURL": "http://18.158.139.243:8080/hapi-fhir-jpaserver/fhir",
+          "mpiURL": "http://18.158.139.243:5001/fhir"
+      }
+  },
+  "configDefs": [
+      {
+          "param": "fhirServer",
+          "displayName": "FHIR Server",
+          "description": "FHIR Server Configuration Details",
+          "type": "struct",
+          "template": [
+              {
+                  "type": "string",
+                  "description": "The base URL (e.g. http://localhost:8080/hapi/fhir)",
+                  "displayName": "Base URL",
+                  "param": "baseURL"
+              },
+              {
+                "type": "string",
+                "description": "The MPI URL",
+                "displayName": "MPI URL",
+                "param": "mpiURL"
+              },
+              {
+                  "type": "string",
+                  "description": "Username required to access FHIR server",
+                  "displayName": "Username",
+                  "param": "username"
+              },
+              {
+                  "type": "password",
+                  "description": "Password required to access FHIR server",
+                  "displayName": "Password",
+                  "param": "password"
+              }
+          ],
+          "values": ["","","",""]
+      }
+  ],
+  "defaultChannelConfig": [
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH"
+      ],
+      "type": "http",
+      "allow": [
+        "openmrs"
+      ],
+      "whitelist": [],
+      "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "requestBody": true,
+      "responseBody": true,
+      "name": "HAPI FHIR Passthrough",
+      "description": "Post a new resource into the SHR",
+      "urlPattern": "^/SHR/fhir.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "Create/Update Resource",
+          "secured": false,
+          "host": "host.docker.internal",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/fhir/fhir/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "updatedBy": {
+        "id": "5f84d542efaf3c001240dd95",
+        "name": "Super User"
+      },
+      "matchContentJson": null,
+      "matchContentRegex": null,
+      "matchContentValue": null,
+      "matchContentXpath": null,
+      "pollingSchedule": null,
+      "tcpHost": null,
+      "tcpPort": null,
+      "priority": 2
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "type": "http",
+      "allow": [
+        "openmrs"
+      ],
+      "whitelist": [],
+      "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "name": "Get IPS",
+      "requestBody": true,
+      "responseBody": true,
+      "description": "Get International Patient Summary Bundle from the SHR",
+      "urlPattern": "^/SHR/fhir/ips.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "Get IPS",
+          "secured": false,
+          "host": "host.docker.internal",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "updatedBy": {
+        "id": "5f84d542efaf3c001240dd95",
+        "name": "Super User"
+      },
+      "matchContentJson": null,
+      "matchContentRegex": null,
+      "matchContentValue": null,
+      "matchContentXpath": null,
+      "pollingSchedule": null,
+      "tcpHost": null,
+      "tcpPort": null,
+      "priority": 1
+    }],
+  "endpoints": [
+      {
+          "name": "SHR Endpoint",
+          "host": "host.docker.internal",
+          "path": "/",
+          "port": 3000,
+          "primary": true,
+          "forwardAuthHeader": false,
+          "status": "enabled",
+          "type": "http"
+      }
+  ]
+}
