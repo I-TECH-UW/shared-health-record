@@ -1,0 +1,47 @@
+version: '2.4'
+
+## Port Assignments:
+##  See .env file
+
+## Container debugging: 
+# 1. append the following lines to desired container 
+# 2. boot up the container using `docker-compose up -d`
+# 3 run `docker exec -it <container-name> bash` to start interactive shell
+# 
+#    tty: true
+#    stdin_open: true
+#    entrypoint: bash
+
+## Utility for booting up placeholder page:
+# `docker run --hostname openhim-placeholder --network shared-health-record_sedish --name openhim-placeholder -e MESSAGE=OPENHIM-PLACEHOLDER -e PORT=3000 -d docker.io/sroze/landing-page:latest`
+
+services:
+  shr:
+    container_name: shr
+    hostname: shr
+    build:
+      context: shr
+    ports:
+      - "${SHR_PORT}:3000"
+    restart: on-failure
+    environment:
+      - NODE_ENV=docker
+    depends_on: 
+      - shr-fhir
+    networks:
+      - sedish
+  shr-fhir:
+    image: "hapiproject/hapi:latest"
+    container_name: shr-fhir
+    hostname: shr-fhir
+    restart: unless-stopped
+    ports:
+      - "${SHR_FHIR_PORT}:8080"
+    volumes:
+      - hapi-data:/data/hapi
+      - ./docker/shr/hapi.properties:/conf/hapi/hapi.properties
+    environment:
+      JAVA_OPTS: '-Dhapi.properties=/conf/hapi/hapi.properties'
+    networks:
+      - sedish
+  
