@@ -1,20 +1,29 @@
   
-FROM node:erbium-slim
+FROM sandrokeil/typescript:latest AS build
 
+COPY ./lib /src/lib
+COPY ./package.json /src
+COPY ./tsconfig.json /src
+
+WORKDIR /src
+
+RUN yarn
+RUN tsc
+
+FROM node:erbium-slim AS run
 RUN mkdir -p /var/log
 
+COPY --from=build /src/built /server/built
+COPY --from=build /src/package.json /server
+COPY --from=build /src/yarn.lock /server
+COPY --from=build /src/node_modules /server/node_modules
 
-COPY ./built /src/server/built
-COPY ./config /src/server/config
-COPY ./gui /src/gui
-COPY ./package.json /src/server
-COPY ./tsconfig.json /src/server
-
-WORKDIR /src/server
+WORKDIR /server
 RUN yarn
 
-ARG NODE_ENV=shr
+ARG NODE_ENV=docker
 ENV NODE_ENV=$NODE_ENV
 
 EXPOSE 3000
-CMD ["node", "built/app.js"]
+
+ENTRYPOINT [ "node", "built/app.js" ]

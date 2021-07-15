@@ -10,17 +10,17 @@
   "mediator": {
     "api": {
       "username": "root@openhim.org",
-      "password": "haitiopenhim",
-      "apiURL": "https://sedish-haiti.org:8080",
-      "trustSelfSigned": true,
+      "password": "bw-openhim",
+      "apiURL": "https://core.moh.org.bw",
+      "trustSelfSigned": false,
       "urn": ""
     }
   },
   "fhirServer": {
     "username": "shr",
     "password": "shr123",
-    "mpiURL": "https://sedish-haiti.org:5001/fhir",
-    "baseURL": "https://shr-fhir.sedish-haiti.org/hapi-fhir-jpaserver/fhir"
+    "mpiURL": "https://openhim.moh.org.bw/CR/fhir",
+    "baseURL": "https://shr-fhir.moh.org.bw/fhir"
   },
 
   "structureDefinition": {
@@ -28,13 +28,5 @@
     "reportRelationship": "patientreport"
   },
   "clients": [
-    {
-      "id": "openmrs_user",
-      "displayName": "OpenMRS"
-    },
-    {
-      "id": "lims",
-      "displayName": "Lab Info Management System"
-    }
   ]
 }

@@ -1,0 +1,18 @@
+# node
+node_modules
+
+# vscode
+.vscode
+
+# macos
+*.DS_Store
+
+# vagrant
+.vagrant
+
+server/log
+*.log
+
+/db
+
+tmpConfig.json

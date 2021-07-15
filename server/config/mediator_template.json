@@ -1,14 +1,14 @@
 {
   "urn": "urn:uuid:4bc42b2f-b5a8-473d-8207-5dd5c61f0c4b",
   "version": "0.0.1",
-  "name": "Haiti SHR",
-  "description": "Haiti Shared Health Record",
+  "name": "Botswana SHR",
+  "description": "Botswana Shared Health Record",
   "config": {
       "fhirServer": {
         "username": "shr",
         "password": "shr123",
-        "baseURL": "https://shr-fhir.sedish-haiti.org/hapi-fhir-jpaserver/fhir",
-        "mpiURL": "https://sedish-haiti.org:5001/fhir"
+        "baseURL": "https://shr-fhir.moh.org.bw/fhir",
+        "mpiURL": "https://openhim.moh.org.bw/CR/fhir"
       }
   },
   "configDefs": [
@@ -55,9 +55,6 @@
         "PATCH"
       ],
       "type": "http",
-      "allow": [
-        "openmrs"
-      ],
       "whitelist": [],
       "authType": "private",
       "matchContentTypes": [],
@@ -72,18 +69,18 @@
       "autoRetryPeriodMinutes": 60,
       "requestBody": true,
       "responseBody": true,
-      "name": "HAPI FHIR Passthrough",
-      "description": "Post a new resource into the SHR",
+      "name": "SHR - FHIR Passthrough",
+      "description": "Get or Post a new FHIR Resource to the SHR",
       "urlPattern": "^/SHR/fhir.*$",
       "routes": [
         {
           "type": "http",
           "status": "enabled",
           "forwardAuthHeader": false,
-          "name": "Create/Update Resource",
-          "secured": false,
-          "host": "shr.sedish-haiti.org",
-          "port": 80,
+          "name": "SHR - Get/Create/Update Resource",
+          "secured": true,
+          "host": "shr.moh.org.bw",
+          "port": 443,
           "path": "",
           "pathTransform": "s/SHR\\/fhir/fhir/g",
           "primary": true,
@@ -111,9 +108,6 @@
         "GET"
       ],
       "type": "http",
-      "allow": [
-        "openmrs"
-      ],
       "whitelist": [],
       "authType": "private",
       "matchContentTypes": [],
@@ -126,20 +120,20 @@
       "addAutoRewriteRules": true,
       "autoRetryEnabled": false,
       "autoRetryPeriodMinutes": 60,
-      "name": "Get IPS",
+      "name": "SHR - Get/Update IPS",
       "requestBody": true,
       "responseBody": true,
-      "description": "Get International Patient Summary Bundle from the SHR",
+      "description": "Get or Update International Patient Summary Bundle from the SHR",
       "urlPattern": "^/SHR/fhir/ips.*$",
       "routes": [
         {
           "type": "http",
           "status": "enabled",
           "forwardAuthHeader": false,
-          "name": "Get IPS",
-          "secured": false,
-          "host": "shr.sedish-haiti.org",
-          "port": 80,
+          "name": "SHR - Get IPS",
+          "secured": true,
+          "host": "shr.moh.org.bw",
+          "port": 443,
           "path": "",
           "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",
           "primary": true,
@@ -165,9 +159,9 @@
   "endpoints": [
       {
           "name": "SHR Endpoint",
-          "host": "shr.sedish-haiti.org",
+          "host": "shr.moh.org.bw",
           "path": "/",
-          "port": 80,
+          "port": 443,
           "primary": true,
           "forwardAuthHeader": false,
           "status": "enabled",
