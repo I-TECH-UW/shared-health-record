@@ -58,22 +58,22 @@ export function start(callback: Function) {
 
   // Loads app config based on the required environment
   const env = process.env.NODE_ENV || 'dev';
-  const configFile = require(`${__dirname}/../config/config_${env}_template`);
+  const configFile = require(`${__dirname}/../config/config_${env}`);
   // Loads OpenHIM mediator config
   const mediatorConfig = require(`${__dirname}/../config/mediator_${env}`);
 
-  logger.info('Running client registry as a mediator');
+  logger.info('Running client registry as a mediator with' + `${__dirname}/../config/mediator_${env}`);
   medUtils.registerMediator(config.get('mediator:api'), mediatorConfig, (err: Error) => {
     if (err) {
       logger.error('Failed to register this mediator, check your config');
-      logger.error(err.stack);
+      // logger.error(err.stack);
       process.exit(1);
     }
     config.set('mediator:api:urn', mediatorConfig.urn);
     medUtils.fetchConfig(config.get('mediator:api'), (err2: Error, newConfig: JSON) => {
       if (err2) {
         logger.info('Failed to fetch initial config');
-        logger.info(err2.stack);
+        // logger.info(err2.stack);
         process.exit(1);
       }
 
