@@ -15,4 +15,6 @@ server/log
 
 /db
 
+/dist
+
 tmpConfig.json

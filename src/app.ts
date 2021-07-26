@@ -1,6 +1,8 @@
 import express, {Request, Response} from 'express';
-import bodyParser from 'body-parser';
 import medUtils from 'openhim-mediator-utils';
+import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
 import _ from 'lodash';
 import fs from 'fs';
 
@@ -9,36 +11,47 @@ import config from './config';
 import fhirRoutes from './routes/fhir';
 import ipsRoutes from './routes/ips';
 
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let authorized = false;
 
+const swaggerSpec = swaggerJSDoc({
+  swaggerDefinition: {
+      info: {
+          title: 'FHIR Converter API',
+          // If changing the version update the checks in convert/hl7 and convert/hl7/:template
+          version: '1.0'
+      }
+  },
+  apis: ['./routes/*.js']
+});
 /**
  * @returns {express.app}
  */
 function appRoutes() {
   const app = express();
 
-  app.use(bodyParser.json({
+  app.use(express.json({
     limit: '10Mb',
     type: ['application/fhir+json', 'application/json+fhir', 'application/json']
   }));
 
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  
+  app.use(cookieParser());
+
   app.use('/ips', ipsRoutes);
   app.use('/fhir', fhirRoutes);
+
   app.get('/', (req: Request, res: Response) => {
-    return res.status(200).send(req.url);
+    return res.redirect('/api-docs');
   });
 
   return app;
 }
 
-/**
- * start - starts the mediator
- *
- * @param  {Function} callback a node style callback that is called once the
- * server is started
- */
+
 
 // tmpConfig seems to be a temporary storage for a config file that gets grabbed from 
 // OpenHIM - not sure why it was not in .gitignore
@@ -53,6 +66,12 @@ function appRoutes() {
   });
 }
 
+/**
+ * start - starts the mediator
+ *
+ * @param  {Function} callback a node style callback that is called once the
+ * server is started
+ */
 export function start(callback: Function) {
   // Run as OpenHIM Mediator - We only need this approach
 
