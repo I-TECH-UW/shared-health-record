@@ -1,19 +1,20 @@
 import express, {Request, Response} from 'express';
 import medUtils from 'openhim-mediator-utils';
-import cookieParser from 'cookie-parser';
-import swaggerUi from 'swagger-ui-express';
-import swaggerJSDoc from 'swagger-jsdoc';
 import _ from 'lodash';
 import fs from 'fs';
-
+import cookieParser from 'cookie-parser';
 import logger from './winston';
 import config from './config';
 import fhirRoutes from './routes/fhir';
 import ipsRoutes from './routes/ips';
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerJSDoc = require('swagger-jsdoc');
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let authorized = false;
+
 
 const swaggerSpec = swaggerJSDoc({
   swaggerDefinition: {
