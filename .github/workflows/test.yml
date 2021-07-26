@@ -1,0 +1,43 @@
+name: Tests
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Start containers
+      run: docker-compose -f "dev.docker-compose.yml" up -d --build
+
+    - name: Install node
+      uses: actions/setup-node@v1
+      with:
+        node-version: 16.x
+
+    - name: Install dependencies
+      run: yarn
+
+    - name: Run Instance
+      run: yarn start
+
+    - uses: matt-ball/newman-action@master
+      with:
+        collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd
+        environment: .postman/github.postman_environment.json
+
+    - name: Run Jest Tests
+      run: yarn test
+
+    - name: Stop containers
+      if: always()
+      run: docker-compose -f "docker-compose.yml" down

@@ -11,7 +11,12 @@ This project implements the following FHIR IGs:
 ## Dev Guide
 
 ### Local Development
-
+1. Download and build
+```
+git clone https://github.com/I-TECH-UW/shared-health-record.git
+cd shared-health-record
+yarn
+```
 
 ### Docker Setup
 

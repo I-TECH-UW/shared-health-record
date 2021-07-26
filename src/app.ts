@@ -11,7 +11,6 @@ import config from './config';
 import fhirRoutes from './routes/fhir';
 import ipsRoutes from './routes/ips';
 
-
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let authorized = false;
