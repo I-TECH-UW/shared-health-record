@@ -10,7 +10,7 @@ WORKDIR /src
 RUN yarn
 RUN yarn build
 
-FROM node:16-stretchslim AS run
+FROM node:16-slim AS run
 RUN mkdir -p /var/log
 
 COPY --from=build /src/dist /server/dist
