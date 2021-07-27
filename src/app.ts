@@ -79,9 +79,9 @@ export function start(callback: Function) {
   const env = process.env.NODE_ENV || 'dev';
   const configFile = require(`${__dirname}/../config/config_${env}`);
   // Loads OpenHIM mediator config
-  const mediatorConfig = require(`${__dirname}/../config/mediator_${env}`);
+  const mediatorConfig = require(`${__dirname}/../config/mediator`);
 
-  logger.info('Running client registry as a mediator with' + `${__dirname}/../config/mediator_${env}`);
+  logger.info('Running client registry as a mediator with' + `${__dirname}/../config/mediator`);
   medUtils.registerMediator(config.get('mediator:api'), mediatorConfig, (err: Error) => {
     if (err) {
       logger.error('Failed to register this mediator, check your config');

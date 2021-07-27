@@ -1,0 +1,18 @@
+{
+  "app": {
+    "port": 3000
+  },
+  "mediator": {
+    "api": {
+      "username": "root@openhim.org",
+      "password": "bw-openhim",
+      "apiURL": "https://core.moh.org.bw",
+      "trustSelfSigned": false,
+      "urn": "urn:mediator:shared-health-record"
+    }
+  },
+  "fhirServer": {
+    "mpiURL": "https://openhim.moh.org.bw/CR/fhir",
+    "baseURL": "https://shr-fhir.moh.org.bw/fhir"
+  }
+}
