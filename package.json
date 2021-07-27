@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "rimraf dist/",
     "start": "env NODE_ENV=production node ./dist/app.js",
-    "build": "yarn clean && yarn tsc && yarn",
+    "build": "yarn && yarn clean && yarn tsc",
     "dev": "env NODE_ENV=development node ./dist/app.js",
     "test": "env NODE_ENV=test jest"
   },
