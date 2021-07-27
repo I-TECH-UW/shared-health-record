@@ -1,11 +1,11 @@
   
 FROM sandrokeil/typescript:latest AS build
 
-COPY ./src /src
-COPY ./package.json /src
-COPY ./tsconfig.json /src
+COPY ./src /app/src
+COPY ./package.json /app
+COPY ./tsconfig.json /app
 
-WORKDIR /src
+WORKDIR /app
 
 RUN yarn
 RUN yarn build
@@ -13,13 +13,14 @@ RUN yarn build
 FROM node:16-slim AS run
 RUN mkdir -p /var/log
 
-COPY --from=build /src/dist /server/dist
-COPY --from=build /src/package.json /server
-COPY --from=build /src/yarn.lock /server
-COPY --from=build /src/node_modules /server/node_modules
+WORKDIR /app
 
-WORKDIR /server
-RUN yarn
+COPY --from=build /app/dist /app/dist
+COPY --from=build /app/package.json /app
+COPY --from=build /app/yarn.lock /app
+COPY --from=build /app/node_modules /app/node_modules
+COPY ./config /app/config
+
 
 ARG NODE_ENV=docker
 ENV NODE_ENV=$NODE_ENV
