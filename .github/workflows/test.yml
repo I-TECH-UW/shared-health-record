@@ -27,6 +27,9 @@ jobs:
     - name: Build
       run: yarn build
 
+    - name: check containers
+      run: docker ps
+      
     - name: Run Instance
       run: yarn start
 
