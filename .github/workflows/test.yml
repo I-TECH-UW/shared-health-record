@@ -27,7 +27,7 @@ jobs:
         context: .
     
     - name: Run SHR
-      run: docker run test-image:latest -p 3000:3000 -d
+      run: docker run test-image:latest -e NODE_ENV=docker -p 3000:3000 -d
 
     - uses: matt-ball/newman-action@master
       with:
@@ -39,4 +39,4 @@ jobs:
 
     - name: Stop containers
       if: always()
-      run: docker-compose -f "docker-compose.yml" down
+      run: docker-compose -f "dev.docker-compose.yml" down
