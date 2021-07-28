@@ -28,7 +28,7 @@ jobs:
     - uses: addnab/docker-run-action@v3
       with:
         image: test-image:latest
-        options: -p 3000:3000
+        options: -p 3000:3000 -d
 
     - uses: matt-ball/newman-action@master
       with:
