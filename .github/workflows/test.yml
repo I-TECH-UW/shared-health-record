@@ -18,20 +18,9 @@ jobs:
 
     - name: Start containers
       run: docker-compose -f "dev.docker-compose.yml" up -d --build
-
-    - name: Install node
-      uses: actions/setup-node@v1
-      with:
-        node-version: 16.x
-
-    - name: Build
-      run: yarn build
-
-    - name: check containers
-      run: docker ps
-
-    - name: Run Instance
-      run: yarn dev
+    
+    - name: Build and start SHR
+      run: docker-compose up -d --build shr
 
     - uses: matt-ball/newman-action@master
       with:
