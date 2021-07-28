@@ -19,9 +19,12 @@ jobs:
     - name: Start containers
       run: docker-compose -f "dev.docker-compose.yml" up -d --build
     
-    - name: Build and start SHR
-      run: docker-compose up -d --build shr
+    - name: Build SHR
+      run: docker-compose build shr
 
+    - name: Start SHR
+      run: docker-compose up -d shr
+      
     - uses: matt-ball/newman-action@master
       with:
         collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd
