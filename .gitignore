@@ -10,9 +10,12 @@ node_modules
 # vagrant
 .vagrant
 
-server/log
+log
 *.log
 
 /db
 
+/dist
+
 tmpConfig.json
+

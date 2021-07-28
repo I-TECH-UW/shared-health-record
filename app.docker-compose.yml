@@ -17,16 +17,9 @@ version: '2.4'
 
 services:
   shr:
-    build: ./
+    image: ghcr.io/i-tech-uw/shared-health-record:main
     ports:
       - "3000:3000"
     restart: on-failure
     environment:
       - NODE_ENV=docker
-  shr-fhir:
-    image: "hapiproject/hapi:latest"
-    container_name: shr-fhir
-    hostname: shr-fhir
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
