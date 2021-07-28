@@ -29,17 +29,17 @@ jobs:
 
     - name: check containers
       run: docker ps
-      
+
     - name: Run Instance
-      run: yarn start
+      run: yarn dev
 
     - uses: matt-ball/newman-action@master
       with:
         collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd
         environment: .postman/github.postman_environment.json
 
-    - name: Run Jest Tests
-      run: yarn test
+    # - name: Run Jest Tests
+    #   run: yarn test
 
     - name: Stop containers
       if: always()
