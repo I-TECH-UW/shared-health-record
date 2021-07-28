@@ -25,11 +25,9 @@ jobs:
         push: false
         context: .
 
-
     - uses: addnab/docker-run-action@v3
       with:
         image: test-image:latest
-        run: echo "hello world"
         options: -p 3000:3000
 
     - uses: matt-ball/newman-action@master
