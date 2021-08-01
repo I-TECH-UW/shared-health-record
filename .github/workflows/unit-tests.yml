@@ -21,4 +21,4 @@ jobs:
       run: yarn build
     
     - name: Run Jest Tests
-       run: yarn test:unit
+      run: yarn test:unit
