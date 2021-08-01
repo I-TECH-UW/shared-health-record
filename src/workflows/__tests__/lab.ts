@@ -7,9 +7,12 @@ let patient: R4.IPatient
 
 jest.mock("fhirclient/lib/Client");
 
+beforeAll(async () => {
+  patient = await got(IG_URL+"/Patient-example-laboratory-patient.json").json()
+});
+
 describe('generateLabBundle', () => {
   it ('should return a Document Bundle with the correct type', async () => {
-    console.log(`${IG_URL}/Task-example-laboratory-task-simple-requested.json`)
     let task: R4.ITask = await got(IG_URL+"/Task-example-laboratory-task-simple-requested.json").json();
 
     let result: R4.IBundle = generateLabBundle(task, patient)
@@ -34,6 +37,8 @@ describe('generateLabBundle', () => {
                                   [(<R4.IServiceRequest> serviceRequest)], 
                                   <R4.IPractitioner> practitioner);
 
-    expect(result).toEqual(exampleBundle)
+    expect(result.resourceType!).toEqual("Bundle")
+    expect(result.type!).toEqual(R4.BundleTypeKind._document)
+    expect(result.entry?.length).toBe(4)
   })
 })
