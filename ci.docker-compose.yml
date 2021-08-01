@@ -21,7 +21,7 @@ services:
     container_name: shr
     hostname: shr
     ports:
-      3000:3000
+      - 3000:3000
     environment:
       - NODE_ENV=docker
     volumes:
