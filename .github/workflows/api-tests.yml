@@ -8,7 +8,7 @@ on:
     - main
 
 jobs:
-  test:
+  newman:
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
