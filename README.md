@@ -1,6 +1,7 @@
 # Shared Health Record
 [![Publish Docker image](https://github.com/I-TECH-UW/shared-health-record/actions/workflows/publish.yml/badge.svg)](https://github.com/I-TECH-UW/shared-health-record/actions/workflows/publish.yml)
-[![Run Tests](https://github.com/I-TECH-UW/shared-health-record/actions/workflows/test.yml/badge.svg)](https://github.com/I-TECH-UW/shared-health-record/actions/workflows/test.yml)
+[![Run Unit Tests](https://github.com/I-TECH-UW/shared-health-record/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/I-TECH-UW/shared-health-record/actions/workflows/unit-tests.yml)
+[![Run API Tests](https://github.com/I-TECH-UW/shared-health-record/actions/workflows/api-tests.yml/badge.svg)](https://github.com/I-TECH-UW/shared-health-record/actions/workflows/api-tests.yml)
 
 An FHIR-based Implementation of the Shared Health Record (SHR) as specified in section 3.6 of the [OpenHIE Architecture Specifications](https://ohie.org/framework/).
 
