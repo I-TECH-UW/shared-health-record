@@ -6,9 +6,10 @@ on:
   pull_request:
     branches:
     - main
+  workflow_dispatch:
 
 jobs:
-  test:
+  unit-test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
