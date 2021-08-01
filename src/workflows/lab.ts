@@ -4,11 +4,6 @@ import { R4 } from "@ahryman40k/ts-fhir-types";
 
 export function generateLabBundle(task: R4.ITask, patient: R4.IPatient, serviceRequests?: R4.IServiceRequest[], 
                             practitioner?: R4.IPractitioner, targetOrg?: R4.IOrganization, sourceOrg?: R4.IOrganization) {
-  // Move elsewhere
-  // let task: R4.ITask = await shrClient.request<R4.ITask>('/Task/'+taskId, { flat: false });
-  // let encounters = await shrClient.request<R4.IEncounter[]>(`Encounter?${query}`, { flat: true });
-  // let observations = await shrClient.request<R4.IObservation[]>(`Observation?${query}`, { flat: true });
-  
   let ipsBundle: R4.IBundle = {
       resourceType: "Bundle"
   };

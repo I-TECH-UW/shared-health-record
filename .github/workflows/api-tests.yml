@@ -1,11 +1,11 @@
 name: Run API Tests
 on:
-  # push:
-  #   branches:
-  #   - main
-  # pull_request:
-  #   branches:
-  #   - main
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
   workflow_dispatch:
 jobs:
   newman-test:
@@ -17,25 +17,29 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Start containers
-      run: docker-compose -f "dev.docker-compose.yml" up -d --build
+      run: docker-compose -f "ci.docker-compose.yml" up -d --build
 
-    - name: Build SHR
-      uses: docker/build-push-action@v2
-      with:
-        tags: test-image:latest
-        push: false
-        context: .
+    - name: Sleep for 30 seconds
+      run: sleep 30s
+      shell: bash
+
+    - name: Show containers
+      run: docker-compose -f "ci.docker-compose.yml" up -d --build
+
+    # - name: Build SHR
+    #   uses: docker/build-push-action@v2
+    #   with:
+    #     tags: test-image:latest
+    #     push: false
+    #     context: .
     
-    - name: Run SHR
-      run: docker run test-image:latest -e NODE_ENV=docker -p 3000:3000 -d
+    # - name: Run SHR
+    #   run: docker run test-image:latest -e NODE_ENV=docker -p 3000:3000 -d
 
     - uses: matt-ball/newman-action@master
       with:
-        collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd
+        collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd # FHIR Metadata
         environment: .postman/github.postman_environment.json
-
-    # - name: Run Jest Tests
-    #   run: yarn test
 
     - name: Stop containers
       if: always()
