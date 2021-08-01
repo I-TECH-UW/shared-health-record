@@ -3,8 +3,8 @@ import medUtils from 'openhim-mediator-utils';
 import _ from 'lodash';
 import fs from 'fs';
 import cookieParser from 'cookie-parser';
-import logger from './winston';
-import config from './config';
+import logger from './lib/winston';
+import config from './lib/config';
 import fhirRoutes from './routes/fhir';
 import ipsRoutes from './routes/ips';
 
@@ -84,8 +84,8 @@ export function start(callback: Function) {
   logger.info('Running client registry as a mediator with' + `${__dirname}/../config/mediator`);
   medUtils.registerMediator(config.get('mediator:api'), mediatorConfig, (err: Error) => {
     if (err) {
-      logger.error('Failed to register this mediator, check your config');
-      // logger.error(err.stack);
+      logger.error('Failed to register mediator at '+config.get('mediator:api')+', check your config:\n'+JSON.stringify(mediatorConfig));
+      logger.error(err.stack!);
       process.exit(1);
     }
     config.set('mediator:api:urn', mediatorConfig.urn);

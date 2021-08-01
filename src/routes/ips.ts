@@ -1,17 +1,16 @@
 "use strict";
 import express, { Request, Response } from "express";
-import logger from '../winston';
+import logger from '../lib/winston';
 import fhirClient from 'fhirclient';
 import { R4 } from '@ahryman40k/ts-fhir-types';
-import config from '../config';
-import { generateIpsbundle, generateUpdateBundle } from "../ips";
+import config from '../lib/config';
+import { generateIpsbundle, generateUpdateBundle } from "../workflows/ips";
 
 export const router = express.Router();
 
 var sprintf = require('sprintf-js').sprintf;
 
-  // TODO: add to config
-const system = "urn:ietf:rfc:3986";
+let system = config.get("app:mpiSystem");
 
 router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url);

@@ -1,14 +1,14 @@
-name: Run Tests
+name: Run API Tests
 on:
-  push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
-
+  # push:
+  #   branches:
+  #   - main
+  # pull_request:
+  #   branches:
+  #   - main
+  workflow_dispatch:
 jobs:
-  test:
+  newman-test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
@@ -19,18 +19,15 @@ jobs:
     - name: Start containers
       run: docker-compose -f "dev.docker-compose.yml" up -d --build
 
-    - uses: docker/build-push-action@v2
+    - name: Build SHR
+      uses: docker/build-push-action@v2
       with:
         tags: test-image:latest
         push: false
         context: .
-
-
-    - uses: addnab/docker-run-action@v3
-      with:
-        image: test-image:latest
-        run: echo "hello world"
-        options: -p 3000:3000
+    
+    - name: Run SHR
+      run: docker run test-image:latest -e NODE_ENV=docker -p 3000:3000 -d
 
     - uses: matt-ball/newman-action@master
       with:
@@ -42,4 +39,4 @@ jobs:
 
     - name: Stop containers
       if: always()
-      run: docker-compose -f "docker-compose.yml" down
+      run: docker-compose -f "dev.docker-compose.yml" down

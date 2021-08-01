@@ -1,9 +1,9 @@
-const config = require('../config');
+const config = require('../lib/config');
 const request = require('request');
 const URI = require('urijs');
 const async = require('async');
 const ParseConformance = require('./parseConformance').ParseConformance;
-const logger = require('../winston');
+const logger = require('../lib/winston');
 
 const parser = new ParseConformance(true);
 

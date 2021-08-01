@@ -4,10 +4,10 @@ const URI = require('urijs');
 const moment = require('moment');
 const generalMixin = require('../mixins/generalMixin');
 const Fhir = require('fhir').Fhir;
-const fhirWrapper = require('../fhir')();
+const fhirWrapper = require('../lib/fhir')();
 const structureDefinition = require('./structureDefinition');
-const config = require('../config');
-const logger = require('../winston');
+const config = require('../lib/config');
+const logger = require('../lib/winston');
 const slashes = require('slashes');
 
 const fhir = new Fhir();

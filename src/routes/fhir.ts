@@ -2,8 +2,8 @@
 import express, {Request, Response} from "express";
 import URI from 'urijs';
 import async from 'async';
-import logger from '../winston';
-import config from '../config';
+import logger from '../lib/winston';
+import config from '../lib/config';
 
 export const router = express.Router();
 const fhirWrapper = require('../fhir')();
