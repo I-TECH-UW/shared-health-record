@@ -1,8 +1,8 @@
 'use strict';
 /*global process, __dirname*/
 const fs = require('fs');
-const logger = require('../winston');
-const config = require('../config');
+const logger = require('../lib/winston');
+const config = require('../lib/config');
 const env = process.env.NODE_ENV || 'development';
 
 const isMatchBroken = (resourceData, reference) => {

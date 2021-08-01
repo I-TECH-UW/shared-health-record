@@ -3,8 +3,8 @@ import medUtils from 'openhim-mediator-utils';
 import _ from 'lodash';
 import fs from 'fs';
 import cookieParser from 'cookie-parser';
-import logger from './winston';
-import config from './config';
+import logger from './lib/winston';
+import config from './lib/config';
 import fhirRoutes from './routes/fhir';
 import ipsRoutes from './routes/ips';
 

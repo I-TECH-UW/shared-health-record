@@ -2,9 +2,9 @@
 import express, { Request, Response } from "express";
 const fhirWrapper = require('../fhir')();
 
-import logger from '../winston';
+import logger from '../lib/winston';
 import { R4 } from '@ahryman40k/ts-fhir-types';
-import config from '../config';
+import config from '../lib/config';
 
 export const router = express.Router();
 
@@ -32,10 +32,13 @@ router.post('/orders'), (req: Request, res: Response) => {
     // Handle Patient Identity
 
     // Save
+
+    let resource = req.body;
+
     
-  fhirWrapper.create(resource, (code: number, _err: any, _response: Response, body: any) => {
-    return res.status(code).send(body);
-  });
+    fhirWrapper.create(resource, (code: number, _err: any, _response: Response, body: any) => {
+        return res.status(code).send(body);
+    });
 }
 
 router.put('/orders/:id')
