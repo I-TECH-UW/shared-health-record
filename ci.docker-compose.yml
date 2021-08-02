@@ -5,8 +5,6 @@ version: '2.4'
 services:
   shr:
     build: ./
-    container_name: shr
-    hostname: shr
     ports:
       - 3000:3000
     environment:
@@ -17,8 +15,6 @@ services:
 
   shr-fhir:
     image: hapiproject/hapi:latest
-    container_name: shr-fhir
-    hostname: shr-fhir
     restart: unless-stopped
     ports:
       - "8081:8080"
@@ -29,7 +25,6 @@ services:
   # OpenHIM
   ###
   openhim-core:
-    container_name: openhim-core
     image: jembi/openhim-core:latest
     restart: unless-stopped
     environment:
@@ -47,7 +42,6 @@ services:
       retries: 3
 
   openhim-console:
-    container_name: openhim-console
     image: jembi/openhim-console:latest
     restart: unless-stopped
     ports:
@@ -61,7 +55,6 @@ services:
       retries: 3
 
   mongo-db:
-    container_name: mongo-db
     image: mongo:3.4
     ports:
       - 27017:27017
