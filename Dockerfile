@@ -9,7 +9,7 @@ WORKDIR /app
 
 RUN yarn install
 
-RUN yarn tsc
+RUN tsc
 
 FROM node:16-slim AS run
 RUN mkdir -p /var/log
