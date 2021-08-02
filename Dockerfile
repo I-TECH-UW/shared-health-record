@@ -7,7 +7,6 @@ COPY ./tsconfig.json /app
 
 WORKDIR /app
 
-RUN yarn
 RUN yarn build
 
 FROM node:16-slim AS run
