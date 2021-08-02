@@ -1,16 +1,22 @@
 "use strict";
 import express, { Request, Response } from "express";
+import got from "got/dist/source";
+
 const fhirWrapper = require('../lib/fhir')();
 
 import logger from '../lib/winston';
 import { R4 } from '@ahryman40k/ts-fhir-types';
 import config from '../lib/config';
+import { generateLabBundle } from "../workflows/lab";
 
 export const router = express.Router();
 
-router.get('/', (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
+    let task: R4.ITask = <R4.ITask>(await got("https://i-tech-uw.github.io/laboratory-workflows-ig/Task-example-laboratory-task-simple-requested.json").json())
+    let patient: R4.IPatient = <R4.IPatient>(await got("https://i-tech-uw.github.io/laboratory-workflows-ig/Patient-example-laboratory-patient.json").json())
+    
     // Temporary Testing Bundle
-    return res.status(200).send()
+    return res.status(200).send(generateLabBundle(task, patient))
 });
 
 // Get list of active orders targetting :facility
