@@ -17,7 +17,7 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Build SHR
-      run: docker-compose -f ci.docker-compsose.yml build shr  
+      run: docker-compose -f ci.docker-compose.yml build shr  
     
     - name: Start containers
       run: docker-compose -f ci.docker-compose.yml up -d
