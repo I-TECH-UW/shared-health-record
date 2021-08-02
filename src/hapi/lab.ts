@@ -11,6 +11,6 @@ const SHR_URL = config.get('fhirServer:baseURL');
 // const mpiClient = fhirClient(req, res).client({ serverUrl: mpiUrl, username: config.get('fhirServer:username'), password: config.get('fhirServer:password')});
 // const shrClient = fhirClient(req, res).client({ serverUrl: shrUrl, username: config.get('fhirServer:username'), password: config.get('fhirServer:password')});
 
-export async function getResource(resourceType: any, uri: string) {
-  return got.get(`${SHR_URL}${uri}`).json()
+export async function getResource(type: any, id: string) {
+  return got.get(`${SHR_URL}/${type}/${id}`).json()
 }

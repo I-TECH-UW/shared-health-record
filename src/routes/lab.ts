@@ -1,6 +1,6 @@
 "use strict";
 import express, { Request, Response } from "express";
-const fhirWrapper = require('../fhir')();
+const fhirWrapper = require('../lib/fhir')();
 
 import logger from '../lib/winston';
 import { R4 } from '@ahryman40k/ts-fhir-types';
@@ -9,7 +9,8 @@ import config from '../lib/config';
 export const router = express.Router();
 
 router.get('/', (req: Request, res: Response) => {
-    return res.status(200).send(req.url);
+    // Temporary Testing Bundle
+    return res.status(200).send()
 });
 
 // Get list of active orders targetting :facility
