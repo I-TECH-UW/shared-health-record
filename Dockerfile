@@ -7,7 +7,9 @@ COPY ./tsconfig.json /app
 
 WORKDIR /app
 
-RUN yarn build
+RUN yarn install
+
+RUN yarn tsc
 
 FROM node:16-slim AS run
 RUN mkdir -p /var/log
