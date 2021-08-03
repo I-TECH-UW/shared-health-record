@@ -3,9 +3,9 @@ FROM node:16-slim AS build
 
 ENV NODE_ENV=development
 
-COPY ./package.json /app
-
 WORKDIR /app
+
+COPY ./package.json /app
 
 RUN yarn install --production=false
 
