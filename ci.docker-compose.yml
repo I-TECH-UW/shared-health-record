@@ -11,11 +11,12 @@ services:
     environment:
       - NODE_ENV=docker
     volumes:
-      - ./config/config_test.json:/app/config/config_docker.json
+      - ./config/config_ci.json:/app/config/config_docker.json
       - ./config/mediator.json:/app/config/mediator.json
 
   shr-fhir:
     image: hapiproject/hapi:latest
+    hostname: shr-fhir
     restart: unless-stopped
     ports:
       - "8081:8080"
@@ -27,6 +28,7 @@ services:
   ###
   openhim-core:
     image: jembi/openhim-core:latest
+    hostname: openhim-core
     restart: unless-stopped
     environment:
       mongo_url: "mongodb://mongo-db/openhim"
@@ -41,20 +43,6 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
-
-  openhim-console:
-    image: jembi/openhim-console:latest
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    #volumes:
-      # - ./configs/openhim-console/default.json:/usr/share/nginx/html/config/default.json
-    healthcheck:
-      test: "curl -sS http://localhost || exit 1"
-      interval: 30s
-      timeout: 30s
-      retries: 3
-
   mongo-db:
     image: mongo:3.4
     ports:

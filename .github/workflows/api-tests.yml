@@ -38,6 +38,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Pull containers
+        run: docker-compose -f ci.docker-compose.yml pull
+
+      - name: Cache containers
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
       - name: Start containers
         run: docker-compose -f ci.docker-compose.yml up -d
 
@@ -53,8 +60,9 @@ jobs:
 
       - uses: matt-ball/newman-action@master
         with:
-          collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd # FHIR Metadata
+          collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd 
           environment: .postman/github.postman_environment.json
+          insecure: true
 
       - name: Stop containers
         if: always()

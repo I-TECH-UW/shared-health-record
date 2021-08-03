@@ -6,13 +6,13 @@
     "api": {
       "username": "root@openhim.org",
       "password": "openhim-password",
-      "apiURL": "https://localhost:8080",
+      "apiURL": "https://openhim-core:8080",
       "trustSelfSigned": true,
-      "urn": "urn:mediator:shared-health-record"
+      "urn": ""
     }
   },
   "fhirServer": {
-    "mpiURL": "http://localhost:5000/CR/fhir",
-    "baseURL": "http://localhost:8081/fhir"
+    "mpiURL": "http://openhim-core:5000/CR/fhir",
+    "baseURL": "http://shr-fhir:8080/fhir"
   }
 }
