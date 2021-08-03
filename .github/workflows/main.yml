@@ -66,15 +66,14 @@ jobs:
 
       - name: Start containers
         run: docker-compose -f ci.docker-compose.yml up -d
-
+      
+      - name: Sleep for 60 seconds
+        run: sleep 60s
+        shell: bash
 
       - name: Show SHR Log
         run: docker-compose -f "ci.docker-compose.yml" logs shr
       
-      - name: Sleep for 30 seconds
-        run: sleep 30s
-        shell: bash
-
       - name: Check openhim-core
         run: curl -sSk https://localhost:8080/heartbeat
 
