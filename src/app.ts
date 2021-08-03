@@ -85,41 +85,43 @@ export function start(callback: Function) {
   medUtils.registerMediator(config.get('mediator:api'), mediatorConfig, (err: Error) => {
     if (err) {
       logger.error('Failed to register mediator at '+config.get('mediator:api:apiURL')+'\nCheck your config!');
-    }
-    config.set('mediator:api:urn', mediatorConfig.urn);
-    
-    medUtils.fetchConfig(config.get('mediator:api'), (err2: Error, newConfig: JSON) => {
-      if (err2) {
-        logger.info('Failed to fetch initial config');
-      }
-
-      // Merges configs?
-      const updatedConfig: JSON = Object.assign(configFile, newConfig);
-      reloadConfig(updatedConfig, () => {
-        config.set('mediator:api:urn', mediatorConfig.urn);
-        logger.info('Received initial config:', newConfig);
-        logger.info('Successfully registered mediator!');
-
-        const app = appRoutes();
-
-        // Start up server on 3000 (default)
-        const server = app.listen(config.get('app:port'), () => {
-
-          // Activate heartbeat for OpenHIM mediator
-          const configEmitter = medUtils.activateHeartbeat(config.get('mediator:api'));
-
-          // Updates config based on what's sent from the server
-          configEmitter.on('config', (newConfig: JSON) => {
-            logger.info('Received updated config:', newConfig);
-            const updatedConfig = Object.assign(configFile, newConfig);
-            reloadConfig(updatedConfig, () => {
-              config.set('mediator:api:urn', mediatorConfig.urn);
+      process.exit(1);
+    } else {
+      config.set('mediator:api:urn', mediatorConfig.urn);
+      medUtils.fetchConfig(config.get('mediator:api'), (err2: Error, newConfig: JSON) => {
+        if (err2) {
+          logger.info('Failed to fetch initial config');
+          process.exit(1);
+        }
+  
+        // Merges configs?
+        const updatedConfig: JSON = Object.assign(configFile, newConfig);
+        reloadConfig(updatedConfig, () => {
+          config.set('mediator:api:urn', mediatorConfig.urn);
+          logger.info('Received initial config:', newConfig);
+          logger.info('Successfully registered mediator!');
+  
+          const app = appRoutes();
+  
+          // Start up server on 3000 (default)
+          const server = app.listen(config.get('app:port'), () => {
+  
+            // Activate heartbeat for OpenHIM mediator
+            const configEmitter = medUtils.activateHeartbeat(config.get('mediator:api'));
+  
+            // Updates config based on what's sent from the server
+            configEmitter.on('config', (newConfig: JSON) => {
+              logger.info('Received updated config:', newConfig);
+              const updatedConfig = Object.assign(configFile, newConfig);
+              reloadConfig(updatedConfig, () => {
+                config.set('mediator:api:urn', mediatorConfig.urn);
+              });
             });
+            callback(server);
           });
-          callback(server);
         });
-      });
-    });
+      });  
+    }
   });
 }
 
