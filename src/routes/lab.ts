@@ -7,7 +7,7 @@ const fhirWrapper = require('../lib/fhir')();
 import logger from '../lib/winston';
 import { R4 } from '@ahryman40k/ts-fhir-types';
 import config from '../lib/config';
-import { generateLabBundle } from "../workflows/lab";
+import { generateLabBundle, validateLabBundle } from "../workflows/lab";
 
 export const router = express.Router();
 
@@ -32,15 +32,15 @@ router.get('/orders/source/:facilityId/:_lastUpdated?', (req: Request, res: Resp
 // Create a new lab order in SHR based on bundle 
 // (https://i-tech-uw.github.io/emr-lis-ig/Bundle-example-emr-lis-bundle.html)
 router.post('/orders'), (req: Request, res: Response) => {
-    // Validate bundle adheres to Profile
 
-    // Validate Facility Codes
-
-    // Handle Patient Identity
 
     // Save
 
     let resource = req.body;
+
+    if(validateLabBundle(resource)) {
+        
+    }
 
     
     fhirWrapper.create(resource, (code: number, _err: any, _response: Response, body: any) => {

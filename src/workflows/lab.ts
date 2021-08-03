@@ -45,3 +45,13 @@ export function generateLabBundle(task: R4.ITask, patient: R4.IPatient, serviceR
     
   return ipsBundle;
 }
+
+export async function validateLabBundle(bundle: R4.IBundle) {
+    // TODO: Validate bundle adheres to Profile
+
+    // TODO: Validate Facility Codes
+
+    // TODO Validate Patient Identity
+
+    return true;
+}
