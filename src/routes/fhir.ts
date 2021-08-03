@@ -106,6 +106,7 @@ function getResource({
     uri.addQuery(param, req.query[param]);
   }
   let url: string = uri.toString();
+  logger.info(`Getting ${url}`);
 
   fhirWrapper.getResource({
     url,

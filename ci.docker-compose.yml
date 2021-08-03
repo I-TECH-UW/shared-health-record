@@ -5,6 +5,7 @@ version: '2.4'
 services:
   shr:
     container_name: shr
+    hostname: shr
     image: test-image:latest
     ports:
       - 3000:3000
@@ -12,9 +13,7 @@ services:
       - NODE_ENV=docker
     volumes:
       - ./config/config_ci.json:/app/config/config_docker.json
-      - ./config/mediator.json:/app/config/mediator.json
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - ./config/mediator_ci.json:/app/config/mediator.json
 
   shr-fhir:
     image: hapiproject/hapi:latest

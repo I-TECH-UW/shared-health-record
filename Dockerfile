@@ -3,13 +3,14 @@ FROM node:16-slim AS build
 
 ENV NODE_ENV=development
 
-COPY ./src /app/src
 COPY ./package.json /app
-COPY ./tsconfig.json /app
 
 WORKDIR /app
 
 RUN yarn install --production=false
+
+COPY ./src /app/src
+COPY ./tsconfig.json /app
 
 RUN yarn tsc --diagnostics
 
