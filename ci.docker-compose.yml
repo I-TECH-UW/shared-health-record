@@ -54,3 +54,6 @@ services:
 volumes:
   mongo-data:
   hapi-data:
+
+networks:
+  hie:
