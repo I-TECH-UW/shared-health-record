@@ -65,7 +65,14 @@ jobs:
       #   continue-on-error: true
 
       - name: Start containers
-        run: docker-compose -f ci.docker-compose.yml up -d
+        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core
+        
+      - name: Sleep for 60 seconds
+        run: sleep 60s
+        shell: bash
+
+      - name: Run SHR image
+        run: docker-compose -f ci.docker-compose.yml up -d shr
       
       - name: Sleep for 60 seconds
         run: sleep 60s
