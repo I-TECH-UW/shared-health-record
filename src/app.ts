@@ -84,7 +84,8 @@ export function start(callback: Function) {
   logger.info('Running client registry as a mediator with' + `${__dirname}/../config/mediator`);
   medUtils.registerMediator(config.get('mediator:api'), mediatorConfig, (err: Error) => {
     if (err) {
-      logger.error('Failed to register mediator at '+config.get('mediator:api:apiURL')+'\nCheck your config!');
+      logger.error('Failed to register mediator at '+config.get('mediator:api:apiURL')+'\nCheck your config!\n');
+      logger.error(err.stack!)
       process.exit(1);
     } else {
       config.set('mediator:api:urn', mediatorConfig.urn);
