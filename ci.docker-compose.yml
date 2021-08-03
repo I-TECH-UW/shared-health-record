@@ -13,6 +13,8 @@ services:
     volumes:
       - ./config/config_ci.json:/app/config/config_docker.json
       - ./config/mediator.json:/app/config/mediator.json
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   shr-fhir:
     image: hapiproject/hapi:latest
@@ -54,6 +56,3 @@ services:
 volumes:
   mongo-data:
   hapi-data:
-
-networks:
-  hie:
