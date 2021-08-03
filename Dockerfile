@@ -9,7 +9,7 @@ WORKDIR /app
 
 RUN yarn install
 
-RUN tsc
+RUN tsc --diagnostics
 
 FROM node:16-slim AS run
 
