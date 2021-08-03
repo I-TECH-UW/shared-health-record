@@ -1,0 +1,92 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  unit-test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Yarn
+      run: yarn
+      
+    - name: Build
+      run: yarn build
+    
+    - name: Run Jest Tests
+      run: yarn test:unit
+  
+  build-test-push:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build SHR
+        uses: docker/build-push-action@v2
+        with:
+          tags: test-image:latest
+          push: false
+          load: true
+          context: .
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Pull containers
+        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db
+
+      - name: Cache containers
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
+      - name: Start containers
+        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core
+        
+      - name: Sleep for 30 seconds
+        run: sleep 30s
+        shell: bash
+
+      - name: Run SHR image
+        run: docker-compose -f ci.docker-compose.yml up -d shr
+      
+      - name: Sleep for 30 seconds
+        run: sleep 30s
+        shell: bash
+
+      - name: Show SHR Log
+        run: docker-compose -f "ci.docker-compose.yml" logs shr
+      
+      - name: Check openhim-core
+        run: curl -sSk https://localhost:8080/heartbeat
+
+      - name: Show containers
+        run: docker-compose -f "ci.docker-compose.yml" ps
+
+      - uses: matt-ball/newman-action@master
+        with:
+          collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd 
+          environment: .postman/github.postman_environment.json
+          insecure: true
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f "dev.docker-compose.yml" down
+  

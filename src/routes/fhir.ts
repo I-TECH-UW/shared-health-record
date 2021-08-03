@@ -6,7 +6,7 @@ import logger from '../lib/winston';
 import config from '../lib/config';
 
 export const router = express.Router();
-const fhirWrapper = require('../fhir')();
+const fhirWrapper = require('../lib/fhir')();
 
 router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url);
@@ -106,6 +106,7 @@ function getResource({
     uri.addQuery(param, req.query[param]);
   }
   let url: string = uri.toString();
+  logger.info(`Getting ${url}`);
 
   fhirWrapper.getResource({
     url,

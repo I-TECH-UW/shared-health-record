@@ -1,16 +1,21 @@
   
-FROM sandrokeil/typescript:latest AS build
+FROM node:16-slim AS build
 
-COPY ./src /app/src
-COPY ./package.json /app
-COPY ./tsconfig.json /app
+ENV NODE_ENV=development
 
 WORKDIR /app
 
-RUN yarn
-RUN yarn build
+COPY ./package.json /app
+
+RUN yarn install --production=false
+
+COPY ./src /app/src
+COPY ./tsconfig.json /app
+
+RUN yarn tsc --diagnostics
 
 FROM node:16-slim AS run
+
 RUN mkdir -p /var/log
 
 WORKDIR /app

@@ -1,15 +1,22 @@
 "use strict";
 import express, { Request, Response } from "express";
-const fhirWrapper = require('../fhir')();
+import got from "got/dist/source";
+
+const fhirWrapper = require('../lib/fhir')();
 
 import logger from '../lib/winston';
 import { R4 } from '@ahryman40k/ts-fhir-types';
 import config from '../lib/config';
+import { generateLabBundle, validateLabBundle } from "../workflows/lab";
 
 export const router = express.Router();
 
-router.get('/', (req: Request, res: Response) => {
-    return res.status(200).send(req.url);
+router.get('/', async (req: Request, res: Response) => {
+    let task: R4.ITask = <R4.ITask>(await got("https://i-tech-uw.github.io/laboratory-workflows-ig/Task-example-laboratory-task-simple-requested.json").json())
+    let patient: R4.IPatient = <R4.IPatient>(await got("https://i-tech-uw.github.io/laboratory-workflows-ig/Patient-example-laboratory-patient.json").json())
+    
+    // Temporary Testing Bundle
+    return res.status(200).send(generateLabBundle(task, patient))
 });
 
 // Get list of active orders targetting :facility
@@ -25,15 +32,15 @@ router.get('/orders/source/:facilityId/:_lastUpdated?', (req: Request, res: Resp
 // Create a new lab order in SHR based on bundle 
 // (https://i-tech-uw.github.io/emr-lis-ig/Bundle-example-emr-lis-bundle.html)
 router.post('/orders'), (req: Request, res: Response) => {
-    // Validate bundle adheres to Profile
 
-    // Validate Facility Codes
-
-    // Handle Patient Identity
 
     // Save
 
     let resource = req.body;
+
+    if(validateLabBundle(resource)) {
+        
+    }
 
     
     fhirWrapper.create(resource, (code: number, _err: any, _response: Response, body: any) => {
