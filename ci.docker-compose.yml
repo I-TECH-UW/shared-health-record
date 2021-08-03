@@ -4,6 +4,7 @@ version: '2.4'
 #   This file builds the shr image from source
 services:
   shr:
+    container_name: shr
     image: test-image:latest
     ports:
       - 3000:3000

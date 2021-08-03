@@ -12,6 +12,7 @@ RUN yarn install
 RUN tsc
 
 FROM node:16-slim AS run
+
 RUN mkdir -p /var/log
 
 WORKDIR /app
