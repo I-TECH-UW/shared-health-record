@@ -6,8 +6,8 @@
 name: Publish Docker image
 
 on:
-  # push:
-  #   branches: ['main']
+  push:
+    branches: ['main']
   # pull_request:
   #   branches: [ main ]
   workflow_dispatch:
@@ -48,10 +48,4 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-  # test-image:
-  #   name: Test API
-  #   needs: build-image
-  #   runs-on: ubuntu-latest
-  #   steps:
-  # push-image:
 

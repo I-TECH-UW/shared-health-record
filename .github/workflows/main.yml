@@ -1,7 +1,9 @@
-name: Run API Tests
+name: CI/CD
 
 on:
   pull_request:
+    branches: [ main ]
+  push:
     branches: [ main ]
   workflow_dispatch:
 
@@ -10,6 +12,23 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  unit-test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Yarn
+      run: yarn
+      
+    - name: Build
+      run: yarn build
+    
+    - name: Run Jest Tests
+      run: yarn test:unit
+  
   build-test-push:
     timeout-minutes: 10
     runs-on: ubuntu-latest
@@ -39,7 +58,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Pull containers
-        run: docker-compose -f ci.docker-compose.yml pull
+        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db
 
       - name: Cache containers
         uses: satackey/action-docker-layer-caching@v0.0.11
@@ -67,3 +86,4 @@ jobs:
       - name: Stop containers
         if: always()
         run: docker-compose -f "dev.docker-compose.yml" down
+  
