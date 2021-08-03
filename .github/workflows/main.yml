@@ -57,25 +57,25 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # - name: Pull containers
-      #   run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db
+      - name: Pull containers
+        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db
 
-      # - name: Cache containers
-      #   uses: satackey/action-docker-layer-caching@v0.0.11
-      #   continue-on-error: true
+      - name: Cache containers
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
 
       - name: Start containers
         run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core
         
-      - name: Sleep for 60 seconds
-        run: sleep 60s
+      - name: Sleep for 30 seconds
+        run: sleep 30s
         shell: bash
 
       - name: Run SHR image
         run: docker-compose -f ci.docker-compose.yml up -d shr
       
-      - name: Sleep for 60 seconds
-        run: sleep 60s
+      - name: Sleep for 30 seconds
+        run: sleep 30s
         shell: bash
 
       - name: Show SHR Log
