@@ -6,7 +6,7 @@
     "api": {
       "username": "root@openhim.org",
       "password": "openhim-password",
-      "apiURL": "https://openhim-core:8080",
+      "apiURL": "https://172.17.0.1:8080",
       "trustSelfSigned": true,
       "urn": ""
     }
