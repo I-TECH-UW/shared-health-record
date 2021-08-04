@@ -7,6 +7,7 @@ import logger from './lib/winston';
 import config from './lib/config';
 import fhirRoutes from './routes/fhir';
 import ipsRoutes from './routes/ips';
+import labRoutes from './routes/lab'
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerJSDoc = require('swagger-jsdoc');
@@ -41,8 +42,9 @@ function appRoutes() {
   
   app.use(cookieParser());
 
-  app.use('/ips', ipsRoutes);
-  app.use('/fhir', fhirRoutes);
+  app.use('/ips', ipsRoutes)
+  app.use('/fhir', fhirRoutes)
+  app.use('/lab', labRoutes)
 
   app.get('/', (req: Request, res: Response) => {
     return res.redirect('/api-docs');
@@ -79,7 +81,7 @@ export function start(callback: Function) {
   const env = process.env.NODE_ENV || 'dev';
   const configFile = require(`${__dirname}/../config/config_${env}`);
   // Loads OpenHIM mediator config
-  const mediatorConfig = require(`${__dirname}/../config/mediator`);
+  const mediatorConfig = require(`${__dirname}/../config/mediator_${env}`);
 
   logger.info('Running client registry as a mediator with' + `${__dirname}/../config/mediator`);
   medUtils.registerMediator(config.get('mediator:api'), mediatorConfig, (err: Error) => {

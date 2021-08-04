@@ -2,12 +2,12 @@
 import express, { Request, Response } from "express";
 import got from "got/dist/source";
 
-const fhirWrapper = require('../lib/fhir')();
-
 import logger from '../lib/winston';
 import { R4 } from '@ahryman40k/ts-fhir-types';
 import config from '../lib/config';
 import { generateLabBundle, validateLabBundle } from "../workflows/lab";
+import { invalidBundleMessage, validBundle } from "../lib/helpers";
+import { saveBundle } from "../hapi/lab";
 
 export const router = express.Router();
 
@@ -31,21 +31,18 @@ router.get('/orders/source/:facilityId/:_lastUpdated?', (req: Request, res: Resp
 
 // Create a new lab order in SHR based on bundle 
 // (https://i-tech-uw.github.io/emr-lis-ig/Bundle-example-emr-lis-bundle.html)
-router.post('/orders'), (req: Request, res: Response) => {
+router.post('/orders'), async (req: Request, res: Response) => {
+    logger.info('Received a Lab Order bundle to save');
+    let orderBundle: R4.IBundle = req.body
 
-
-    // Save
-
-    let resource = req.body;
-
-    if(validateLabBundle(resource)) {
-        
+    // Validate Bundle
+    if (!validBundle(orderBundle)) {
+      return res.status(400).json(invalidBundleMessage())
     }
 
+    let result: any = await saveBundle(orderBundle)
     
-    fhirWrapper.create(resource, (code: number, _err: any, _response: Response, body: any) => {
-        return res.status(code).send(body);
-    });
+    return res.status(result.statusCode).json(result.body)
 }
 
 router.put('/orders/:id')
@@ -60,3 +57,4 @@ router.put('/orders/:id')
 //     saveResource(req, res);
 // });
   
+export default router;
