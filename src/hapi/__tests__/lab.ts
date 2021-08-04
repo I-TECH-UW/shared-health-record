@@ -3,22 +3,44 @@ import got from 'got/dist/source';
 import { config } from '../../lib/config';
 
 import nock from 'nock';
-import {getResource} from '../lab'
+import {getResource, saveBundle} from '../lab'
 
 const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
+let fhirUrl: string = config.get('fhirServer:baseURL')
 
 describe('getResource', () => {
   it ('should return resource of given type', async () => {
     let resource: R4.IPatient = await got(IG_URL+"/Patient-example-laboratory-patient.json").json()
     let type: string = "Patient"
     let id: string = resource.id!
-    let fhirUrl: string = config.get('fhirServer:baseURL')
 
     const scope = nock(fhirUrl).get(`/${type}/${id}`).once().reply(200, resource)
 
-    let result: R4.IPatient = <R4.IPatient>(await getResource(type, id))
+    // let result: R4.IPatient = <R4.IPatient>(await getResource(type, id))
 
-    expect(result).toEqual(resource)
+    // expect(result).toEqual(resource)
   })
+});
+
+describe('saveBundle', () => {
+  it('should save a a document bundle', async () => {
+    // Load data
+    let docBundle: R4.IBundle = await got(IG_URL+"/Bundle-example-laboratory-simple-bundle.json").json()
+    let transactionBundle: R4.IBundle = await got(IG_URL+"/Bundle-example-laboratory-simple-bundle-transaction.json").json()
+    let transactionResultBundle: R4.IBundle = await got(IG_URL+"/Bundle-example-transaction-response-bundle.json").json()
+
+    // Mock server
+    const scope = nock(fhirUrl)
+      .post('', 
+        body => (body.resourceType == "Bundle" && 
+                body.type == transactionBundle.type! && 
+                body.id == docBundle.id! &&
+                body.entry[0].request.method == "PUT"))
+      .once().reply(200, transactionResultBundle)
+
+    let result = await saveBundle(docBundle)
+
+    expect(result).toEqual(transactionResultBundle)
+  });
 });
   

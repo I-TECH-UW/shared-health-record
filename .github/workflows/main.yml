@@ -86,6 +86,13 @@ jobs:
           environment: .postman/github.postman_environment.json
           insecure: true
 
+      # TODO: Enable once correct OpenHIM settings are uploaded to docker container
+      # - uses: matt-ball/newman-action@master
+      #   with:
+      #     collection: https://www.getpostman.com/collections/ff5183adca5b5e720338
+      #     environment: .postman/github.postman_environment.json
+      #     insecure: true
+
       - name: Stop containers
         if: always()
         run: docker-compose -f "dev.docker-compose.yml" down

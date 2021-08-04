@@ -7,9 +7,10 @@
     "clean": "rimraf dist/",
     "start": "env NODE_ENV=production node ./dist/app.js",
     "build": "yarn clean && yarn tsc",
-    "dev": "env NODE_ENV=development node ./dist/app.js",
+    "dev": "env NODE_ENV=development node --inspect ./dist/app.js",
     "test:unit": "ENV_FILE=./config/.env.test jest --passWithNoTests",
-    "test:newman": ""
+    "test:api": "env NODE_ENV=test node --inspect ./dist/app.js",
+    "docker:up": "docker build ./ -t test-image:latest && docker-compose -f ci.docker-compose.yml up shr"
   },
   "keywords": [
     "client registry",

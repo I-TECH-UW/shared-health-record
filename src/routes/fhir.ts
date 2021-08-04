@@ -4,6 +4,7 @@ import URI from 'urijs';
 import async from 'async';
 import logger from '../lib/winston';
 import config from '../lib/config';
+import { invalidBundleMessage, invalidBundle } from "../lib/helpers";
 
 export const router = express.Router();
 const fhirWrapper = require('../lib/fhir')();
@@ -36,21 +37,9 @@ router.post('/', (req, res) => {
   logger.info('Received a request to add a bundle of resources');
   const resource = req.body;
   
-  // Verify that bundle
-  if (!resource.resourceType ||
-    (resource.resourceType && resource.resourceType !== 'Bundle') ||
-    !resource.entry || (resource.entry && resource.entry.length === 0)) {
-    return res.status(400).json({
-      resourceType: "OperationOutcome",
-      issue: [{
-        severity: "error",
-        code: "processing",
-        diagnostics: "Invalid bundle submitted"
-      }],
-      response: {
-        status: 400
-      }
-    });
+  // Verify the bundle
+  if (invalidBundle(resource)) {
+    return res.status(400).json(invalidBundleMessage());
   }
   
   async.parallel({

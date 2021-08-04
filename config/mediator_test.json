@@ -3,18 +3,6 @@
   "version": "0.0.1",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
-  "config": {
-    "fhirServer": {
-      "username": "",
-      "password": "",
-      "baseURL": "http://localhost:8081/fhir"
-    },
-    "clientRegistry": {
-      "username": "",
-      "password": "",
-      "url": "http://localhost:5000/CR/fhir"
-    }
-  },
   "defaultChannelConfig": [
     {
       "methods": [
@@ -48,8 +36,8 @@
           "forwardAuthHeader": false,
           "name": "SHR - Get/Create/Update Resource",
           "secured": false,
-          "host": "localhost",
-          "port": 8080,
+          "host": "host.docker.internal",
+          "port": 3000,
           "path": "",
           "pathTransform": "s/SHR\\/fhir/fhir/g",
           "primary": true,
@@ -90,7 +78,7 @@
           "forwardAuthHeader": false,
           "name": "SHR - Get IPS",
           "secured": false,
-          "host": "localhost",
+          "host": "host.docker.internal",
           "port": 3000,
           "path": "",
           "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",
@@ -151,7 +139,7 @@
   "endpoints": [
     {
       "name": "SHR Endpoint",
-      "host": "localhost",
+      "host": "host.docker.internal",
       "path": "/",
       "port": 3000,
       "primary": true,
