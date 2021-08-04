@@ -51,6 +51,7 @@ export async function getResource(type: string, id: string, params?: any, noCach
   return resourceData;
 }
 
+// TODO
 export async function saveResource() {
   
 }
@@ -60,5 +61,19 @@ export async function saveBundle(bundle: R4.IBundle) {
 
   logger.info(`Posting ${bundle.resourceType} to ${uri.toString()}`);
 
-  return got.post(uri.toString(), {json: bundle})
+  bundle.type = R4.BundleTypeKind._transaction
+  bundle.link = [{
+    relation: "self",
+    url: "responding.server.org/fhir"
+  }]
+
+  let entry: R4.IBundle_Entry
+  for(entry of bundle.entry!) {
+    entry.request = {
+      method: R4.Bundle_RequestMethodKind._put,
+      url: `${entry.resource!.resourceType}/${entry.resource!.id!}`
+    }  
+  }  
+
+  return await got.post(uri.toString(), {json: bundle}).json()
 }

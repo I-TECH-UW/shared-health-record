@@ -4,7 +4,7 @@ import URI from 'urijs';
 import async from 'async';
 import logger from '../lib/winston';
 import config from '../lib/config';
-import { invalidBundleMessage, validBundle } from "../lib/helpers";
+import { invalidBundleMessage, invalidBundle } from "../lib/helpers";
 
 export const router = express.Router();
 const fhirWrapper = require('../lib/fhir')();
@@ -38,7 +38,7 @@ router.post('/', (req, res) => {
   const resource = req.body;
   
   // Verify the bundle
-  if (!validBundle(resource)) {
+  if (invalidBundle(resource)) {
     return res.status(400).json(invalidBundleMessage());
   }
   
