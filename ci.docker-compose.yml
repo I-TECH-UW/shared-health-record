@@ -53,6 +53,15 @@ services:
       - "mongo-data:/data/db"
     restart: unless-stopped
 
+  # Newman Tests
+  newman:
+    image: postman/newman
+    environment: 
+      - $POSTMAN_COLLECTION
+    volumes:
+      - ./.postman:/.postman
+    entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000
+
 volumes:
   mongo-data:
   hapi-data:
