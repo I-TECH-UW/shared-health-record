@@ -62,6 +62,19 @@ services:
       - ./.postman:/.postman
     entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000
 
+  # Not necessary
+  openhim-console:
+    image: jembi/openhim-console:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    #volumes:
+      # - ./configs/openhim-console/default.json:/usr/share/nginx/html/config/default.json
+    healthcheck:
+      test: "curl -sS http://localhost || exit 1"
+      interval: 30s
+      timeout: 30s
+      retries: 3
 volumes:
   mongo-data:
   hapi-data:

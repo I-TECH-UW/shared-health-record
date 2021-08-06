@@ -21,8 +21,10 @@ let ohConfig = JSON.parse(fs.readFileSync('docker/test-openhim-config.json'));
     );
 
     logger.info(`Successfully configured OpenHIM at ${config.get("mediator:api:apiURL")}`);
+    process.exit(0);
   } catch (error) {
     logger.error(error);
+    process.exit(1);
   }
 })();
 
