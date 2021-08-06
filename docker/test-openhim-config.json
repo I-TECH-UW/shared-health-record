@@ -1,0 +1,634 @@
+{
+  "Users": [
+    {
+      "groups": [
+        "admin"
+      ],
+      "firstname": "Super",
+      "surname": "User",
+      "email": "root@openhim.org",
+      "passwordAlgorithm": "sha512",
+      "passwordHash": "ac881bf1b0b0add8f91fe1b708ef0d6d74e9d9ec95828a22cb0ffd744e4736b75d3e334b42a39275493bb4c0325cc9ab3f0d307fcf1c4cd05a78ec17e51efacf",
+      "passwordSalt": "97eef85f2030b53d8080eabdf90336cb",
+      "expiry": null,
+      "locked": false,
+      "tokenType": null,
+      "token": null,
+      "settings": {
+        "visualizer": {
+          "data": {
+            "components": [],
+            "channels": [],
+            "mediators": [],
+            "color": {
+              "inactive": "#cccccc",
+              "active": "#4cae4c",
+              "error": "#d43f3a",
+              "text": "#000000"
+            },
+            "size": {
+              "responsive": true,
+              "width": 1000,
+              "height": 400,
+              "padding": 20
+            },
+            "time": {
+              "updatePeriod": 200,
+              "minDisplayPeriod": 500,
+              "maxSpeed": 5,
+              "maxTimeout": 5000
+            }
+          },
+          "status": 200,
+          "config": {
+            "method": "GET",
+            "transformRequest": [
+              null
+            ],
+            "transformResponse": [
+              null
+            ],
+            "jsonpCallbackParam": "callback",
+            "url": "config/visualizer.json",
+            "headers": {
+              "Accept": "application/json, text/plain, */*",
+              "auth-username": "root@openhim.org",
+              "auth-ts": "2021-08-03T17:14:20.170Z",
+              "auth-salt": "519f3ad7deb57cafe99db3035fa84e55",
+              "auth-token": "b776fe544914ae359c28548c3e513d38a270b8f99096fadaf6e8e4143e419f4646c07b1c82c671e2eb98289f40debce5348ea5efc5ee2a56ff7bf776631a8dbd"
+            }
+          },
+          "statusText": "OK",
+          "xhrStatus": "complete"
+        }
+      }
+    }
+  ],
+  "Clients": [
+    {
+      "roles": [
+        "test"
+      ],
+      "clientID": "tester",
+      "name": "tester",
+      "passwordAlgorithm": "sha512",
+      "passwordSalt": "0cce6dd3e3fe58ad1b471f3859cefc50",
+      "passwordHash": "6a9785631997f32b1805fd768ee51206ffecc8ddbe5639851debd99b78eff61c70231c0ece2b3d077c87930f5bc30840b4c15676ba3fe2bf9b4219541bb27fa9"
+    },
+    {
+      "roles": [
+        "test"
+      ],
+      "clientID": "postman",
+      "name": "postman",
+      "passwordAlgorithm": "sha512",
+      "passwordSalt": "ad7aff63dc3b5c4f347e35d111f0166a",
+      "passwordHash": "ef907ec096cb64b9a194d3c17aa19df4dff6538305443395089bb694b6e2913197dd8feb527e254dea75af0eccd10d503cb521468e476c8c9fbdabf65ca53c14"
+    }
+  ],
+  "Channels": [
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH"
+      ],
+      "type": "http",
+      "allow": [
+        "test"
+      ],
+      "whitelist": [],
+      "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "requestBody": true,
+      "responseBody": true,
+      "name": "SHR - FHIR Passthrough",
+      "description": "Get or Post a new FHIR Resource to the SHR",
+      "urlPattern": "^/SHR/fhir.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR - Get/Create/Update Resource",
+          "secured": false,
+          "host": "shr",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/fhir/fhir/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "priority": 1,
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "updatedBy": {
+        "id": "6106f756d8218700182e20b2",
+        "name": "Super User"
+      },
+      "matchContentJson": null,
+      "matchContentRegex": null,
+      "matchContentValue": null,
+      "matchContentXpath": null,
+      "pollingSchedule": null,
+      "tcpHost": null,
+      "tcpPort": null
+    },
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "PUT"
+      ],
+      "type": "http",
+      "allow": [
+        "test"
+      ],
+      "whitelist": [],
+      "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "name": "SHR - Get/Update IPS",
+      "requestBody": true,
+      "responseBody": true,
+      "description": "Get or Update the Internaional Patient Summary Bundle from the SHR",
+      "urlPattern": "^/SHR/fhir/ips.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR - Get IPS",
+          "secured": false,
+          "host": "shr",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "priority": 2,
+      "updatedBy": {
+        "id": "6106f756d8218700182e20b2",
+        "name": "Super User"
+      }
+    },
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE",
+        "PUT"
+      ],
+      "type": "http",
+      "allow": [
+        "test"
+      ],
+      "whitelist": [],
+      "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "updatedBy": {
+        "id": "6106f756d8218700182e20b2",
+        "name": "Super User"
+      },
+      "requestBody": true,
+      "responseBody": true,
+      "description": "Get or Update the Lab Workflow Bundles in the SHR",
+      "urlPattern": "^/SHR/lab.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR - Get IPS",
+          "secured": false,
+          "host": "shr",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/lab/lab/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "priority": 3,
+      "name": "SHR Lab",
+      "matchContentRegex": null,
+      "matchContentXpath": null,
+      "matchContentValue": null,
+      "matchContentJson": null,
+      "pollingSchedule": null,
+      "tcpHost": null,
+      "tcpPort": null
+    },
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE",
+        "PUT"
+      ],
+      "type": "http",
+      "allow": [
+        "openmrs",
+        "test"
+      ],
+      "whitelist": [],
+      "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "requestBody": true,
+      "responseBody": true,
+      "name": "Add or Get Resource Data From/To openCR",
+      "description": "Add or Get Resource Data From/To openCR",
+      "urlPattern": "^/CR/fhir.*$",
+      "matchContentRegex": null,
+      "matchContentXpath": null,
+      "matchContentValue": null,
+      "matchContentJson": null,
+      "pollingSchedule": null,
+      "tcpHost": null,
+      "tcpPort": null,
+      "rewriteUrlsConfig": [],
+      "alerts": [],
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "Add/Get Resources",
+          "secured": false,
+          "host": "shr",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/CR\\/fhir/fhir/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "updatedBy": {
+        "id": "6106f756d8218700182e20b2",
+        "name": "Super User"
+      },
+      "priority": 4
+    }
+  ],
+  "Mediators": [
+    {
+      "urn": "urn:mediator:shared-health-record",
+      "version": "0.0.1",
+      "name": "Shared Health Record",
+      "description": "Shared Health Record",
+      "config": {
+        "fhirServer": {
+          "username": "",
+          "password": "",
+          "baseURL": "http://shr-fhir:8080/fhir"
+        },
+        "clientRegistry": {
+          "username": "",
+          "password": "",
+          "url": "http://openhim-core:5001/CR/fhir"
+        }
+      },
+      "defaultChannelConfig": [
+        {
+          "methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH"
+          ],
+          "type": "http",
+          "allow": [],
+          "whitelist": [],
+          "authType": "private",
+          "matchContentTypes": [],
+          "properties": [],
+          "txViewAcl": [],
+          "txViewFullAcl": [],
+          "txRerunAcl": [],
+          "status": "enabled",
+          "rewriteUrls": false,
+          "addAutoRewriteRules": true,
+          "autoRetryEnabled": false,
+          "autoRetryPeriodMinutes": 60,
+          "requestBody": true,
+          "responseBody": true,
+          "name": "SHR - FHIR Passthrough",
+          "description": "Get or Post a new FHIR Resource to the SHR",
+          "urlPattern": "^/SHR/fhir.*$",
+          "routes": [
+            {
+              "type": "http",
+              "status": "enabled",
+              "forwardAuthHeader": false,
+              "name": "SHR - Get/Create/Update Resource",
+              "secured": false,
+              "host": "shr",
+              "port": 3000,
+              "path": "",
+              "pathTransform": "s/SHR\\/fhir/fhir/g",
+              "primary": true,
+              "username": "",
+              "password": ""
+            }
+          ],
+          "priority": 1,
+          "alerts": [],
+          "rewriteUrlsConfig": []
+        },
+        {
+          "methods": [
+            "GET",
+            "POST",
+            "PUT"
+          ],
+          "type": "http",
+          "allow": [],
+          "whitelist": [],
+          "authType": "private",
+          "matchContentTypes": [],
+          "properties": [],
+          "txViewAcl": [],
+          "txViewFullAcl": [],
+          "txRerunAcl": [],
+          "status": "enabled",
+          "rewriteUrls": false,
+          "addAutoRewriteRules": true,
+          "autoRetryEnabled": false,
+          "autoRetryPeriodMinutes": 60,
+          "name": "SHR - Get/Update IPS",
+          "requestBody": true,
+          "responseBody": true,
+          "description": "Get or Update the Internaional Patient Summary Bundle from the SHR",
+          "urlPattern": "^/SHR/fhir/ips.*$",
+          "routes": [
+            {
+              "type": "http",
+              "status": "enabled",
+              "forwardAuthHeader": false,
+              "name": "SHR - Get IPS",
+              "secured": false,
+              "host": "shr",
+              "port": 3000,
+              "path": "",
+              "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",
+              "primary": true,
+              "username": "",
+              "password": ""
+            }
+          ],
+          "alerts": [],
+          "rewriteUrlsConfig": [],
+          "priority": 2
+        }
+      ],
+      "endpoints": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR Endpoint",
+          "host": "shr",
+          "path": "/",
+          "port": 3000,
+          "primary": true
+        }
+      ],
+      "configDefs": [],
+      "_uptime": 681.948116792,
+      "_lastHeartbeat": "2021-08-04T16:56:10.471Z"
+    },
+    {
+      "urn": "urn:uuid:client_registry",
+      "version": "0.1.1",
+      "name": "Client Registry",
+      "description": "Open Client Registry",
+      "config": {
+        "fhirServer": {
+          "username": "hapi",
+          "password": "hapi",
+          "baseURL": "http://opencr-fhir:8080/fhir"
+        },
+        "elastic": {
+          "server": "http://es:9200",
+          "username": "",
+          "password": "",
+          "max_compilations_rate": "10000/1m",
+          "index": "patients"
+        },
+        "matching": {
+          "tool": "elasticsearch"
+        }
+      },
+      "configDefs": [
+        {
+          "values": [],
+          "template": [
+            {
+              "type": "string",
+              "description": "The base URL (e.g. http://localhost:8080/hapi/fhir)",
+              "displayName": "Base URL",
+              "param": "baseURL"
+            },
+            {
+              "type": "string",
+              "description": "Username required to access FHIR server",
+              "displayName": "Username",
+              "param": "username"
+            },
+            {
+              "type": "password",
+              "description": "Password required to access FHIR server",
+              "displayName": "Password",
+              "param": "password"
+            }
+          ],
+          "param": "fhirServer",
+          "displayName": "FHIR Server",
+          "description": "FHIR Server Configuration Details",
+          "type": "struct"
+        },
+        {
+          "values": [],
+          "template": [
+            {
+              "type": "string",
+              "description": "The base URL (e.g. http://localhost:9200)",
+              "displayName": "Base URL",
+              "param": "server"
+            },
+            {
+              "type": "string",
+              "description": "Username required to access elasticsearch server",
+              "displayName": "Username",
+              "param": "username"
+            },
+            {
+              "type": "password",
+              "description": "Password required to access elasticsearch server",
+              "displayName": "Password",
+              "param": "password"
+            },
+            {
+              "type": "string",
+              "description": "Number of requests to compile per minute",
+              "displayName": "Maximum Compilations Rate",
+              "param": "max_compilations_rate"
+            },
+            {
+              "type": "string",
+              "description": "index to use for data storage",
+              "displayName": "Index Name",
+              "param": "index"
+            }
+          ],
+          "param": "elastic",
+          "displayName": "Elasticsearch Server",
+          "description": "Elasticsearch Server Configuration Details",
+          "type": "struct"
+        },
+        {
+          "values": [],
+          "template": [
+            {
+              "type": "option",
+              "values": [
+                "mediator",
+                "elasticsearch"
+              ],
+              "description": "Tool to Use for Matching",
+              "displayName": "Tool to Use for Matching",
+              "param": "tool"
+            }
+          ],
+          "param": "matching",
+          "displayName": "FHIR Server",
+          "description": "FHIR Server Configuration Details",
+          "type": "struct"
+        }
+      ],
+      "defaultChannelConfig": [
+        {
+          "methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "type": "http",
+          "allow": [
+            "openmrs"
+          ],
+          "whitelist": [],
+          "authType": "private",
+          "matchContentTypes": [],
+          "properties": [],
+          "txViewAcl": [],
+          "txViewFullAcl": [],
+          "txRerunAcl": [],
+          "status": "enabled",
+          "rewriteUrls": false,
+          "addAutoRewriteRules": true,
+          "autoRetryEnabled": false,
+          "autoRetryPeriodMinutes": 60,
+          "requestBody": true,
+          "responseBody": true,
+          "name": "Add or Get Resource Data From/To openCR",
+          "description": "Add or Get Resource Data From/To openCR",
+          "urlPattern": "/fhir",
+          "matchContentRegex": null,
+          "matchContentXpath": null,
+          "matchContentValue": null,
+          "matchContentJson": null,
+          "pollingSchedule": null,
+          "tcpHost": null,
+          "tcpPort": null,
+          "rewriteUrlsConfig": [],
+          "alerts": [],
+          "routes": [
+            {
+              "type": "http",
+              "status": "enabled",
+              "forwardAuthHeader": false,
+              "name": "Add/Get Resources",
+              "secured": false,
+              "host": "shr",
+              "port": 3000,
+              "path": "",
+              "pathTransform": "",
+              "primary": true,
+              "username": "",
+              "password": ""
+            }
+          ],
+          "updatedBy": {
+            "id": "5d5d94607329d74724442f67",
+            "name": "Super User"
+          }
+        }
+      ],
+      "endpoints": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "Activate Client Registry",
+          "host": "shr",
+          "path": "/fhir",
+          "port": 3000,
+          "primary": true
+        }
+      ],
+      "_uptime": 151.466490208,
+      "_lastHeartbeat": "2021-08-04T22:00:11.129Z",
+      "_configModifiedTS": "2017-12-15T02:52:49.054Z"
+    }
+  ],
+  "ContactGroups": []
+}

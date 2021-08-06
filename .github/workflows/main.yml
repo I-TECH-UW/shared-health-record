@@ -51,7 +51,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Pull containers
-        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db
+        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman
 
       - name: Cache containers
         uses: satackey/action-docker-layer-caching@v0.0.11
@@ -79,19 +79,17 @@ jobs:
 
       - name: Show containers
         run: docker-compose -f "ci.docker-compose.yml" ps
+      
+      # Newman Container Approach
+      - name: Run General Tests Collection
+        env: 
+          POSTMAN_COLLECTION: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd
+        run: docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman 
 
-      - uses: matt-ball/newman-action@master
-        with:
-          collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd 
-          environment: .postman/github.postman_environment.json
-          insecure: true
-
-      # TODO: Enable once correct OpenHIM settings are uploaded to docker container
-      # - uses: matt-ball/newman-action@master
-      #   with:
-      #     collection: https://www.getpostman.com/collections/ff5183adca5b5e720338
-      #     environment: .postman/github.postman_environment.json
-      #     insecure: true
+      - name: Run Laboratory Workflows Collection
+        env: 
+          POSTMAN_COLLECTION: https://www.getpostman.com/collections/ff5183adca5b5e720338
+        run: docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman
 
       - name: Stop containers
         if: always()
