@@ -81,17 +81,17 @@ jobs:
         run: docker-compose -f "ci.docker-compose.yml" ps
       
       # Github action approach
-      - uses: matt-ball/newman-action@master
-        with:
-          collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd 
-          environment: .postman/github.postman_environment.json
-          insecure: true
+      # - uses: matt-ball/newman-action@master
+      #   with:
+      #     collection: https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd 
+      #     environment: .postman/github.postman_environment.json
+      #     insecure: true
 
-      - uses: matt-ball/newman-action@master
-        with:
-          collection: https://www.getpostman.com/collections/ff5183adca5b5e720338
-          environment: .postman/github.postman_environment.json
-          insecure: true
+      # - uses: matt-ball/newman-action@master
+      #   with:
+      #     collection: https://www.getpostman.com/collections/ff5183adca5b5e720338
+      #     environment: .postman/github.postman_environment.json
+      #     insecure: true
       
       # Newman Container Approach
       - name: Run General Tests Collection
