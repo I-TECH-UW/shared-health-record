@@ -1,6 +1,6 @@
 {
   "urn": "urn:mediator:shared-health-record",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
   "defaultChannelConfig": [
@@ -69,7 +69,7 @@
       "name": "SHR - Get/Update IPS",
       "requestBody": true,
       "responseBody": true,
-      "description": "Get or Update the Internaional Patient Summary Bundle from the SHR",
+      "description": "Get or Update the International Patient Summary Bundle from the SHR",
       "urlPattern": "^/SHR/fhir/ips.*$",
       "routes": [
         {
@@ -95,6 +95,7 @@
       "methods": [
         "GET",
         "POST",
+        "DELETE",
         "PUT"
       ],
       "type": "http",
@@ -102,30 +103,26 @@
       "authType": "private",
       "matchContentTypes": [],
       "properties": [],
-      "txViewAcl": [],
-      "txViewFullAcl": [],
-      "txRerunAcl": [],
       "status": "enabled",
       "rewriteUrls": false,
       "addAutoRewriteRules": true,
       "autoRetryEnabled": false,
       "autoRetryPeriodMinutes": 60,
-      "name": "SHR - Laboratory",
       "requestBody": true,
       "responseBody": true,
-      "description": "Get or Update the Laboratory Order Bundle in the SHR",
-      "urlPattern": "^/SHR/fhir/ips.*$",
+      "description": "Get or Update the Lab Workflow Bundles in the SHR",
+      "urlPattern": "^/SHR/lab.*$",
       "routes": [
         {
           "type": "http",
           "status": "enabled",
           "forwardAuthHeader": false,
-          "name": "SHR - Laboratory",
+          "name": "SHR - Get Lab Bundle",
           "secured": false,
-          "host": "host.docker.internal",
+          "host": "shr",
           "port": 3000,
           "path": "",
-          "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",
+          "pathTransform": "s/SHR\\/lab/lab/g",
           "primary": true,
           "username": "",
           "password": ""
@@ -133,7 +130,8 @@
       ],
       "alerts": [],
       "rewriteUrlsConfig": [],
-      "priority": 3
+      "priority": 3,
+      "name": "SHR Lab"
     }
   ],
   "endpoints": [

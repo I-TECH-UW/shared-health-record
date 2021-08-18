@@ -14,7 +14,6 @@ services:
     volumes:
       - ./config/config_ci.json:/app/config/config_docker.json
       - ./config/mediator_ci.json:/app/config/mediator_docker.json
-    entrypoint:  ["./docker/ci-entrypoint.sh"]
 
   shr-fhir:
     image: hapiproject/hapi:latest
@@ -53,6 +52,13 @@ services:
       - "mongo-data:/data/db"
     restart: unless-stopped
 
+  # OpenHIM Config
+  openhim-config:
+    container_name: openhim-config
+    image: ghcr.io/i-tech-uw/openhim-config:latest
+    volumes:
+      - ./config/openhim/test-openhim-config.json:/app/test-openhim-config.json
+
   # Newman Tests
   newman:
     image: postman/newman
@@ -75,6 +81,7 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+    
 volumes:
   mongo-data:
   hapi-data:

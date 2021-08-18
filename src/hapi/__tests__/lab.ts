@@ -42,5 +42,20 @@ describe('saveBundle', () => {
 
     expect(result).toEqual(transactionResultBundle)
   });
+
+  it('should return 400 for invalid bundle', async () => {
+    // Load data
+    let docBundle: R4.IBundle = {resourceType: "Bundle"}
+
+    // Mock server
+    const scope = nock(fhirUrl)
+      .post('', 
+        body => (body.resourceType == "Bundle" &&
+                body.entry[0].request.method == "PUT"))
+      .once().reply(400)
+
+    let result = await saveBundle(docBundle)
+    
+  });
 });
   

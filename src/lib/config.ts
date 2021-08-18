@@ -1,6 +1,6 @@
 import nconf from 'nconf';
 
-const env = process.env.NODE_ENV || 'dev';
+const env = process.env.NODE_ENV || 'development';
 
 nconf.argv()
   .env()

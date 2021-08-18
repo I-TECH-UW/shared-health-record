@@ -14,6 +14,8 @@ const SHR_URL = config.get('fhirServer:baseURL');
 
 const fhirWrapper = require('../lib/fhir')();
 
+let uri = URI(config.get('fhirServer:baseURL'));
+
 // TODO: change source utils to use got() & await pattern
 // Promisify fns
 let create = util.promisify(fhirWrapper.create)
@@ -54,6 +56,22 @@ export async function getResource(type: string, id: string, params?: any, noCach
 // TODO
 export async function saveResource() {
   
+}
+
+export async function getTaskBundle(patientId: string, locationId: string) {
+  let uri = URI(config.get('fhirServer:baseURL'));
+ 
+  logger.info(`Getting Bundle for patient ${patientId} and location ${locationId}`);
+
+  let requestUri = uri
+    .segment('Task')
+    .addQuery('patient', patientId)
+    .addQuery('owner', locationId)
+    .addQuery('_include', '*')
+    .addQuery('_revinclude', '*')
+
+  // Get Task and Associated Resources
+  return await got.get(uri.toString()).json()
 }
 
 export async function saveBundle(bundle: R4.IBundle) {

@@ -1,0 +1,55 @@
+{
+  "urn": "urn:mediator:shared-health-record",
+  "version": "0.2.1-dev",
+  "name": "Shared Health Record",
+  "description": "Shared Health Record",
+  "defaultChannelConfig": [
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH"
+      ],
+      "type": "http",
+      "authType": "private",
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "requestBody": true,
+      "responseBody": true,
+      "name": "SHR - Passthrough",
+      "description": "Get or Post a new FHIR Resource to the SHR",
+      "urlPattern": "^/SHR/.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR - Get/Create/Update Resource",
+          "secured": false,
+          "host": "host.docker.internal",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR//g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "priority": 1
+    }
+  ],
+  "endpoints": [
+    {
+      "name": "SHR Endpoint",
+      "host": "host.docker.internal",
+      "path": "/",
+      "port": 3000,
+      "primary": true,
+      "forwardAuthHeader": false,
+      "status": "enabled",
+      "type": "http"
+    }
+  ]
+}
