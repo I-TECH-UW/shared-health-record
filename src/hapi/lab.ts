@@ -74,7 +74,9 @@ export async function getTaskBundle(patientId: string, locationId: string) {
   return await got.get(uri.toString()).json()
 }
 
-export async function saveBundle(bundle: R4.IBundle) {
+
+
+export async function saveLabBundle(bundle: R4.IBundle) {
   let uri = URI(config.get('fhirServer:baseURL'));
 
   logger.info(`Posting ${bundle.resourceType} to ${uri.toString()}`);

@@ -3,7 +3,7 @@ import got from 'got/dist/source';
 import { config } from '../../lib/config';
 
 import nock from 'nock';
-import {getResource, saveBundle} from '../lab'
+import {getResource, saveLabBundle} from '../lab'
 
 const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
 let fhirUrl: string = config.get('fhirServer:baseURL')
@@ -22,7 +22,7 @@ describe('getResource', () => {
   })
 });
 
-describe('saveBundle', () => {
+describe('saveLabBundle', () => {
   it('should save a a document bundle', async () => {
     // Load data
     let docBundle: R4.IBundle = await got(IG_URL+"/Bundle-example-laboratory-simple-bundle.json").json()
@@ -38,7 +38,7 @@ describe('saveBundle', () => {
                 body.entry[0].request.method == "PUT"))
       .once().reply(200, transactionResultBundle)
 
-    let result = await saveBundle(docBundle)
+    let result = await saveLabBundle(docBundle)
 
     expect(result).toEqual(transactionResultBundle)
   });
@@ -54,8 +54,19 @@ describe('saveBundle', () => {
                 body.entry[0].request.method == "PUT"))
       .once().reply(400)
 
-    let result = await saveBundle(docBundle)
+    let result = await saveLabBundle(docBundle)
     
   });
+
+});
+
+describe('getTaskBundle', () => {
+  it ('Should return a Task resource with associated resources for a target facility and patient', async () => {
+    // Load demo Task Bundle from IG
+    
+    // Mock server requests to HAPI to return demo Task Bundle
+    
+  })
+  
 });
   

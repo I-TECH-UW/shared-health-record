@@ -14,4 +14,9 @@ export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
     practitioner?: R4.IPractitioner, targetOrg?: R4.IOrganization, sourceOrg?: R4.IOrganization): R4.IBundle {
       return super.generateLabBundle(task, patient, serviceRequests, practitioner, targetOrg, sourceOrg)
   }
+
+  // Translate a Task Search Result Bundle into a Lab Doc Bundle
+  static translateTaskBundle(taskBundle: R4.IBundle): R4.IBundle {
+    return {resourceType: "Bundle"};
+  }
 }
