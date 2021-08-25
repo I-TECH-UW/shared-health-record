@@ -25,7 +25,6 @@ COPY --from=build /app/package.json /app
 COPY --from=build /app/yarn.lock /app
 COPY --from=build /app/node_modules /app/node_modules
 COPY ./config /app/config
-COPY ./docker /app/docker 
 
 RUN chmod u+x -R docker
 
