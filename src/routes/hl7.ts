@@ -37,13 +37,13 @@ router.get('/obr/list/:facilityCode', async (req: Request, res: Response) => {
 
     uri = URI(config.get("fhirConverterUrl")).segment("convert").segment("fhir")
 
-    let hl7Msg = await got.post(uri.toString(), {
-      username: config.get("mediator:client:id"),
-      password: config.get("mediator:client:password"),
-      json: bundle
-    })
+    // let hl7Msg = await got.post(uri.toString(), {
+    //   username: config.get("mediator:client:id"),
+    //   password: config.get("mediator:client:password"),
+    //   json: bundle
+    // })
 
-    return res.status(200).send(hl7Msg.body)
+    return res.status(200).send("Not Implemented Yet!")
   } catch (error) {
     return res.status(500).json(error)
   }

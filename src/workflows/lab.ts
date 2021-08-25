@@ -48,7 +48,7 @@ export class LaboratoryWorkflows {
     return ipsBundle;
   }
 
-  public async validateLabBundle(bundle: R4.IBundle) {
+  static async validateLabBundle(bundle: R4.IBundle) {
     // TODO: Validate bundle adheres to Profile
 
     // TODO: Validate Facility Codes
