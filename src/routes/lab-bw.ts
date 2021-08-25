@@ -13,17 +13,28 @@ export const router = express.Router();
 
 router.all('/', async (req: Request, res: Response) => {
   if(req.method == "POST" || req.method == "PUT") {
-    logger.info('Received a Lab Order bundle to save.')
-    let orderBundle: R4.IBundle = req.body
+    try {
+      logger.info('Received a Lab Order bundle to save.')
+      let orderBundle: R4.IBundle = req.body
+    
+      // Validate Bundle
+      if (invalidBundle(orderBundle)) {
+        return res.status(400).json(invalidBundleMessage())
+      }
   
-    // Validate Bundle
-    if (invalidBundle(orderBundle)) {
-      return res.status(400).json(invalidBundleMessage())
+      // Map locations
+  
+  
+      // Map codes
+      
+      
+      let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(orderBundle))
+      
+      return res.status(200).json(resultBundle)
+    } catch (e) {
+      return res.status(500).send(e)
     }
     
-    let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(orderBundle))
-    
-    return res.status(200).json(resultBundle)
   }
 });
 
