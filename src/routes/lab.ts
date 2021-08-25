@@ -13,7 +13,7 @@ export const router = express.Router();
 
 router.all('/', async (req: Request, res: Response) => {
   if(req.method == "GET") {
-    let task: R4.ITask = <R4.ITask>(await got("https://i-tech-uw.github.io/laboratory-workflows-ig/Task-example-laboratory-task-simple-requested.json").json())
+    let task: R4.ITask = <R4.ITask>(await got("https://b-techbw.github.io/bw-lab-ig/Task-example-laboratory-task-simple-requested.json").json())
     let patient: R4.IPatient = <R4.IPatient>(await got("https://i-tech-uw.github.io/laboratory-workflows-ig/Patient-example-laboratory-patient.json").json())
     
     // Temporary Testing Bundle
@@ -32,6 +32,12 @@ router.all('/', async (req: Request, res: Response) => {
     return res.status(200).json(resultBundle)
   }
 });
+
+router.get('/example-result', async (req: Request, res: Response) => {
+  let bundle: R4.IBundle = <R4.IBundle>(await got("https://b-techbw.github.io/bw-lab-ig/Bundle-example-bw-lab-results-bundle.json").json())
+
+  return res.status(200).send(bundle)
+})
 
 // Create a new lab order in SHR based on bundle 
 // (https://i-tech-uw.github.io/emr-lis-ig/Bundle-example-emr-lis-bundle.html)
