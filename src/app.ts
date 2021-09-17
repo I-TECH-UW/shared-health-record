@@ -37,11 +37,12 @@ function appRoutes() {
     limit: '10Mb',
     type: ['application/fhir+json', 'application/json+fhir', 'application/json']
   }));
+  
+  app.use(express.text())
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   
   app.use(cookieParser());
-
   app.use('/ips', ipsRoutes)
   app.use('/fhir', fhirRoutes)
   app.use('/lab', labRoutes)

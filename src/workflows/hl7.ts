@@ -1,8 +1,8 @@
 "use strict"
 
 import { R4 } from "@ahryman40k/ts-fhir-types";
-
-}
+import got from "got";
+import URI from "urijs";
 
 class hl7Workflows {
   constructor() {
@@ -25,11 +25,11 @@ class hl7Workflows {
 
   }
 
-  private processSearchBundle() {
+  private async processSearchBundle() {
         // Paginate through results
         let nextExists = false;
         do {
-          let searchBundle: any = await got.get(uri.toString()).json()
+          let searchBundle: any = await got.get(URI.toString()).json()
     
           if(searchBundle.entry && searchBundle.entry.length > 0) {
             for (const serviceRequest of searchBundle.entry) {

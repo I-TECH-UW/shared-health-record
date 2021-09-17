@@ -9,16 +9,22 @@ import config from "../lib/config";
 
 export const router = express.Router();
 
+// Translate ORU message to lab bundle
 router.post('/oru', async (req: Request, res: Response) => {
-  let hl7Msg = req.body
+  try {
+    let hl7Msg = req.body
 
-  // Translate into FHIR Bundle
-  let translatedBundle: R4.IBundle = await got.post(config.get("fhirConverterUrl") + "/convert/hl7v2/ORU_R01.hbs", { body: hl7Msg }).json()
+    // Translate into FHIR Bundle
+    let translatedBundle: R4.IBundle = await got.post(config.get("fhirConverterUrl") + "/convert/hl7v2/ORU_R01.hbs", { body: hl7Msg }).json()
+  
+    // Save to SHR
+    let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(translatedBundle))
+    return res.status(200).json(resultBundle)
 
-  // Save to SHR
-  let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(translatedBundle))
+  } catch (error) {
+    return res.status(500).json(error)
+  }
 
-  return res.status(200).json(resultBundle)
 })
 
 // Get list of HL7 OBR messages targeted at a given facility
