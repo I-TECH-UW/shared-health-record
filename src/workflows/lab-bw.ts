@@ -13,7 +13,7 @@ export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
     try {
       for (const e of bundle.entry!) {
         if (e.resource && e.resource!.resourceType == "ServiceRequest") {
-          e.resource = await this.translateCodings(e.resource!)
+          e.resource = await this.translatePimsCoding(e.resource!)
           e.resource = await this.translateLocations(e.resource)
         }
       }
@@ -24,17 +24,7 @@ export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
     return bundle
   }
 
-  static generateLabBundle(task: R4.ITask, patient: R4.IPatient, serviceRequests?: R4.IServiceRequest[],
-    practitioner?: R4.IPractitioner, targetOrg?: R4.IOrganization, sourceOrg?: R4.IOrganization): R4.IBundle {
-    return super.generateLabBundle(task, patient, serviceRequests, practitioner, targetOrg, sourceOrg)
-  }
-
-  // Translate a Task Search Result Bundle into a Lab Doc Bundle
-  static translateTaskBundle(taskBundle: R4.IBundle): R4.IBundle {
-    return { resourceType: "Bundle" };
-  }
-
-  static async translateCodings(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
+  static async translatePimsCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
     try {
       let pimsCoding: R4.ICoding = <R4.ICoding>sr.code!.coding!.find(e => e.system &&
         e.system! == "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-PROFILE-DICT/")

@@ -2,6 +2,18 @@ version: '2.4'
 
 services:
   # shr: Run natively using yarn, or see docker-compose.yml
+  shr:
+    container_name: shr
+    hostname: shr
+    image: test-image:latest
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=docker
+    volumes:
+      - ./config/config_ci.json:/app/config/config_docker.json
+      - ./config/mediator_ci.json:/app/config/mediator_docker.json
+
 
   shr-fhir:
     image: hapiproject/hapi:latest

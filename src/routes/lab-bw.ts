@@ -34,21 +34,6 @@ router.all('/', async (req: Request, res: Response) => {
   }
 })
 
-// Create a new lab order in SHR based on bundle 
-// (https://i-tech-uw.github.io/emr-lis-ig/Bundle-example-emr-lis-bundle.html)
-// router.post('/'), async (req: Request, res: Response) => {
-//   logger.info('Received a Lab Order bundle to save')
-//   let orderBundle: R4.IBundle = req.body
-
-//   // Validate Bundle
-//   if (invalidBundle(orderBundle)) {
-//     return res.status(400).json(invalidBundleMessage())
-//   }
-
-//   let result: any = await saveLabBundle(orderBundle)
-  
-//   return res.status(result.statusCode).json(result.body)
-// }
 
 // Get list of active orders targetting :facility
 router.get('/orders/target/:facilityId/:_lastUpdated?', (req: Request, res: Response) => {
@@ -60,16 +45,5 @@ router.get('/orders/source/:facilityId/:_lastUpdated?', (req: Request, res: Resp
     return res.status(200).send(req.url)
 })
 
-router.put('/orders/:id')
 
-// // Create resource
-// router.post('/orders', (req, res) => {
-//     saveResource(req, res)
-// })
-  
-// // Update resource
-// router.put('/:resourceType/:id', (req, res) => {
-//     saveResource(req, res)
-// })
-  
 export default router

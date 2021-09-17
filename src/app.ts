@@ -8,6 +8,7 @@ import config from './lib/config'
 import fhirRoutes from './routes/fhir'
 import ipsRoutes from './routes/ips'
 import labRoutes from './routes/lab'
+import labBwRoutes from './routes/lab-bw'
 import hl7Routes from './routes/hl7'
 
 const swaggerUi = require('swagger-ui-express')
@@ -45,7 +46,7 @@ function appRoutes() {
   app.use(cookieParser());
   app.use('/ips', ipsRoutes)
   app.use('/fhir', fhirRoutes)
-  app.use('/lab', labRoutes)
+  app.use('/lab', labBwRoutes)
   app.use('/hl7', hl7Routes)
 
   app.get('/', (req: Request, res: Response) => {
