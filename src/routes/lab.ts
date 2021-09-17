@@ -1,13 +1,13 @@
-"use strict";
+  "use strict";
 import express, { Request, Response } from "express";
 import got from "got/dist/source";
 
 import logger from '../lib/winston';
 import { R4 } from '@ahryman40k/ts-fhir-types';
 import config from '../lib/config';
-import { generateLabBundle, validateLabBundle } from "../workflows/lab";
+import { LaboratoryWorkflows } from "../workflows/lab";
 import { invalidBundleMessage, invalidBundle } from "../lib/helpers";
-import { saveBundle } from "../hapi/lab";
+import { saveLabBundle } from "../hapi/lab";
 
 export const router = express.Router();
 
@@ -17,7 +17,7 @@ router.all('/', async (req: Request, res: Response) => {
     let patient: R4.IPatient = <R4.IPatient>(await got("https://i-tech-uw.github.io/laboratory-workflows-ig/Patient-example-laboratory-patient.json").json())
     
     // Temporary Testing Bundle
-    return res.status(200).send(generateLabBundle(task, patient))
+    return res.status(200).send(LaboratoryWorkflows.generateLabBundle(task, patient))
   } else {
     logger.info('Received a Lab Order bundle to save');
     let orderBundle: R4.IBundle = req.body
@@ -26,8 +26,15 @@ router.all('/', async (req: Request, res: Response) => {
     if (invalidBundle(orderBundle)) {
       return res.status(400).json(invalidBundleMessage())
     }
-  
-    let resultBundle: R4.IBundle = <R4.IBundle>(await saveBundle(orderBundle))
+
+    let resultBundle: R4.IBundle
+
+    try {
+      resultBundle = <R4.IBundle>(await saveLabBundle(orderBundle))
+    } catch (error) {
+      logger.error(error)
+      return res.status(500).send(error)
+    }
     
     return res.status(200).json(resultBundle)
   }
@@ -50,7 +57,7 @@ router.get('/example-result', async (req: Request, res: Response) => {
 //     return res.status(400).json(invalidBundleMessage())
 //   }
 
-//   let result: any = await saveBundle(orderBundle)
+//   let result: any = await saveLabBundle(orderBundle)
   
 //   return res.status(result.statusCode).json(result.body)
 // }

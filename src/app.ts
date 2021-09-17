@@ -1,21 +1,21 @@
-import express, {Request, Response} from 'express';
-import medUtils from 'openhim-mediator-utils';
-import _ from 'lodash';
-import fs from 'fs';
-import cookieParser from 'cookie-parser';
-import logger from './lib/winston';
-import config from './lib/config';
-import fhirRoutes from './routes/fhir';
-import ipsRoutes from './routes/ips';
+import express, {Request, Response} from 'express'
+import medUtils from 'openhim-mediator-utils'
+import _ from 'lodash'
+import fs from 'fs'
+import cookieParser from 'cookie-parser'
+import logger from './lib/winston'
+import config from './lib/config'
+import fhirRoutes from './routes/fhir'
+import ipsRoutes from './routes/ips'
 import labRoutes from './routes/lab'
+import hl7Routes from './routes/hl7'
 
-const swaggerUi = require('swagger-ui-express');
-const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express')
+const swaggerJSDoc = require('swagger-jsdoc')
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
-let authorized = false;
-
+let authorized = false
 
 const swaggerSpec = swaggerJSDoc({
   swaggerDefinition: {
@@ -37,14 +37,16 @@ function appRoutes() {
     limit: '10Mb',
     type: ['application/fhir+json', 'application/json+fhir', 'application/json']
   }));
+  
+  app.use(express.text())
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   
   app.use(cookieParser());
-
   app.use('/ips', ipsRoutes)
   app.use('/fhir', fhirRoutes)
   app.use('/lab', labRoutes)
+  app.use('/hl7', hl7Routes)
 
   app.get('/', (req: Request, res: Response) => {
     return res.redirect('/api-docs');
@@ -83,7 +85,8 @@ export function start(callback: Function) {
   // Loads OpenHIM mediator config
   const mediatorConfig = require(`${__dirname}/../config/mediator_${env}`);
 
-  logger.info('Running client registry as a mediator with' + `${__dirname}/../config/mediator`);
+  logger.info('Running SHR as a mediator with' + `${__dirname}/../config/mediator_${env}`);
+  
   medUtils.registerMediator(config.get('mediator:api'), mediatorConfig, (err: Error) => {
     if (err) {
       logger.error('Failed to register mediator at '+config.get('mediator:api:apiURL')+'\nCheck your config!\n');
