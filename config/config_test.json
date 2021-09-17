@@ -1,0 +1,18 @@
+{
+  "app": {
+    "port": 3000
+  },
+  "mediator": {
+    "api": {
+      "username": "root@openhim.org",
+      "password": "openhim-password",
+      "apiURL": "https://openhim-core:8080",
+      "trustSelfSigned": true,
+      "urn": ""
+    }
+  },
+  "fhirServer": {
+    "mpiURL": "http://openhim-core:5000/CR/fhir",
+    "baseURL": "http://shr-fhir:8080/fhir"
+  }
+}

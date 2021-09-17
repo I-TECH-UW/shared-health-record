@@ -10,11 +10,7 @@ import util = require('util');
 import config from '../lib/config';
 import logger = require("../lib/winston");
 
-const SHR_URL = config.get('fhirServer:baseURL');
-
 const fhirWrapper = require('../lib/fhir')();
-
-let uri = URI(config.get('fhirServer:baseURL'));
 
 // TODO: change source utils to use got() & await pattern
 // Promisify fns
@@ -88,12 +84,14 @@ export async function saveLabBundle(bundle: R4.IBundle) {
   }]
 
   let entry: R4.IBundle_Entry
-  for(entry of bundle.entry!) {
-    entry.request = {
-      method: R4.Bundle_RequestMethodKind._put,
-      url: `${entry.resource!.resourceType}/${entry.resource!.id!}`
+  if(bundle.entry) {
+    for(entry of bundle.entry!) {
+      entry.request = {
+        method: R4.Bundle_RequestMethodKind._put,
+        url: `${entry.resource!.resourceType}/${entry.resource!.id!}`
+      }  
     }  
-  }  
+  }
 
   return await got.post(uri.toString(), {json: bundle}).json()
 }
