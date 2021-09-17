@@ -26,8 +26,6 @@ COPY --from=build /app/yarn.lock /app
 COPY --from=build /app/node_modules /app/node_modules
 COPY ./config /app/config
 
-RUN chmod u+x -R docker
-
 ARG NODE_ENV=docker
 ENV NODE_ENV=$NODE_ENV
 
