@@ -17,7 +17,8 @@
   },
   "fhirServer": {
     "mpiURL": "http://localhost:5001/CR/fhir",
-    "baseURL": "http://localhost:8081/fhir"
+    "baseURL": "http://localhost:8081/fhir", 
+    "simulateResulting": true
   },
   "fhirConverterUrl": "http://localhost:5001/72f"
 }

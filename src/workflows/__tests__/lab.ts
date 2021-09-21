@@ -11,14 +11,6 @@ beforeAll(async () => {
   patient = await got(IG_URL+"/Patient-example-laboratory-patient.json").json()
 });
 
-// TODO
-describe('validateLabBundle', () => {
-  it('should validate valid example bundle', async () => {
-    let bundle: R4.IBundle = await got(IG_URL+"/Bundle-example-laboratory-simple-bundle.json").json()
-    expect(LaboratoryWorkflows.validateLabBundle(bundle)).toBeTruthy()
-  })
-});
-
 describe('generateLabBundle', () => {
   it ('should return a Document Bundle with the correct type', async () => {
     let task: R4.ITask = await got(IG_URL+"/Task-example-laboratory-task-simple-requested.json").json();

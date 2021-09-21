@@ -71,7 +71,7 @@ export async function getTaskBundle(patientId: string, locationId: string) {
 
 
 
-export async function saveLabBundle(bundle: R4.IBundle, addResults: boolean): R4.IBundle {
+export async function saveLabBundle(bundle: R4.IBundle, addResults: boolean): Promise<R4.IBundle> {
   let uri = URI(config.get('fhirServer:baseURL'));
 
   logger.info(`Posting ${bundle.resourceType} to ${uri.toString()}`);
@@ -106,7 +106,7 @@ export async function saveLabBundle(bundle: R4.IBundle, addResults: boolean): R4
   return got.post(uri.toString(), { json: bundle }).json()
 }
 
-function generateIpmsResults(sr: R4.IServiceRequest): R4.IBundle_Entry[] {
+export function generateIpmsResults(sr: R4.IServiceRequest): R4.IBundle_Entry[] {
   let srId = sr.id!
   let drId = "ipms-dr-" + uuidv4()
   let obsId = "ipms-obs-" + uuidv4()

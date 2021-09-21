@@ -8,13 +8,12 @@ let patient: R4.IPatient
 
 jest.mock("fhirclient/lib/Client");
 
-beforeAll(async () => {
-  patient = await got(IG_URL+"/Patient-example-laboratory-patient.json").json()
-});
-
 describe('translatePimsCoding', () => {
-  it('should translate a given lab test PIMS coding to ciel, loinc, and IPMS', () => {
-    let getServiceRequest = got(IG_URL+"/ServiceRequest-example-laboratory-service-request.json").json()
-
+  it('should translate a given lab test PIMS coding to ciel, loinc, and IPMS', async () => {
+    let serviceRequest = <R4.IServiceRequest> (await got.get(IG_URL+"/ServiceRequest-example-bw-pims-service-request-1.json").json())
+    
+    let result = await LaboratoryWorkflowsBw.translatePimsCoding(serviceRequest)
+    
+    expect(result).toBeDefined
   });
 });
