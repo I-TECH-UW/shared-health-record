@@ -156,12 +156,7 @@ module.exports = () => ({
       .segment(resource)
       .toString();
     const options = {
-      url,
-      withCredentials: true,
-      auth: {
-        username: config.get('fhirServer:username'),
-        password: config.get('fhirServer:password'),
-      },
+      url
     };
     request.delete(options, (err, res, body) => {
       if (err) {
@@ -185,12 +180,7 @@ module.exports = () => ({
       headers: {
         'Content-Type': 'application/json',
       },
-      withCredentials: true,
-      auth: {
-        username: config.get('fhirServer:username'),
-        password: config.get('fhirServer:password'),
-      },
-      json: resourceData,
+      json: resourceData
     };
     request.post(options, (err, res, body) => {
       if (res.statusCode < 200 || res.statusCode > 299) {
@@ -230,12 +220,8 @@ module.exports = () => ({
       headers: {
         'Content-Type': 'application/json',
       },
-      withCredentials: true,
-      auth: {
-        username: config.get('fhirServer:username'),
-        password: config.get('fhirServer:password'),
-      },
-      json: resource,
+      withCredentials: false,
+      json: resource
     };
     request.put(options, (err, res, body) => {
       let code;
@@ -263,11 +249,6 @@ module.exports = () => ({
         url,
         headers: {
           'Content-Type': 'application/json',
-        },
-        withCredentials: true,
-        auth: {
-          username: config.get('fhirServer:username'),
-          password: config.get('fhirServer:password'),
         },
         json: resourceParameters,
       };

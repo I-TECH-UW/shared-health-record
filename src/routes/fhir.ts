@@ -63,15 +63,15 @@ router.post('/', (req, res) => {
         code = 500;
       }
 
-      return res.status(code).json([results.patients.body, results.patients.body]);
+      return res.status(code).json([err, results]);
     });
   } catch (error) {
     return res.status(500).json(error)
   }
 });
 
-  // Create resource
-  router.post('/:resourceType', (req, res) => {
+// Create resource
+router.post('/:resourceType', (req, res) => {
   saveResource(req, res);
 });
 
