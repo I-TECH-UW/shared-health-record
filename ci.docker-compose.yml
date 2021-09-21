@@ -1,7 +1,6 @@
 version: '2.4'
 
 # Docker Compose for Github CI setup
-#   This file builds the shr image from source
 services:
   shr:
     container_name: shr

@@ -1,20 +1,8 @@
 {
   "urn": "urn:mediator:shared-health-record",
-  "version": "1.1.0-dev",
+  "version": "0.1.1",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
-  "config": {
-    "fhirServer": {
-      "username": "",
-      "password": "",
-      "baseURL": "http://localhost:8081/fhir"
-    },
-    "clientRegistry": {
-      "username": "",
-      "password": "",
-      "url": "http://localhost:5000/CR/fhir"
-    }
-  },
   "defaultChannelConfig": [
     {
       "methods": [
@@ -24,13 +12,21 @@
         "PATCH"
       ],
       "type": "http",
+      "whitelist": [],
       "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
       "status": "enabled",
       "rewriteUrls": false,
       "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
       "requestBody": true,
       "responseBody": true,
-      "name": "SHR - Passthrough",
+      "name": "SHR - FHIR Passthrough",
       "description": "Get or Post a new FHIR Resource to the SHR",
       "urlPattern": "^/SHR/fhir.*$",
       "routes": [
@@ -40,7 +36,7 @@
           "forwardAuthHeader": false,
           "name": "SHR - Get/Create/Update Resource",
           "secured": false,
-          "host": "host.docker.internal",
+          "host": "shr",
           "port": 3000,
           "path": "",
           "pathTransform": "s/SHR\\/fhir/fhir/g",
@@ -141,7 +137,7 @@
   "endpoints": [
     {
       "name": "SHR Endpoint",
-      "host": "host.docker.internal",
+      "host": "shr",
       "path": "/",
       "port": 3000,
       "primary": true,

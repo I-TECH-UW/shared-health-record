@@ -95,11 +95,7 @@ module.exports = () => ({
       callback => {
         const options = {
           url,
-          withCredentials: true,
-          auth: {
-            username: config.get('fhirServer:username'),
-            password: config.get('fhirServer:password'),
-          },
+          withCredentials: false,
           headers
         };
         url = false;
@@ -160,12 +156,7 @@ module.exports = () => ({
       .segment(resource)
       .toString();
     const options = {
-      url,
-      withCredentials: true,
-      auth: {
-        username: config.get('fhirServer:username'),
-        password: config.get('fhirServer:password'),
-      },
+      url
     };
     request.delete(options, (err, res, body) => {
       if (err) {
@@ -179,9 +170,7 @@ module.exports = () => ({
     });
   },
 
-  saveResource({
-    resourceData
-  }, callback) {
+  saveResource(resourceData, callback) {
     logger.info('Saving resource data');
     const url = URI(config.get('fhirServer:baseURL')).toString();
     const options = {
@@ -189,14 +178,10 @@ module.exports = () => ({
       headers: {
         'Content-Type': 'application/json',
       },
-      withCredentials: true,
-      auth: {
-        username: config.get('fhirServer:username'),
-        password: config.get('fhirServer:password'),
-      },
-      json: resourceData,
+      json: resourceData
     };
     request.post(options, (err, res, body) => {
+      let code = res.statusCode
       if (res.statusCode < 200 || res.statusCode > 299) {
         logger.error(JSON.stringify(body, 0, 2));
         err = true;
@@ -206,7 +191,7 @@ module.exports = () => ({
         return callback(err, body);
       }
       logger.info('Resource(s) data saved successfully');
-      callback(err, body);
+      callback(code, err, res, body);
     });
   },
 
@@ -234,12 +219,8 @@ module.exports = () => ({
       headers: {
         'Content-Type': 'application/json',
       },
-      withCredentials: true,
-      auth: {
-        username: config.get('fhirServer:username'),
-        password: config.get('fhirServer:password'),
-      },
-      json: resource,
+      withCredentials: false,
+      json: resource
     };
     request.put(options, (err, res, body) => {
       let code;
@@ -267,11 +248,6 @@ module.exports = () => ({
         url,
         headers: {
           'Content-Type': 'application/json',
-        },
-        withCredentials: true,
-        auth: {
-          username: config.get('fhirServer:username'),
-          password: config.get('fhirServer:password'),
         },
         json: resourceParameters,
       };
