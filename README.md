@@ -20,9 +20,24 @@ yarn build
 yarn start
 ```
 
-### Docker Setup
+### Docker Compose Entry
+```sh
+  shr:
+    container_name: shr
+    hostname: shr
+    image: ghcr.io/i-tech-uw/shared-health-record:latest
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=docker
+    volumes:
+      - ./config/config_docker.json:/app/config/config_docker.json
+      - ./config/config_docker.json:/app/config/mediator_docker.json
+```
 
+See the `docker-compose.yml` files for examples of integration with OpenHIM and other OpenHIE components
 
 ## References
-Supports the [International Patient Summary](http://hl7.org/fhir/uv/ips/)
-Supports the [OpenHIE Laboratory Workflows](https://i-tech-uw.github.io/emr-lis-ig/)
+1. Supports the [International Patient Summary](http://hl7.org/fhir/uv/ips/)
+
+2. Supports the [OpenHIE Laboratory Workflows](https://i-tech-uw.github.io/emr-lis-ig/)
