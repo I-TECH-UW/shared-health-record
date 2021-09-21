@@ -58,17 +58,23 @@ jobs:
         continue-on-error: true
 
       - name: Start containers
-        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core
+        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core 
         
-      - name: Sleep for 30 seconds
-        run: sleep 30s
+      - name: Load openhim config
+        run: docker-compose -f ci.docker-compose.yml up -d openhim-config
+
+      - name: Sleep for 60 seconds
+        run: sleep 60s
         shell: bash
+
+      - name: Display docker logs for openhim config
+        run: docker-compose -f docker-compose.ci.yml logs openhim-config
 
       - name: Run SHR image
         run: docker-compose -f ci.docker-compose.yml up -d shr
       
-      - name: Sleep for 30 seconds
-        run: sleep 30s
+      - name: Sleep for 10 seconds
+        run: sleep 10s
         shell: bash
 
       - name: Show SHR Log

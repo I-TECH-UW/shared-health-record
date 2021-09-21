@@ -38,9 +38,6 @@ router.get('/obr/list/:facilityCode', async (req: Request, res: Response) => {
       .addQuery('performer', req.params.facilityCode)
       .addQuery('status', 'active')
 
-
-
-
     uri = URI(config.get("fhirConverterUrl")).segment("convert").segment("fhir")
 
     // let hl7Msg = await got.post(uri.toString(), {
