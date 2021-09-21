@@ -56,7 +56,7 @@ services:
     container_name: openhim-config
     image: ghcr.io/i-tech-uw/openhim-config:latest
     volumes:
-      - ./configs/openhim/test-openhim-config.json:/app/test-openhim-config.json
+      - ./config/openhim/test-openhim-config.json:/app/test-openhim-config.json
 
   # Newman Tests
   newman:
