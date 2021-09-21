@@ -68,7 +68,7 @@ jobs:
         shell: bash
 
       - name: Display docker logs for openhim config
-        run: docker-compose -f docker-compose.ci.yml logs openhim-config
+        run: docker-compose -f ci.docker-compose.yml logs openhim-config
 
       - name: Run SHR image
         run: docker-compose -f ci.docker-compose.yml up -d shr
