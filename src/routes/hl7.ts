@@ -18,7 +18,7 @@ router.post('/oru', async (req: Request, res: Response) => {
     let translatedBundle: R4.IBundle = await got.post(config.get("fhirConverterUrl") + "/convert/hl7v2/ORU_R01.hbs", { body: hl7Msg }).json()
   
     // Save to SHR
-    let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(translatedBundle))
+    let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(translatedBundle, false))
     return res.status(200).json(resultBundle)
 
   } catch (error) {
