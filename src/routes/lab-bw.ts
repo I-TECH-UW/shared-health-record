@@ -24,7 +24,7 @@ router.all('/', async (req: Request, res: Response) => {
       // Add BW Mappings
       orderBundle = await LaboratoryWorkflowsBw.addBwMappings(orderBundle)
       
-      let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(orderBundle))
+      let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(orderBundle, config.get('fhirServer:simulateResulting')))
       
       return res.status(200).json(resultBundle)
     } catch (e) {

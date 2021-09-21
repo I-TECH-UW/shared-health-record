@@ -95,11 +95,7 @@ module.exports = () => ({
       callback => {
         const options = {
           url,
-          withCredentials: true,
-          auth: {
-            username: config.get('fhirServer:username'),
-            password: config.get('fhirServer:password'),
-          },
+          withCredentials: false,
           headers
         };
         url = false;

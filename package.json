@@ -7,7 +7,7 @@
     "clean": "rimraf dist/",
     "start": "env NODE_ENV=production node ./dist/app.js",
     "build": "yarn clean && yarn tsc",
-    "dev": "env NODE_ENV=development node ./dist/app.js",
+    "dev": "cross-env NODE_ENV=development node ./dist/app.js",
     "test:unit": "ENV_FILE=./config/.env.test jest --passWithNoTests",
     "test:api": "env NODE_ENV=test node --inspect ./dist/app.js",
     "docker:up": "docker build ./ -t test-image:latest && docker-compose -f ci.docker-compose.yml up shr"
@@ -72,6 +72,7 @@
     "@types/swagger-ui-express": "^4.1.3",
     "@types/urijs": "^1.19.12",
     "acorn": ">=7.1.1",
+    "cross-env": "^7.0.3",
     "eslint": "^7.11.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-standard": "^14.1.0",
