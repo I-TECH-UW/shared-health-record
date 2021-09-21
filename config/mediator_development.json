@@ -1,8 +1,20 @@
 {
   "urn": "urn:mediator:shared-health-record",
-  "version": "1.0.0-dev",
+  "version": "1.1.0-dev",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
+  "config": {
+    "fhirServer": {
+      "username": "",
+      "password": "",
+      "baseURL": "http://localhost:8081/fhir"
+    },
+    "clientRegistry": {
+      "username": "",
+      "password": "",
+      "url": "http://localhost:5000/CR/fhir"
+    }
+  },
   "defaultChannelConfig": [
     {
       "methods": [

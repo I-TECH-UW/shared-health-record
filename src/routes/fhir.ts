@@ -47,24 +47,19 @@ router.post('/', (req, res) => {
       return res.status(400).json(invalidBundleMessage());
     }
 
-    async.parallel({
-      otherResources: (callback) => {
-        if (resource.entry.length === 0) {
-          return callback(null, {});
-        }
-        fhirWrapper.create(resource, (code: number, err: Error, response: Response, body: any) => {
-          return callback(null, { code, err, response, body });
-        });
-      }
-    }, (err, results: any) => {
-      let code = results.otherResources.code;
-
+    if (resource.entry.length === 0) {
+      return res.status(400).json(invalidBundleMessage());
+    }
+    fhirWrapper.saveResource(resource, (code: number, err: Error, response: Response, body: any) => {
       if (!code) {
         code = 500;
       }
 
-      return res.status(code).json([err, results]);
+      if(err) return res.status(code).send(err);
+
+      return res.status(code).json(body);
     });
+    
   } catch (error) {
     return res.status(500).json(error)
   }

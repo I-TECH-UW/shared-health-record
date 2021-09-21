@@ -6,7 +6,7 @@
     "api": {
       "username": "root@openhim.org",
       "password": "openhim",
-      "apiURL": "http://localhost:8080",
+      "apiURL": "https://localhost:8080",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     },
