@@ -8,11 +8,14 @@
       "password": "openhim-password",
       "apiURL": "https://openhim-core:8080",
       "trustSelfSigned": true,
-      "urn": ""
+      "urn": "urn:mediator:shared-health-record"
     }
   },
   "fhirServer": {
     "mpiURL": "http://openhim-core:5000/CR/fhir",
-    "baseURL": "http://shr-fhir:8080/fhir"
-  }
+    "baseURL": "http://shr-fhir:8080/fhir",
+    "simulateResulting": false
+  },
+  "fhirConverterUrl": "http://localhost:5001/72f"
+
 }
