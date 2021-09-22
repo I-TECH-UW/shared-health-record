@@ -89,9 +89,11 @@ export async function saveLabBundle(bundle: R4.IBundle, addResults: boolean): Pr
       if (addResults
         && entry.resource
         && entry.resource.resourceType === "ServiceRequest"
-        && entry.resource.status === "requested") {
-        let sr = <R4.IServiceRequest>entry.resource
-        additionalResources = generateIpmsResults(sr)
+        && entry.resource.basedOn
+        && entry.resource.status === "active") {
+        let sr: R4.IServiceRequest = entry.resource
+        entry.resource.status = "completed"
+        additionalResources = additionalResources.concat(generateIpmsResults(sr))
       }
       
       entry.request = {
@@ -112,7 +114,7 @@ export function generateIpmsResults(sr: R4.IServiceRequest): R4.IBundle_Entry[] 
   let obsId = "ipms-obs-" + uuidv4()
   let code = sr.code!
   let srRef: R4.IReference = { reference: "ServiceRequest/" + srId }
-  let obsRef: R4.IReference = { reference: "ServiceRequest/" + srId }
+  let obsRef: R4.IReference = { reference: "Observation/" + obsId }
   let cellCount = Math.floor(Math.random() * 100 + 50)
   let returnVal: R4.IBundle_Entry[] = []
 
@@ -138,6 +140,7 @@ export function generateIpmsResults(sr: R4.IServiceRequest): R4.IBundle_Entry[] 
     resourceType: "Observation",
     id: obsId,
     code: code,
+    status: R4.ObservationStatusKind._final,
     valueQuantity: {
       value: cellCount,
       unit: "cells per microliter",
@@ -162,6 +165,7 @@ export function generateIpmsResults(sr: R4.IServiceRequest): R4.IBundle_Entry[] 
       }
     }],
     performer: sr.performer,
+    basedOn: [srRef]
   }
   
   returnVal.push({
