@@ -5,7 +5,7 @@ import logger from '../lib/winston'
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import config from '../lib/config'
 import { invalidBundleMessage, invalidBundle } from "../lib/helpers"
-import { saveLabBundle } from "../hapi/lab"
+import { saveLabBundle } from '../hapi/lab';
 import { LaboratoryWorkflowsBw } from "../workflows/lab-bw"
 
 export const router = express.Router()
@@ -23,6 +23,12 @@ router.all('/', async (req: Request, res: Response) => {
 
       // Add BW Mappings
       orderBundle = await LaboratoryWorkflowsBw.addBwMappings(orderBundle)
+      
+      // TODO: Remove when not needed
+      // Simulate Resulting by IPMS
+      if(config.get("simulateResulting") && orderBundle.entry) {
+        orderBundle.entry = orderBundle.entry.concat(LaboratoryWorkflowsBw.generateIpmsResults(orderBundle))
+      }
       
       let resultBundle: R4.IBundle = (await saveLabBundle(orderBundle, true))
       
