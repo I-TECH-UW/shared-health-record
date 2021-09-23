@@ -25,3 +25,5 @@ do
 
    docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman 
 done
+
+docker-compose -f ci.docker-compose.yml down -v

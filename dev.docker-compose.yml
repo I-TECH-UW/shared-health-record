@@ -68,7 +68,7 @@ services:
     networks:
       - hie
     
-# Kafka Task Runners
+  # Kafka Task Runners
   zookeeper:
     image: 'bitnami/zookeeper:latest'
     hostname: zookeeper
