@@ -69,28 +69,24 @@ export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
     return sr
   }
 
-  static generateIpmsResults(bundle: R4.IBundle): R4.IBundle_Entry[] {
+  static generateIpmsResults(entries: R4.IBundle_Entry[]): R4.IBundle_Entry[] {
     let generatedResults: R4.IBundle_Entry[] = []
 
-    if (bundle.entry) {
-      for (let entry of bundle.entry) {
-        let resource = entry.resource
-        if (resource && resource.resourceType == "ServiceRequest" && resource.basedOn && resource.status! == "active") {
-          let sr = resource
-          if (sr.code && sr.code.coding && sr.code.coding.length > 0) {
-            if (sr.code.coding[0].code == '1' && sr.code.coding[0].system == "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/") {
-              generatedResults = generatedResults.concat(this.generateCD4Results(sr))
-            }
-            if (sr.code.coding[0].code == '3' && sr.code.coding[0].system == "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/") {
-              generatedResults = generatedResults.concat(this.generateViralLoadResults(sr))
-            }
+    for (let entry of entries) {
+      let resource = entry.resource
+      if (resource && resource.resourceType == "ServiceRequest" && resource.basedOn && resource.status! == "active") {
+        let sr = resource
+        if (sr.code && sr.code.coding && sr.code.coding.length > 0) {
+          if (sr.code.coding[0].code == '1' && sr.code.coding[0].system == "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/") {
+            generatedResults = generatedResults.concat(this.generateCD4Results(sr))
+          }
+          if (sr.code.coding[0].code == '3' && sr.code.coding[0].system == "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/") {
+            generatedResults = generatedResults.concat(this.generateViralLoadResults(sr))
           }
         }
       }
-      return bundle.entry.concat(generatedResults)
     }
-
-    return bundle.entry || []
+    return entries.concat(generatedResults)
   }
   
   private static generateCD4Results(sr: R4.IServiceRequest): R4.IBundle_Entry[] {
