@@ -6,19 +6,19 @@
     "api": {
       "username": "root@openhim.org",
       "password": "openhim",
-      "apiURL": "http://localhost:8080",
+      "apiURL": "https://localhost:8080",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     },
     "client": {
-      "id": "shr",
-      "password": "shr"
+      "id": "shr-client",
+      "password": "shr-client"
     }
   },
   "fhirServer": {
-    "mpiURL": "http://localhost:5001/CR/fhir",
-    "baseURL": "http://localhost:8081/fhir", 
+    "mpiURL": "https://localhost:5000/CR/fhir",
+    "baseURL": "http://localhost:8090/fhir", 
     "simulateResulting": true
   },
-  "fhirConverterUrl": "http://localhost:5001/72f"
+  "fhirConverterUrl": "https://localhost:5000/72f"
 }

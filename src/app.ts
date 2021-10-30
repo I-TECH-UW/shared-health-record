@@ -1,5 +1,4 @@
 import express, {Request, Response} from 'express'
-import medUtils from 'openhim-mediator-utils'
 import _ from 'lodash'
 import fs from 'fs'
 import cookieParser from 'cookie-parser'
@@ -13,6 +12,7 @@ import hl7Routes from './routes/hl7'
 
 const swaggerUi = require('swagger-ui-express')
 const swaggerJSDoc = require('swagger-jsdoc')
+const medUtils = require('openhim-mediator-utils')
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -81,7 +81,7 @@ export function start(callback: Function) {
   // Run as OpenHIM Mediator - We only need this approach
 
   // Loads app config based on the required environment
-  const env = process.env.NODE_ENV || 'dev';
+  const env = process.env.NODE_ENV || 'development';
   const configFile = require(`${__dirname}/../config/config_${env}`);
   // Loads OpenHIM mediator config
   const mediatorConfig = require(`${__dirname}/../config/mediator_${env}`);

@@ -1,18 +1,18 @@
 {
   "urn": "urn:mediator:shared-health-record",
-  "version": "1.1.0-dev",
+  "version": "1.2.2-dev",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
   "config": {
     "fhirServer": {
       "username": "",
       "password": "",
-      "baseURL": "http://localhost:8081/fhir"
+      "baseURL": "http://localhost:8090/fhir"
     },
     "clientRegistry": {
       "username": "",
       "password": "",
-      "url": "http://localhost:5000/CR/fhir"
+      "url": "https://localhost:5000/CR/fhir"
     }
   },
   "defaultChannelConfig": [
@@ -123,7 +123,7 @@
           "forwardAuthHeader": false,
           "name": "SHR - Get Lab Bundle",
           "secured": false,
-          "host": "shr",
+          "host": "host.docker.internal",
           "port": 3000,
           "path": "",
           "pathTransform": "s/SHR\\/lab/lab/g",
@@ -136,6 +136,47 @@
       "rewriteUrlsConfig": [],
       "priority": 3,
       "name": "SHR Lab"
+    },
+    
+    {
+      "methods": [
+        "POST",
+        "PUT"
+      ],
+      "type": "http",
+      "whitelist": [],
+      "authType": "public",
+      "matchContentTypes": [],
+      "properties": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "requestBody": true,
+      "responseBody": true,
+      "description": "Send HL7v2 message to SHR",
+      "urlPattern": "^/SHR/hl7/.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR - Get Lab Bundle",
+          "secured": false,
+          "host": "host.docker.internal",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/hl7/hl7/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "priority": 2,
+      "name": "SHR HL7"
     }
   ],
   "endpoints": [

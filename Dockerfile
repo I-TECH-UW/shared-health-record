@@ -16,9 +16,13 @@ RUN yarn tsc --diagnostics
 
 FROM node:16-slim AS run
 
+RUN apt-get update && apt-get install -y wget
+
 RUN mkdir -p /var/log
 
 WORKDIR /app
+
+RUN wget -qO- https://raw.githubusercontent.com/eficode/wait-for/v2.1.3/wait-for
 
 COPY --from=build /app/dist /app/dist
 COPY --from=build /app/package.json /app
@@ -31,4 +35,5 @@ ENV NODE_ENV=$NODE_ENV
 
 EXPOSE 3000
 
-ENTRYPOINT [ "node", "dist/app.js" ]
+CMD sh -c './wait-for shr=-fhir:8080 -- '
+ENTRYPOINT node dist/app.js
