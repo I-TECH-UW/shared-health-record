@@ -7,7 +7,7 @@
     "fhirServer": {
       "username": "",
       "password": "",
-      "baseURL": "http://localhost:8090/fhir"
+      "baseURL": "https://localhost:8090/fhir"
     },
     "clientRegistry": {
       "username": "",

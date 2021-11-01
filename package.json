@@ -43,6 +43,7 @@
     "moment": "^2.24.0",
     "nconf": "^0.10.0",
     "openhim-mediator-utils": "^0.2.3",
+    "querystring": "^0.2.1",
     "request-promise-native": "^1.0.8",
     "slashes": "^1.0.5",
     "soundex-code": "^1.0.4",
