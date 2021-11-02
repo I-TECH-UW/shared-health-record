@@ -18,20 +18,20 @@ describe('translatePimsCoding', () => {
   });
 });
 
-describe('generateIpmsResults', () => {
-  it("should add random IPMS results to bundle", async () => {
-    let serviceRequest: R4.IServiceRequest = await got("https://b-techbw.github.io/bw-lab-ig/ServiceRequest-example-bw-pims-service-request-1.json").json()
+// describe('generateIpmsResults', () => {
+//   // it("should add random IPMS results to bundle", async () => {
+//   //   let serviceRequest: R4.IServiceRequest = await got("https://b-techbw.github.io/bw-lab-ig/ServiceRequest-example-bw-pims-service-request-1.json").json()
 
-    let bundle: R4.IBundle = {
-      resourceType: "Bundle",
-      type: R4.BundleTypeKind._document,
-      entry: [{
-        resource: serviceRequest
-      }]
-    }
+//   //   let bundle: R4.IBundle = {
+//   //     resourceType: "Bundle",
+//   //     type: R4.BundleTypeKind._document,
+//   //     entry: [{
+//   //       resource: serviceRequest
+//   //     }]
+//   //   }
 
-    let result: R4.IBundle_Entry[] = LaboratoryWorkflowsBw.generateIpmsResults(bundle.entry!)
+//   //   let result: R4.IBundle_Entry[] = LaboratoryWorkflowsBw.generateIpmsResults(bundle.entry!)
 
-    expect(result).toHaveLength(3)
-  })
-})
+//   //   expect(result).toHaveLength(3)
+//   // })
+// })

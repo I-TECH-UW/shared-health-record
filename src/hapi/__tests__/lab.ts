@@ -39,7 +39,7 @@ describe('getResource', () => {
 
     const scope = nock(fhirUrl).get(`/${type}/${id}`).once().reply(200, resource)
 
-    let result: R4.IPatient = <R4.IPatient>(await getResource(type, id))
+    let result: R4.IPatient = (await getResource(type, id))
 
     expect(result).toEqual(resource)
   })

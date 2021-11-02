@@ -42,9 +42,14 @@ export async function getResource(type: string, id: string, params?: any, noCach
   let url: string = uri.toString();
 
   logger.info(`Getting ${url}`);
-
-  [resourceData, statusCode] = await get({ url: url, noCaching: noCaching });
-
+  
+  try {
+    resourceData = await got({ url: url }).json();
+  } catch (error: any) {
+    logger.error(`Could not retrieve resource: ${error.response.body}`)
+    resourceData = null
+  }
+  
   return resourceData;
 }
 
