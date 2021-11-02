@@ -9,7 +9,7 @@ import logger from "../lib/winston";
 export class hl7Workflows {
   
   // GET Lab Orders via HL7v2 over HTTP - ORU Message
-  static async saveOruMessage(hl7Msg: string): Promise<R4.IBundle | null> {
+  static async saveOruMessage(hl7Msg: string): Promise<R4.IBundle> {
     try {
       let translatedResult: any = await got(
         {
@@ -34,7 +34,7 @@ export class hl7Workflows {
 
     } catch (error: any) {
       logger.error(`Could not translate and save ORU message!\n${JSON.stringify(error)}`)
-      return null
+      return {resourceType: "Bundle"}
     }
   }
 
