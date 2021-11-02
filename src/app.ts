@@ -6,9 +6,10 @@ import logger from './lib/winston'
 import config from './lib/config'
 import fhirRoutes from './routes/fhir'
 import ipsRoutes from './routes/ips'
-import labRoutes from './routes/lab'
 import labBwRoutes from './routes/lab-bw'
 import hl7Routes from './routes/hl7'
+
+import * as net from 'net'
 
 const swaggerUi = require('swagger-ui-express')
 const swaggerJSDoc = require('swagger-jsdoc')
@@ -28,6 +29,7 @@ const swaggerSpec = swaggerJSDoc({
   },
   apis: ['./routes/*.js']
 });
+
 /**
  * @returns {express.app}
  */
@@ -77,7 +79,7 @@ function appRoutes() {
  * @param  {Function} callback a node style callback that is called once the
  * server is started
  */
-export function start(callback: Function) {
+export function startApp(port: Number, callback: Function) {
   // Run as OpenHIM Mediator - We only need this approach
 
   // Loads app config based on the required environment
@@ -111,7 +113,7 @@ export function start(callback: Function) {
           const app = appRoutes();
   
           // Start up server on 3000 (default)
-          const server = app.listen(config.get('app:port'), () => {
+          const server = app.listen(port, () => {
   
             // Activate heartbeat for OpenHIM mediator
             const configEmitter = medUtils.activateHeartbeat(config.get('mediator:api'));
@@ -123,18 +125,52 @@ export function start(callback: Function) {
               reloadConfig(updatedConfig, () => {
                 config.set('mediator:api:urn', mediatorConfig.urn);
               });
-            });
+            });require.main === module
             callback(server);
           });
+
         });
       });  
     }
   });
 }
 
-if (!module.parent) {
-  // if this script is run directly, start the server
-  start(() =>
-    logger.info(`Server is running and listening on port: ${config.get('app:port')}`)
-  );
+export function startTcp(port: Number, callback: Function) {
+
+  const mllpServer = net.createServer()
+
+  mllpServer.listen(port, callback(mllpServer))
+
+  let sockets: net.Socket[] = [];
+
+  mllpServer.on('connection', function(sock: net.Socket) {
+      console.log('CONNECTED: ' + sock.remoteAddress + ':' + sock.remotePort);
+      sockets.push(sock);
+  
+      sock.on('data', function(data) {
+          console.log('DATA ' + sock.remoteAddress + ': ' + data);
+          // Write the data back to all the connected, the client will receive it as data from the server
+          sockets.forEach(function(sock, index, array) {
+              sock.write(sock.remoteAddress + ':' + sock.remotePort + " said " + data + '\n');
+          });
+      });
+  
+      // Add a 'close' event handler to this instance of socket
+      sock.on('close', function(data) {
+          let index = sockets.findIndex(function(o) {
+              return o.remoteAddress === sock.remoteAddress && o.remotePort === sock.remotePort;
+          })
+          if (index !== -1) sockets.splice(index, 1);
+          console.log('CLOSED: ' + sock.remoteAddress + ' ' + sock.remotePort);
+      });
+      
+  });
+}
+
+if (require.main === module) {
+  let appPort = config.get('app:port')
+  let mllpPort = config.get('app:mllpPort')
+
+  startApp(appPort, () => logger.info(`SHR Server is running and listening on port: ${appPort}`))
+  startTcp(mllpPort, () => logger.info(`TCP Server is up and listening on port: ${mllpPort}`))
 }

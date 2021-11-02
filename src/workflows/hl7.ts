@@ -34,10 +34,41 @@ export class hl7Workflows {
 
     } catch (error: any) {
       logger.error(`Could not translate and save ORU message!\n${JSON.stringify(error)}`)
-      return {resourceType: "Bundle"}
+      
+      throw new Error(`Could not translate ORU message!\n${JSON.stringify(error)}`)
     }
   }
 
+  // GET Lab Orders via HL7v2 over HTTP - ORU Message
+  static async saveAdtMessage(hl7Msg: string): Promise<R4.IBundle> {
+    try {
+      let translatedResult: any = await got(
+        {
+          url: config.get("fhirConverterUrl") + "/convert/hl7v2/ORU_R01.hbs",
+          headers: {
+            'content-type': 'text/plain'
+          },
+          body: hl7Msg,
+          method: "POST",
+          https: {
+            rejectUnauthorized: false
+          }
+        }
+      ).json()
+
+      let translatedBundle = <R4.IBundle>translatedResult.fhirResource
+
+      // Save to SHR
+      let resultBundle: R4.IBundle = await saveLabBundle(translatedBundle)
+
+      return resultBundle
+
+    } catch (error: any) {
+      logger.error(`Could not translate and save ORU message!\n${JSON.stringify(error)}`)
+      
+      throw new Error(`Could not translate ORU message!\n${JSON.stringify(error)}`)
+    }
+  }
 
   // Translate a Task and associated ServiceRequests into HL7v2 (OBR)
   static translateTaskBundle(bundle: R4.IBundle) {
