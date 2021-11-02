@@ -1,6 +1,7 @@
 "use strict"
 
 import { R4 } from "@ahryman40k/ts-fhir-types";
+import { BundleTypeKind } from "@ahryman40k/ts-fhir-types/lib/R4";
 import got from "got/dist/source";
 import { resourceUsage } from "process";
 import URI from "urijs";
@@ -10,6 +11,8 @@ import config from '../lib/config';
 import logger = require("../lib/winston");
 
 const fhirWrapper = require('../lib/fhir')();
+
+let uri = URI(config.get('fhirServer:baseURL'));
 
 // TODO: change source utils to use got() & await pattern
 // Promisify fns
@@ -22,7 +25,6 @@ let get = util.promisify(fhirWrapper.getResource)
 export async function getResource(type: string, id: string, params?: any, noCaching?: boolean) {
   // return got.get(`${SHR_URL}/${type}/${id}`).json()
   let resourceData: any, statusCode: number
-  let uri = URI(config.get('fhirServer:baseURL'));
 
   noCaching = (noCaching === undefined) ? true : noCaching
 
@@ -59,8 +61,6 @@ export async function saveResource() {
 }
 
 export async function getTaskBundle(patientId: string, locationId: string) {
-  let uri = URI(config.get('fhirServer:baseURL'));
-
   logger.info(`Getting Bundle for patient ${patientId} and location ${locationId}`);
 
   let requestUri = uri
@@ -76,31 +76,38 @@ export async function getTaskBundle(patientId: string, locationId: string) {
 
 
 
-export async function saveLabBundle(bundle: R4.IBundle, addSimulatedResults: boolean): Promise<R4.IBundle> {
-  let uri = URI(config.get('fhirServer:baseURL'));
-
+export async function saveLabBundle(bundle: R4.IBundle): Promise<R4.IBundle> {
   logger.info(`Posting ${bundle.resourceType} to ${uri.toString()}`);
 
-  bundle.type = R4.BundleTypeKind._transaction
-  bundle.link = [{
-    relation: "self",
-    url: "responding.server.org/fhir"
-  }]
+  if(!bundle.type || bundle.type != BundleTypeKind._transaction) {
+    bundle = translateToTransactionBundle(bundle)
+  }
+  
+  return got.post(uri.toString(), { json: bundle }).json()
+}
 
-  if (bundle.entry) {
-    for (let entry of bundle.entry) {
-      if(entry.resource) {
-        let resource = entry.resource
-        entry.request = {
-          method: R4.Bundle_RequestMethodKind._put,
-          url: `${resource.resourceType}/${resource.id}`
+export function translateToTransactionBundle(bundle: R4.IBundle): R4.IBundle {
+  if(bundle.type && bundle.type == BundleTypeKind._transaction) {
+    logger.info("Bundle already has transaction type.")
+  } else {
+    bundle.type = R4.BundleTypeKind._transaction
+    bundle.link = [{
+      relation: "self",
+      url: "responding.server.org/fhir"
+    }]
+
+    if (bundle.entry) {
+      for (let entry of bundle.entry) {
+        if(entry.resource) {
+          let resource = entry.resource
+          entry.request = {
+            method: R4.Bundle_RequestMethodKind._put,
+            url: `${resource.resourceType}/${resource.id}`
+          }
         }
       }
     }
   }
-  let additionalResources: R4.IBundle_Entry[] = []
-
-  bundle.entry = bundle.entry!.concat(additionalResources)
-
-  return got.post(uri.toString(), { json: bundle }).json()
+  
+  return bundle
 }

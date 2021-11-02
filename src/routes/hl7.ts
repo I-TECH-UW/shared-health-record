@@ -7,23 +7,20 @@ import got from "got/dist/source";
 import URI from "urijs";
 import { saveLabBundle } from "../hapi/lab";
 import config from "../lib/config";
+import logger from "../lib/winston";
 
 const querystring = require('querystring');
 
 export const router = express.Router();
 
-// Translate ORU message to lab bundle
+// Save ORU message as a lab bundle
 router.post('/oru', async (req: Request, res: Response) => {
   try {
     let hl7Msg = req.body.trim()
 
-    // Translate into FHIR Bundle
-    // let translatedBundle: R4.IBundle = await got.post(config.get("fhirConverterUrl") + "/convert/hl7v2/ORU_R01.hbs", { body: hl7Msg }).json()
-    
-    let r: any = await got(
+    let translatedResult: any = await got(
       {
-        //url: config.get("fhirConverterUrl")+"/convert/hl7v2/ORU_R01.hbs",
-        url: "http://localhost:2019/api/convert/hl7v2/ORU_R01.hbs",
+        url: config.get("fhirConverterUrl")+"/convert/hl7v2/ORU_R01.hbs",
         headers: {
           'content-type': 'text/plain'
         },
@@ -35,14 +32,15 @@ router.post('/oru', async (req: Request, res: Response) => {
       }
     ).json()
 
-    let translatedBundle = <R4.IBundle> r.fhirResource
+    let translatedBundle = <R4.IBundle> translatedResult.fhirResource
 
     // Save to SHR
-    //let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(translatedBundle, false))
+    let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(translatedBundle))
     
-    return res.status(200).json(translatedBundle)
+    return res.status(200).json(resultBundle)
 
   } catch (error) {
+    logger.error(`Could not translate and save ORU message to SHR!\n${error}`)
     return res.status(500).json(error)
   }
 
