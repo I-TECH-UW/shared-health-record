@@ -1,7 +1,7 @@
 {
   "app": {
     "port": 3000,
-    "mllpPort": 10041
+    "mllpPort": 2575
   },
   "mediator": {
     "api": {
