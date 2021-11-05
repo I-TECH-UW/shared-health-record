@@ -1,7 +1,6 @@
 const winston = require('winston');
 require('winston-daily-rotate-file');
 
-
 let transports = [ new winston.transports.Console() ]
 if ( process.env.NODE_ENV !== "test" ) {
   var transport = new winston.transports.DailyRotateFile({
@@ -27,4 +26,5 @@ const logger = winston.createLogger({
     winston.format.simple()
   ),
 });
+
 module.exports = logger;

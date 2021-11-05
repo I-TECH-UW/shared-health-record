@@ -1,7 +1,7 @@
 
 import * as fs from 'fs'
 import { config } from './config'
-import logger from 'winston'
+import logger from './winston'
 import shrApp from './shr'
 
 const medUtils = require('openhim-mediator-utils')
