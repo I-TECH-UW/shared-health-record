@@ -1,8 +1,8 @@
 
 import * as fs from 'fs'
-import { config } from './config'
-import logger from './winston'
-import shrApp from './shr'
+import { config } from '../lib/config'
+import logger from '../lib/winston'
+import shrApp from '../lib/shr'
 
 const medUtils = require('openhim-mediator-utils')
 
@@ -12,17 +12,15 @@ const appConfig = require(`${__dirname}/../../config/config_${env}`);
 
 export class ShrMediator {
   private config: JSON
-  private callback: Function
 
-  constructor(callback: Function) {
-    this.callback = callback
+  constructor() {
     this.config = medConfig
   }
 
-  public start() {
+  public start(callback: Function) {
     logger.info('Running SHR as a mediator with' + `${__dirname}/${this.config}`)
     try {
-      medUtils.registerMediator(config.get('mediator:api'), this.config, ShrMediator.registrationCallback(this.callback))
+      medUtils.registerMediator(config.get('mediator:api'), this.config, ShrMediator.registrationCallback(callback))
     } catch (e: any) {
       logger.error(`Could not start SHR as a Mediator!\n${JSON.stringify(e)}`)
       process.exit(1)

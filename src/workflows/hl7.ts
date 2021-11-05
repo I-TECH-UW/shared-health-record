@@ -6,7 +6,7 @@ import URI from "urijs";
 import { saveLabBundle } from "../hapi/lab";
 import config from "../lib/config";
 import logger from "../lib/winston";
-export class hl7Workflows {
+export default class Hl7Workflows {
   
   // GET Lab Orders via HL7v2 over HTTP - ORU Message
   static async saveOruMessage(hl7Msg: string): Promise<R4.IBundle> {
