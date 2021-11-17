@@ -49,7 +49,8 @@ jobs:
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
+          build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
+      
       - name: Pull containers
         run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman
 

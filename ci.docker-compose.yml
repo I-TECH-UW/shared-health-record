@@ -8,6 +8,7 @@ services:
     image: test-image:latest
     ports:
       - 3000:3000
+      - 2575:2575
     environment:
       - NODE_ENV=docker
     volumes:
