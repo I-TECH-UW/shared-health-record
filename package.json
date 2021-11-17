@@ -1,7 +1,7 @@
 {
-  "name": "client-registry",
-  "version": "1.0.0",
-  "description": "Client Registry",
+  "name": "shared-health-registry",
+  "version": "0.3.0",
+  "description": "Open Implementation of an OpenHIE Shared Health Record",
   "main": "app.js",
   "scripts": {
     "clean": "rimraf dist/",
