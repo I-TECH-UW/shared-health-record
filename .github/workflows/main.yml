@@ -57,11 +57,15 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
       
-      - id: string
+      - name: Change repo info to lowercase
+        id: string
         uses: ASzc/change-string-case-action@v1
         with:
           string: ${{ github.repository }}
 
+      - name: Check custom tag
+        run: echo ${{ env.REGISTRY }}/${{ steps.string.outputs.lowercase }}:${{steps.package-version.outputs.current-version}} 
+        
       - name: Build SHR
         uses: docker/build-push-action@v2
         with:
