@@ -131,16 +131,16 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
       
-      - name: get-npm-version
+      - name: Get Package Version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@master
 
-      - name: Build Docker image
+      - name: Publish Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
           push: true
-          tags: ${{ steps.package-version.outputs.current-version }}
+          tags: ${{ steps.package-version.outputs.current-version }},${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
