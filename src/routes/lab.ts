@@ -30,7 +30,7 @@ router.all('/', async (req: Request, res: Response) => {
     let resultBundle: R4.IBundle
 
     try {
-      resultBundle = <R4.IBundle>(await saveLabBundle(orderBundle, false))
+      resultBundle = <R4.IBundle>(await saveLabBundle(orderBundle))
     } catch (error) {
       logger.error(error)
       return res.status(500).send(error)

@@ -5,24 +5,24 @@ services:
   shr:
     container_name: shr
     hostname: shr
-    image: test-image:latest
+    build: .
     ports:
       - 3000:3000
     environment:
       - NODE_ENV=docker
     volumes:
-      - ./config/config_ci.json:/app/config/config_docker.json
-      - ./config/mediator_ci.json:/app/config/mediator_docker.json
-
-
+      - ./config/config_development.json:/app/config/config_docker.json
+      - ./config/mediator_development.json:/app/config/mediator_docker.json
+    networks:
+      - hie
+    
   shr-fhir:
     image: hapiproject/hapi:latest
     restart: unless-stopped
-    ports:
-      - "8081:8080"
     volumes:
       - hapi-data:/data/hapi
-  
+    networks:
+      - hie
   ###
   # OpenHIM
   ###
@@ -67,3 +67,7 @@ services:
 volumes:
   mongo-data:
   hapi-data:
+networks:
+  hie:
+    external: true
+    name: hie-botswana_hie

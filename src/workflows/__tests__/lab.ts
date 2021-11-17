@@ -5,8 +5,6 @@ import logger from '../../lib/winston'
 const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
 let patient: R4.IPatient
 
-jest.mock("fhirclient/lib/Client");
-
 beforeAll(async () => {
   patient = await got(IG_URL+"/Patient-example-laboratory-patient.json").json()
 });

@@ -1,27 +1,29 @@
 "use strict";
 
 import { R4 } from "@ahryman40k/ts-fhir-types";
+import { IBundle } from "@ahryman40k/ts-fhir-types/lib/R4";
 import express, { Request, Response } from "express";
 import got from "got/dist/source";
 import URI from "urijs";
-import { saveLabBundle } from "../hapi/lab";
 import config from "../lib/config";
+import logger from "../lib/winston";
+import Hl7Workflows from '../workflows/hl7';
+
+const querystring = require('querystring');
 
 export const router = express.Router();
 
-// Translate ORU message to lab bundle
+// Save ORU message as a lab bundle
 router.post('/oru', async (req: Request, res: Response) => {
   try {
-    let hl7Msg = req.body
+    let hl7Msg = req.body.trim()
 
-    // Translate into FHIR Bundle
-    let translatedBundle: R4.IBundle = await got.post(config.get("fhirConverterUrl") + "/convert/hl7v2/ORU_R01.hbs", { body: hl7Msg }).json()
-  
-    // Save to SHR
-    let resultBundle: R4.IBundle = <R4.IBundle>(await saveLabBundle(translatedBundle, false))
+    let resultBundle: R4.IBundle = await Hl7Workflows.saveOruMessage(hl7Msg)
+
     return res.status(200).json(resultBundle)
 
   } catch (error) {
+    logger.error(`Could not translate and save ORU message to SHR!\n${error}`)
     return res.status(500).json(error)
   }
 

@@ -1,6 +1,7 @@
 {
   "app": {
-    "port": 3000
+    "port": 3000,
+    "mllpPort": 2575
   },
   "mediator": {
     "api": {
@@ -14,5 +15,6 @@
   "fhirServer": {
     "mpiURL": "http://openhim-core:5000/CR/fhir",
     "baseURL": "http://shr-fhir:8080/fhir"
-  }
+  },
+  "fhirConverterUrl": "http://localhost:5001/72f"
 }
