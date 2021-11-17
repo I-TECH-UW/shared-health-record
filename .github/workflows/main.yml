@@ -56,6 +56,11 @@ jobs:
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      
+      - id: string
+        uses: ASzc/change-string-case-action@v1
+        with:
+          string: ${{ github.repository }}
 
       - name: Build SHR
         uses: docker/build-push-action@v2
@@ -135,17 +140,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: string
-        uses: ASzc/change-string-case-action@v1
-        with:
-          string: ${{ github.actor }}
-
       - name: Publish Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }},${{ env.REGISTRY }}/${{ steps.string.outputs.lowercase }}/${{env.IMAGE_NAME}}:${{steps.package-version.outputs.current-version}} 
+          tags: ${{ steps.meta.outputs.tags }},${{ env.REGISTRY }}/${{ steps.string.outputs.lowercase }}:${{steps.package-version.outputs.current-version}} 
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
