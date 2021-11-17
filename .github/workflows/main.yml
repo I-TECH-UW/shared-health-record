@@ -141,7 +141,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }} 
+          tags: ${{ steps.meta.outputs.tags }},${{ steps.meta.args.DOCKER_META_IMAGES }}:${{steps.package-version.outputs.current-version}} 
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
