@@ -134,7 +134,7 @@
           "forwardAuthHeader": false,
           "name": "SHR - Laboratory",
           "secured": false,
-          "host": "host.docker.internal",
+          "host": "shr",
           "port": 3000,
           "path": "",
           "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",

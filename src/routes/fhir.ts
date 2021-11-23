@@ -5,6 +5,7 @@ import async from 'async';
 import logger from '../lib/winston';
 import config from '../lib/config';
 import { invalidBundleMessage, invalidBundle } from "../lib/helpers";
+import got from "got";
 
 export const router = express.Router();
 const fhirWrapper = require('../lib/fhir')();
@@ -13,23 +14,25 @@ router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url);
 });
 
-router.get('/:resource/:id?', (req, res) => {
+router.get('/:resource/:id?', async (req, res) => {
   try {
-    getResource({
-      req,
-      noCaching: true
-    }, (resourceData: any, statusCode: number) => {
-      for (const index in resourceData.link) {
-        if (!resourceData.link[index].url) {
-          continue;
-        }
-        const urlArr = resourceData.link[index].url.split('fhir');
-        if (urlArr.length === 2) {
-          resourceData.link[index].url = '/fhir' + urlArr[1];
-        }
-      }
-      res.status(statusCode).json(resourceData);
-    });
+    let uri = URI(config.get('fhirServer:baseURL'));
+    uri = uri.segment(req.params.resource);
+    
+    if (req.params.id) {
+      uri = uri.segment(req.params.id);
+    }
+
+    for (const param in req.query) {
+      uri.addQuery(param, req.query[param]);
+    }
+
+    logger.info(`Getting ${uri.toString()}`)
+
+    let result = await got.get(uri.toString()).json()
+
+    res.status(200).json(result)
+
   } catch (error) {
     return res.status(500).json(error)
   }
