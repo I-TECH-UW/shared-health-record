@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "clean": "rimraf dist/",
-    "start": "env NODE_ENV=production node ./dist/app.js",
+    "start": "cross-env NODE_ENV=production node ./dist/app.js",
     "build": "yarn clean && yarn tsc",
     "dev": "cross-env NODE_ENV=development node --inspect ./dist/app.js",
     "test:unit": "cross-env NODE_ENV=test jest --passWithNoTests",

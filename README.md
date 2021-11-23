@@ -14,6 +14,9 @@ This project implements the following FHIR IGs:
 ```sh
 git clone https://github.com/I-TECH-UW/shared-health-record.git
 cd shared-health-record
+
+docker-compose -f .\dev.docker-compose.yml --profile dev up -d
+
 yarn
 yarn build
 yarn start

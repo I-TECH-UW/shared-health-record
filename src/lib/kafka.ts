@@ -24,4 +24,5 @@ export async function sendPayload(payload: any, topic: string) {
     }
 }
 
-export const consumer = kafka.consumer({ groupId: "test-group" });
+export const consumer = kafka.consumer({ groupId: "shr-worker" });
+

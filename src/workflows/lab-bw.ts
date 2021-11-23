@@ -8,16 +8,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { sendPayload } from "../lib/kafka"
 
 export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
-  static async handleBwLabOrder(orderBundle: R4.IBundle) {
+  static async handleBwLabOrder(orderBundle: R4.IBundle, resultBundle: R4.IBundle) {
     try {
-      sendPayload(orderBundle, "pims-order")
+      sendPayload({bundle: orderBundle, response: resultBundle}, "map-concepts")
     } catch (e) {
       logger.error(e)
     }
   }
 
-  // Add mapping info to bundle
-  static async addBwMappings(bundle: R4.IBundle): Promise<R4.IBundle> {
+  // Add coding mappings info to bundle
+  static async addBwCodings(bundle: R4.IBundle): Promise<R4.IBundle> {
     try {
       for (const e of bundle.entry!) {
         if (e.resource && e.resource.resourceType == "ServiceRequest" && e.resource.basedOn) {
@@ -30,6 +30,22 @@ export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
 
     return bundle
   }
+
+  // Add location info to bundle
+  static async addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
+    try {
+      for (const e of bundle.entry!) {
+        if (e.resource && e.resource.resourceType == "ServiceRequest" && e.resource.basedOn) {
+          e.resource = await this.translateLocations(e.resource)
+        }
+      }
+    } catch (e) {
+      logger.error(e)
+    }
+
+    return bundle
+  }
+
 
   static async translatePimsCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
     try {
@@ -57,14 +73,17 @@ export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
         })
       }
 
-      let loincMapping: any = await got.get(`https://api.openconceptlab.org/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCode}&mapType=SAME-AS`).json()
-      if (loincMapping.length > 0) {
-        let loinCode: string = loincMapping[0].to_concept_code
-        sr.code!.coding!.push({
-          system: "https://api.openconceptlab.org/orgs/Regenstrief/sources/LOINC/",
-          code: loinCode
-        })
-      }
+      let loincMapping = got.get(`https://api.openconceptlab.org/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCode}&mapType=SAME-AS`).json()
+      loincMapping.catch(logger.error).then((lm: any) => {
+        if (lm.length > 0) {
+          let loinCode: string = lm[0].to_concept_code
+          sr.code!.coding!.push({
+            system: "https://api.openconceptlab.org/orgs/Regenstrief/sources/LOINC/",
+            code: loinCode
+          })
+        }
+      })
+      
     } catch (e) {
       logger.error(`Could not translate ServiceRequest codings: \n ${e}`)
     }
@@ -96,7 +115,7 @@ export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
     }
     return entries.concat(generatedResults)
   }
-  
+
   private static generateCD4Results(sr: R4.IServiceRequest): R4.IBundle_Entry[] {
     let cellCount = Math.floor(Math.random() * 40)
     let obsId = "ipms-obs-" + uuidv4();

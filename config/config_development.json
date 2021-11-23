@@ -1,7 +1,7 @@
 {
   "app": {
     "port": 3000,
-    "mllpPort": 2575
+    "mllpPort": 3001
   },
   "mediator": {
     "api": {
@@ -17,9 +17,12 @@
     }
   },
   "fhirServer": {
-    "mpiURL": "https://localhost:5000/CR/fhir",
-    "baseURL": "https://localhost:8090/fhir", 
+    "mpiURL": "http://localhost:5001/CR/fhir",
+    "baseURL": "http://localhost:8090/fhir", 
     "simulateResulting": true
   },
-  "fhirConverterUrl": "http://localhost:5001/72f"
+  "fhirConverterUrl": "http://localhost:5001/72f",
+  "taskRunner": {
+    "workers" : ["localhost:9092"]
+  }
 }
