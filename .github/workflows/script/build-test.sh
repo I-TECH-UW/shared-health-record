@@ -1,7 +1,7 @@
 #!/bin/bash
 docker build ./ -t test-image:latest
-docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman
-docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core 
+docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman kafka zookeeper
+docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core kafka zookeeper
 
 sleep 60
 
