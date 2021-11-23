@@ -66,7 +66,7 @@ services:
       - $POSTMAN_COLLECTION
     volumes:
       - ./.postman:/.postman
-    entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000
+    entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000 --delay-request 10000
   
   # Task Runner
   zookeeper:
