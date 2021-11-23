@@ -42,7 +42,8 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
-
+    networks:
+      - hie
   openhim-console:
     image: jembi/openhim-console:latest
     restart: unless-stopped
@@ -55,7 +56,8 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
-
+    networks:
+      - hie
   mongo-db:
     image: mongo:3.4
     ports:
@@ -63,11 +65,40 @@ services:
     volumes:
       - "mongo-data:/data/db"
     restart: unless-stopped
+    networks:
+      - hie
+    
+# Kafka Task Runners
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    hostname: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - hie
+  kafka:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    volumes:
+      - kafka-data:/bitnami/kafka
+    depends_on:
+      - zookeeper
+    networks:
+      - hie
 
 volumes:
   mongo-data:
   hapi-data:
+  kafka-data:
 networks:
   hie:
-    external: true
-    name: hie-botswana_hie
+    # external: true
+    # name: hie-botswana_hie

@@ -87,6 +87,7 @@
     "eslint-plugin-vue": "^6.1.2",
     "jest-cucumber": "^3.0.0",
     "jest-runner-newman": "^1.0.5",
+    "kafkajs": "^1.15.0",
     "minimist": ">=1.2.2",
     "newman": "^5.2.4",
     "nock": "^13.1.1",

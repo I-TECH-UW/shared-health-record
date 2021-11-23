@@ -5,9 +5,17 @@ import got from "got";
 import logger from "../lib/winston";
 import { LaboratoryWorkflows } from "./lab";
 import { v4 as uuidv4 } from 'uuid';
+import { sendPayload } from "../lib/kafka"
 
 export class LaboratoryWorkflowsBw extends LaboratoryWorkflows {
-  
+  static async handleBwLabOrder(orderBundle: R4.IBundle) {
+    try {
+      sendPayload(orderBundle, "pims-order")
+    } catch (e) {
+      logger.error(e)
+    }
+  }
+
   // Add mapping info to bundle
   static async addBwMappings(bundle: R4.IBundle): Promise<R4.IBundle> {
     try {

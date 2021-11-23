@@ -21,16 +21,17 @@ router.all('/', async (req: Request, res: Response) => {
         return res.status(400).json(invalidBundleMessage())
       }
 
+      // Save Bundle
+      let resultBundle: R4.IBundle = (await saveLabBundle(orderBundle))
+
+      // Trigger Background Tasks
+      
       // Add BW Mappings
       orderBundle = await LaboratoryWorkflowsBw.addBwMappings(orderBundle)
 
-      // TODO: Remove when not needed
-      // Simulate Resulting by IPMS
-      if (config.get("simulateResulting") && orderBundle.entry) {
-        orderBundle.entry = orderBundle.entry.concat(LaboratoryWorkflowsBw.generateIpmsResults(orderBundle.entry))
-      }
+      // Resolve Locations
 
-      let resultBundle: R4.IBundle = (await saveLabBundle(orderBundle))
+      // If IPMS, trigger IPMS workflow
 
       return res.status(200).json(resultBundle)
     } catch (e) {
