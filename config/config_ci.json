@@ -13,12 +13,11 @@
     }
   },
   "fhirServer": {
-    "mpiURL": "http://openhim-core:5000/CR/fhir",
-    "baseURL": "http://shr-fhir:8080/fhir",
-    "simulateResulting": false
+    "mpiURL": "https://openhim-core:5000/CR/fhir",
+    "baseURL": "http://shr-fhir:8080/fhir"
   },
-  "fhirConverterUrl": "http://localhost:5001/72f",
+  "fhirConverterUrl": "https://openhim-core:5000/72f",
   "taskRunner": {
-    "workers" : ["localhost:9092"]
+    "workers" : ["kafka:9092"]
   }
 }

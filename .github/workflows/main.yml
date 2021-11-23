@@ -84,14 +84,14 @@ jobs:
           build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
       
       - name: Pull containers
-        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman
+        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman kafka zookeeper
 
       - name: Cache containers
         uses: satackey/action-docker-layer-caching@v0.0.11
         continue-on-error: true
 
       - name: Start containers
-        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core 
+        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core kafka zookeeper
         
       - name: Load openhim config
         run: docker-compose -f ci.docker-compose.yml up -d openhim-config
