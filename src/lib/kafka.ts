@@ -3,7 +3,7 @@ import config from './config'
 
 export const kafka = new Kafka({
     clientId: "shr-task-runner",
-    brokers: config.get("taskRunner:brokers") || ["localhost:9092"]
+    brokers: config.get("taskRunner:brokers") || ["kafka:9092"]
 });
 
 export const producer = kafka.producer({

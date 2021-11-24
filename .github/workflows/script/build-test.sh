@@ -11,7 +11,7 @@ sleep 20
 docker-compose -f ci.docker-compose.yml logs openhim-config
 docker-compose -f ci.docker-compose.yml up -d shr
 
-docker-compose ci.docker-compose.yml ps
+docker-compose -f ci.docker-compose.yml ps
 
 declare -a tests=("https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd" 
                 "https://www.getpostman.com/collections/ff5183adca5b5e720338" 
@@ -26,4 +26,4 @@ do
    docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman 
 done
 
-docker-compose -f ci.docker-compose.yml down -v
+# docker-compose -f ci.docker-compose.yml down -v
