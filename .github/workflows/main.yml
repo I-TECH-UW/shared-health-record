@@ -79,8 +79,8 @@ jobs:
           push: false
           load: true
           context: .
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
       
       - name: Pull containers
@@ -136,10 +136,13 @@ jobs:
       - name: Run Botswana Laboratory Workflows Collection
         env: 
           POSTMAN_COLLECTION: https://www.getpostman.com/collections/2ee8ebff39c078bac256
-        run: docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman
+        run: docker-compose -f ci.docker-compose.yml up newman
 
       - name: Show SHR Log
         run: docker-compose -f "ci.docker-compose.yml" logs shr
+      
+      - name: Show kafka Log
+        run: docker-compose -f "ci.docker-compose.yml" logs kafka  
       
       - name: Stop containers
         if: always()
