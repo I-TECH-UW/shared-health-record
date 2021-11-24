@@ -1,5 +1,5 @@
 #!/bin/bash
-docker build ./ -t test-image:latest
+docker build ./ -t test-image:latest --build-args NODE_AUTH_TOKEN
 docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman kafka zookeeper
 docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core kafka zookeeper
 
@@ -8,6 +8,7 @@ sleep 60
 docker-compose -f ci.docker-compose.yml up -d openhim-config
 
 sleep 20
+
 docker-compose -f ci.docker-compose.yml logs openhim-config
 docker-compose -f ci.docker-compose.yml up -d shr
 
