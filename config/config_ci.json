@@ -18,6 +18,6 @@
   },
   "fhirConverterUrl": "https://openhim-core:5000/72f",
   "taskRunner": {
-    "workers" : ["kafka:9092"]
+    "brokers" : ["kafka:9092"]
   }
 }

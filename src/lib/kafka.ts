@@ -1,9 +1,11 @@
 import { Kafka } from "kafkajs";
 import config from './config'
 
+const brokers = config.get("taskRunner:brokers") || ["kafka:9092"]
+
 export const kafka = new Kafka({
     clientId: "shr-task-runner",
-    brokers: ["kafka:9092"]
+    brokers: brokers
 });
 
 export const producer = kafka.producer({
