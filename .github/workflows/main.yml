@@ -135,6 +135,9 @@ jobs:
           POSTMAN_COLLECTION: https://www.getpostman.com/collections/2ee8ebff39c078bac256
         run: docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman
 
+      - name: Show SHR Log
+        run: docker-compose -f "ci.docker-compose.yml" logs shr
+      
       - name: Stop containers
         if: always()
         run: docker-compose -f "dev.docker-compose.yml" down
