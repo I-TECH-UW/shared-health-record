@@ -15,18 +15,26 @@ services:
       - ./config/mediator_development.json:/app/config/mediator_docker.json
     networks:
       - hie
+    profiles: ["shr"]
     
   shr-fhir:
+    container_name: shr-fhir
+    hostname: shr-fhir
     image: hapiproject/hapi:latest
     restart: unless-stopped
     volumes:
       - hapi-data:/data/hapi
     networks:
       - hie
+    profiles: ["dev"]
+    ports:
+      - 8090:8080
   ###
   # OpenHIM
   ###
   openhim-core:
+    container_name: openhim-core
+    hostname: openhim-core
     image: jembi/openhim-core:latest
     restart: unless-stopped
     environment:
@@ -38,14 +46,19 @@ services:
       - 5000:5000
       - 5001:5001
     healthcheck:
-      test: "curl -sSk https://localhost:8080/heartbeat || exit 1"
-      interval: 30s
-      timeout: 30s
-      retries: 3
+      test: "curl -sSk https://openhim-core:8080/heartbeat || exit 1"
+      interval: 1m
+      timeout: 1m
+      retries: 5
+    networks:
+      - hie
+    profiles: ["dev"]
 
   openhim-console:
     image: jembi/openhim-console:latest
     restart: unless-stopped
+    container_name: openhim-console
+    hostname: openhim-console
     ports:
       - "80:80"
     #volumes:
@@ -55,19 +68,64 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
-
+    networks:
+      - hie
+    profiles: ["dev"]
   mongo-db:
     image: mongo:3.4
+    hostname: mongo-db
+    container_name: mongo-db
     ports:
       - 27017:27017
     volumes:
       - "mongo-data:/data/db"
     restart: unless-stopped
-
+    networks:
+      - hie
+    profiles: ["dev"]
+    
+  # Kafka Task Runners
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    hostname: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - hie
+    profiles: ["dev"]
+  kafka:
+    image: 'bitnami/kafka:latest'
+    hostname: kafka
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    volumes:
+      - kafka-data:/bitnami/kafka
+    depends_on:
+      - zookeeper
+    networks:
+      - hie
+    profiles: ["dev"]
+  # OpenHIM Config
+  openhim-config:
+    container_name: openhim-config
+    image: ghcr.io/i-tech-uw/openhim-config:latest
+    volumes:
+      - ./config/openhim/dev-openhim-config.json:/app/test-openhim-config.json
+    profiles: ["dev"]
+    networks:
+      - hie
 volumes:
   mongo-data:
   hapi-data:
+  kafka-data:
 networks:
   hie:
-    external: true
-    name: hie-botswana_hie
+    # external: true
+    # name: hie-botswana_hie

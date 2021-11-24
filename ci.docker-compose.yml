@@ -8,7 +8,7 @@ services:
     image: test-image:latest
     ports:
       - 3000:3000
-      - 2575:2575
+      - 3001:3001
     environment:
       - NODE_ENV=docker
     volumes:
@@ -57,7 +57,7 @@ services:
     container_name: openhim-config
     image: ghcr.io/i-tech-uw/openhim-config:latest
     volumes:
-      - ./config/openhim/test-openhim-config.json:/app/test-openhim-config.json
+      - ./config/openhim/ci-openhim-config.json:/app/test-openhim-config.json
 
   # Newman Tests
   newman:
@@ -66,7 +66,29 @@ services:
       - $POSTMAN_COLLECTION
     volumes:
       - ./.postman:/.postman
-    entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000
+    entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000 --delay-request 10000
+  
+  # Task Runner
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    hostname: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  kafka:
+    image: 'bitnami/kafka:latest'
+    hostname: kafka
+    container_name: kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    volumes:
+      - kafka-data:/bitnami/kafka
+    depends_on:
+      - zookeeper
 
   # Not necessary
   openhim-console:
@@ -81,7 +103,8 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
-    
+  
 volumes:
   mongo-data:
   hapi-data:
+  kafka-data:

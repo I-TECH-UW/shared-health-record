@@ -84,14 +84,14 @@ jobs:
           build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
       
       - name: Pull containers
-        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman
+        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman kafka zookeeper
 
       - name: Cache containers
         uses: satackey/action-docker-layer-caching@v0.0.11
         continue-on-error: true
 
       - name: Start containers
-        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core 
+        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core kafka zookeeper
         
       - name: Load openhim config
         run: docker-compose -f ci.docker-compose.yml up -d openhim-config
@@ -106,12 +106,15 @@ jobs:
       - name: Run SHR image
         run: docker-compose -f ci.docker-compose.yml up -d shr
       
-      - name: Sleep for 10 seconds
-        run: sleep 10s
+      - name: Sleep for 30 seconds
+        run: sleep 30s
         shell: bash
 
       - name: Show SHR Log
         run: docker-compose -f "ci.docker-compose.yml" logs shr
+      
+      - name: Show kafka Log
+        run: docker-compose -f "ci.docker-compose.yml" logs kafka
       
       - name: Check openhim-core
         run: curl -sSk https://localhost:8080/heartbeat
@@ -135,6 +138,12 @@ jobs:
           POSTMAN_COLLECTION: https://www.getpostman.com/collections/2ee8ebff39c078bac256
         run: docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman
 
+      - name: Show SHR Log
+        run: docker-compose -f "ci.docker-compose.yml" logs shr
+      
+      - name: Show kafka Log
+        run: docker-compose -f "ci.docker-compose.yml" logs kafka  
+      
       - name: Stop containers
         if: always()
         run: docker-compose -f "dev.docker-compose.yml" down

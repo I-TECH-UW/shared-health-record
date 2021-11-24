@@ -1,22 +1,23 @@
 {
   "app": {
     "port": 3000,
-    "mllpPort": 2575
+    "mllpPort": 3001
   },
   "mediator": {
     "api": {
       "username": "root@openhim.org",
-      "password": "openhim-password",
+      "password": "openhim",
       "apiURL": "https://openhim-core:8080",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     }
   },
   "fhirServer": {
-    "mpiURL": "http://openhim-core:5000/CR/fhir",
-    "baseURL": "http://shr-fhir:8080/fhir",
-    "simulateResulting": false
+    "mpiURL": "https://openhim-core:5000/CR/fhir",
+    "baseURL": "http://shr-fhir:8080/fhir"
   },
-  "fhirConverterUrl": "http://localhost:5001/72f"
-
+  "fhirConverterUrl": "https://openhim-core:5000/72f",
+  "taskRunner": {
+    "brokers" : ["kafka:9092"]
+  }
 }

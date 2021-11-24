@@ -1,0 +1,249 @@
+{
+  "Users": [
+    {
+      "groups": [
+        "admin"
+      ],
+      "firstname": "Super",
+      "surname": "User",
+      "email": "root@openhim.org",
+      "passwordAlgorithm": "sha512",
+      "passwordHash": "3d6b43da9421e7388c5091cfb4b8a9c1fd97d7d88a12c8fcf031bee8afc7a7653b8019bb7042a0a9cbb98d5527751df9d209f8ecbdf8b29905d8e64f1b0c9e6d",
+      "passwordSalt": "88e65849aa7f1103798e760fc0dd6602",
+      "expiry": null,
+      "locked": false,
+      "tokenType": null,
+      "token": null,
+      "settings": {
+        "visualizer": {
+          "data": {
+            "components": [],
+            "channels": [],
+            "mediators": [],
+            "color": {
+              "inactive": "#cccccc",
+              "active": "#4cae4c",
+              "error": "#d43f3a",
+              "text": "#000000"
+            },
+            "size": {
+              "responsive": true,
+              "width": 1000,
+              "height": 400,
+              "padding": 20
+            },
+            "time": {
+              "updatePeriod": 200,
+              "minDisplayPeriod": 500,
+              "maxSpeed": 5,
+              "maxTimeout": 5000
+            }
+          },
+          "status": 200,
+          "config": {
+            "method": "GET",
+            "transformRequest": [
+              null
+            ],
+            "transformResponse": [
+              null
+            ],
+            "jsonpCallbackParam": "callback",
+            "url": "config/visualizer.json",
+            "headers": {
+              "Accept": "application/json, text/plain, */*",
+              "auth-username": "root@openhim.org",
+              "auth-ts": "2021-08-03T17:14:20.170Z",
+              "auth-salt": "519f3ad7deb57cafe99db3035fa84e55",
+              "auth-token": "b776fe544914ae359c28548c3e513d38a270b8f99096fadaf6e8e4143e419f4646c07b1c82c671e2eb98289f40debce5348ea5efc5ee2a56ff7bf776631a8dbd"
+            }
+          },
+          "statusText": "OK",
+          "xhrStatus": "complete"
+        }
+      }
+    }
+  ],
+  "Clients": [
+    {
+      "roles": [
+        "test"
+      ],
+      "clientID": "tester",
+      "name": "tester",
+      "passwordAlgorithm": "sha512",
+      "passwordSalt": "0cce6dd3e3fe58ad1b471f3859cefc50",
+      "passwordHash": "6a9785631997f32b1805fd768ee51206ffecc8ddbe5639851debd99b78eff61c70231c0ece2b3d077c87930f5bc30840b4c15676ba3fe2bf9b4219541bb27fa9"
+    },
+    {
+      "roles": [
+        "test"
+      ],
+      "clientID": "postman",
+      "name": "postman",
+      "passwordAlgorithm": "sha512",
+      "passwordSalt": "ad7aff63dc3b5c4f347e35d111f0166a",
+      "passwordHash": "ef907ec096cb64b9a194d3c17aa19df4dff6538305443395089bb694b6e2913197dd8feb527e254dea75af0eccd10d503cb521468e476c8c9fbdabf65ca53c14"
+    }
+  ],
+  "Channels": [
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH"
+      ],
+      "type": "http",
+      "allow": [
+        "test"
+      ],
+      "whitelist": [],
+      "authType": "public",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "requestBody": true,
+      "responseBody": true,
+      "name": "SHR - FHIR Passthrough",
+      "description": "Get or Post a new FHIR Resource to the SHR",
+      "urlPattern": "^/SHR/fhir.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR - Get/Create/Update Resource",
+          "secured": false,
+          "host": "host.docker.internal",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/fhir/fhir/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "priority": 1,
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "matchContentJson": null,
+      "matchContentRegex": null,
+      "matchContentValue": null,
+      "matchContentXpath": null,
+      "pollingSchedule": null,
+      "tcpHost": null,
+      "tcpPort": null
+    },
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "PUT"
+      ],
+      "type": "http",
+      "allow": [
+        "test"
+      ],
+      "whitelist": [],
+      "authType": "public",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "name": "SHR - Get/Update IPS",
+      "requestBody": true,
+      "responseBody": true,
+      "description": "Get or Update the International Patient Summary Bundle from the SHR",
+      "urlPattern": "^/SHR/fhir/ips.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR - Get IPS",
+          "secured": false,
+          "host": "host.docker.internal",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "priority": 2
+    },
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE",
+        "PUT"
+      ],
+      "type": "http",
+      "allow": [
+        "test"
+      ],
+      "whitelist": [],
+      "authType": "public",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "requestBody": true,
+      "responseBody": true,
+      "description": "Get or Update the Lab Workflow Bundles in the SHR",
+      "urlPattern": "^/SHR/lab.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "SHR - Get IPS",
+          "secured": false,
+          "host": "host.docker.internal",
+          "port": 3000,
+          "path": "",
+          "pathTransform": "s/SHR\\/lab/lab/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "priority": 3,
+      "name": "SHR Lab",
+      "matchContentRegex": null,
+      "matchContentXpath": null,
+      "matchContentValue": null,
+      "matchContentJson": null,
+      "pollingSchedule": null,
+      "tcpHost": null,
+      "tcpPort": null
+    }
+  ],
+  "ContactGroups": []
+}

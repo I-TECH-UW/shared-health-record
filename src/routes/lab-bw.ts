@@ -7,6 +7,7 @@ import config from '../lib/config'
 import { invalidBundleMessage, invalidBundle } from "../lib/helpers"
 import { saveLabBundle } from '../hapi/lab';
 import { LaboratoryWorkflowsBw } from "../workflows/lab-bw"
+import { or } from "ip"
 
 export const router = express.Router()
 
@@ -21,16 +22,11 @@ router.all('/', async (req: Request, res: Response) => {
         return res.status(400).json(invalidBundleMessage())
       }
 
-      // Add BW Mappings
-      orderBundle = await LaboratoryWorkflowsBw.addBwMappings(orderBundle)
-
-      // TODO: Remove when not needed
-      // Simulate Resulting by IPMS
-      if (config.get("simulateResulting") && orderBundle.entry) {
-        orderBundle.entry = orderBundle.entry.concat(LaboratoryWorkflowsBw.generateIpmsResults(orderBundle.entry))
-      }
-
+      // Save Bundle
       let resultBundle: R4.IBundle = (await saveLabBundle(orderBundle))
+
+      // Trigger Background Tasks
+      LaboratoryWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)
 
       return res.status(200).json(resultBundle)
     } catch (e) {
