@@ -15,7 +15,7 @@ docker-compose -f ci.docker-compose.yml up -d shr
 
 docker-compose -f ci.docker-compose.yml ps
 
-docker-compose -f ci.docker-compose.yml up --exit-code-from mllp_tests mllp_tests
+docker-compose -f ci.docker-compose.yml up mllp_tests
 
 declare -a tests=("https://www.getpostman.com/collections/481bb6cc8e1e964fd8bd" 
                 "https://www.getpostman.com/collections/ff5183adca5b5e720338" 
