@@ -22,6 +22,6 @@
   },
   "fhirConverterUrl": "http://localhost:5001/72f",
   "taskRunner": {
-    "workers" : ["localhost:9092"]
+    "brokers" : ["localhost:9092"]
   }
 }
