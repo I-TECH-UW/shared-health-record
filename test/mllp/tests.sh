@@ -1,5 +1,5 @@
 #!/bin/bash
-hostname="shr"
+hostname="host.docker.internal"
 port=3001
 
 for hl7File in messages/*
@@ -16,6 +16,7 @@ do
   msg="\x0b${lines}\x1c\x0d"
 
   echo $hostname
+  echo $msg
 
   echo -ne $msg | socat - TCP:$hostname:$port
 done
