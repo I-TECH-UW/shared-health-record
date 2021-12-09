@@ -68,6 +68,13 @@ services:
       - ./.postman:/.postman
     entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000 --delay-request 10000
   
+  # MLLP Tests
+  mllp_tests:
+    container_name: mllp_tests
+    image: ghcr.io/b-techbw/mllp-tester:main
+    volumes:
+      - ./test/mllp:/test
+
   # Task Runner
   zookeeper:
     image: 'bitnami/zookeeper:latest'

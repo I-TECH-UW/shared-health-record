@@ -46,6 +46,7 @@ ARG NODE_ENV=docker
 ENV NODE_ENV=$NODE_ENV
 
 EXPOSE 3000
+EXPOSE 3001
 
 CMD sh -c './wait-for shr=-fhir:8080 -- '
 ENTRYPOINT node dist/app.js
