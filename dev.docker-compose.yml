@@ -121,6 +121,15 @@ services:
     profiles: ["dev"]
     networks:
       - hie
+  
+  # MLLP Testing
+  mllp_tests:
+    container_name: mllp_tests
+    image: ghcr.io/b-techbw/mllp-tester:main
+    networks:
+      - hie
+    volumes:
+      - ./test/mllp:/test
 volumes:
   mongo-data:
   hapi-data:
