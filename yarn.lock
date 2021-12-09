@@ -43,10 +43,10 @@
     call-me-maybe "^1.0.1"
     z-schema "^4.2.3"
 
-"@b-techbw/mllp@^3.0.1":
-  version "3.0.5"
-  resolved "https://npm.pkg.github.com/download/@b-techbw/mllp/3.0.5/621835233ac7f4a6519a4c4a9edffd4c8efe7e2b0ef2b3266c263ecd3ab9036d#ee0b107be44dd21a64d7350325fb4313240326d2"
-  integrity sha512-aaKwLkXXJCYOO/70LyjpEHq5kT4WzrR7M9xK3vWPfdR646yb+qkm9CaCW4tNLpnf4Kz085khVhc/YGxfZWCAUg==
+"@b-techbw/mllp@>=3.0.6":
+  version "3.0.6"
+  resolved "https://npm.pkg.github.com/download/@b-techbw/mllp/3.0.6/b5ad4fd8d7c7256ced58ba4ff94e167b872a6ae3c812607cd4b95278fb0d4642#f57e22ce524882b1167e9693c322692f448548c0"
+  integrity sha512-28VK2v/GWQgFBC7rHq6MUH1fhG4M6LdBJGXiDQo9SgIC9KDcmc/fbZ5pdBz/Fwa56RHMfRSpo0obUp+Y1mapTQ==
   dependencies:
     hl7 "1.x.x"
     tiny-typed-emitter "^2.1.0"

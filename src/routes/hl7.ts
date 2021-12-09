@@ -23,7 +23,7 @@ router.post('/oru', async (req: Request, res: Response) => {
     return res.status(200).json(resultBundle)
 
   } catch (error) {
-    logger.error(`Could not translate and save ORU message to SHR!\n${error}`)
+    logger.error(`/oru: failed!\n${error}`)
     return res.status(500).json(error)
   }
 

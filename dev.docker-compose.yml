@@ -130,6 +130,9 @@ services:
       - hie
     volumes:
       - ./test/mllp:/test
+    # tty: true
+    # stdin_open: true
+    # entrypoint: bash
 volumes:
   mongo-data:
   hapi-data:
