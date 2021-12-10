@@ -6,11 +6,10 @@ services:
     container_name: shr
     hostname: shr
     image: test-image:latest
-    ports:
-      - 3000:3000
-      - 3001:3001
     environment:
       - NODE_ENV=docker
+    ports:
+      - 3001:3001
     volumes:
       - ./config/config_ci.json:/app/config/config_docker.json
       - ./config/mediator_ci.json:/app/config/mediator_docker.json
@@ -55,7 +54,7 @@ services:
   # OpenHIM Config
   openhim-config:
     container_name: openhim-config
-    image: ghcr.io/i-tech-uw/openhim-config:latest
+    image: ghcr.io/i-tech-uw/openhim-config:v0.0.0
     volumes:
       - ./config/openhim/ci-openhim-config.json:/app/test-openhim-config.json
 
@@ -68,6 +67,13 @@ services:
       - ./.postman:/.postman
     entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000 --delay-request 10000
   
+  # MLLP Tests
+  mllp_tests:
+    container_name: mllp_tests
+    image: ghcr.io/b-techbw/mllp-tester:main
+    volumes:
+      - ./test/mllp:/test
+
   # Task Runner
   zookeeper:
     image: 'bitnami/zookeeper:latest'
@@ -78,10 +84,12 @@ services:
     image: 'bitnami/kafka:latest'
     hostname: kafka
     container_name: kafka
+    ports:
+      - 9092:9092
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true

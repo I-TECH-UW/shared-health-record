@@ -115,12 +115,24 @@ services:
   # OpenHIM Config
   openhim-config:
     container_name: openhim-config
-    image: ghcr.io/i-tech-uw/openhim-config:latest
+    image: ghcr.io/i-tech-uw/openhim-config:v0.0.0
     volumes:
       - ./config/openhim/dev-openhim-config.json:/app/test-openhim-config.json
     profiles: ["dev"]
     networks:
       - hie
+  
+  # MLLP Testing
+  mllp_tests:
+    container_name: mllp_tests
+    image: ghcr.io/b-techbw/mllp-tester:main
+    networks:
+      - hie
+    volumes:
+      - ./test/mllp:/test
+    # tty: true
+    # stdin_open: true
+    # entrypoint: bash
 volumes:
   mongo-data:
   hapi-data:

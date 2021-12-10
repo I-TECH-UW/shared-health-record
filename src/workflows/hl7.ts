@@ -6,8 +6,18 @@ import URI from "urijs";
 import { saveLabBundle } from "../hapi/lab";
 import config from "../lib/config";
 import logger from "../lib/winston";
+import { IBundle, BundleTypeKind } from '@ahryman40k/ts-fhir-types/lib/R4';
 export default class Hl7Workflows {
-  
+  private static errorBundle: IBundle = {
+    resourceType: "Bundle",
+    type: BundleTypeKind._transactionResponse,
+    entry: [{
+      response: {
+        status: "500 Server Error"
+      }
+    }]
+  }
+
   // GET Lab Orders via HL7v2 over HTTP - ORU Message
   static async saveOruMessage(hl7Msg: string): Promise<R4.IBundle> {
     try {
@@ -34,8 +44,7 @@ export default class Hl7Workflows {
 
     } catch (error: any) {
       logger.error(`Could not translate and save ORU message!\n${JSON.stringify(error)}`)
-      
-      throw new Error(`Could not translate ORU message!\n${JSON.stringify(error)}`)
+      return this.errorBundle
     }
   }
 
@@ -65,8 +74,7 @@ export default class Hl7Workflows {
 
     } catch (error: any) {
       logger.error(`Could not translate and save ORU message!\n${JSON.stringify(error)}`)
-      
-      throw new Error(`Could not translate ORU message!\n${JSON.stringify(error)}`)
+      return this.errorBundle
     }
   }
 

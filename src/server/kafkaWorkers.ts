@@ -4,6 +4,7 @@ import logger from '../lib/winston'
 import { LaboratoryWorkflowsBw } from '../workflows/lab-bw';
 import { IBundle } from '@ahryman40k/ts-fhir-types/lib/R4';
 import { saveLabBundle } from "../hapi/lab";
+import { Consumer } from "kafkajs";
 const errorTypes = ['unhandledRejection', 'uncaughtException']
 const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2'] 
 
@@ -20,6 +21,8 @@ const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
  */
 
 export async function run() {
+    let k: Consumer = consumer
+
     await consumer.connect()
     
     await consumer.subscribe({ topic: "map-concepts", fromBeginning: true })
