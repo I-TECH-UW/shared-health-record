@@ -2,17 +2,17 @@ version: '2.4'
 
 # Docker Compose for Github CI setup
 services:
-  # shr:
-  #   container_name: shr
-  #   hostname: shr
-  #   image: test-image:latest
-  #   environment:
-  #     - NODE_ENV=docker
-  #   ports:
-  #     - 3001:3001
-  #   volumes:
-  #     - ./config/config_ci.json:/app/config/config_docker.json
-  #     - ./config/mediator_ci.json:/app/config/mediator_docker.json
+  shr:
+    container_name: shr
+    hostname: shr
+    image: test-image:latest
+    environment:
+      - NODE_ENV=docker
+    ports:
+      - 3001:3001
+    volumes:
+      - ./config/config_ci.json:/app/config/config_docker.json
+      - ./config/mediator_ci.json:/app/config/mediator_docker.json
 
   shr-fhir:
     image: hapiproject/hapi:latest
