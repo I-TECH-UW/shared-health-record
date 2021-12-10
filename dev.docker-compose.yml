@@ -115,7 +115,7 @@ services:
   # OpenHIM Config
   openhim-config:
     container_name: openhim-config
-    image: ghcr.io/i-tech-uw/openhim-config:latest
+    image: ghcr.io/i-tech-uw/openhim-config:v0.0.0
     volumes:
       - ./config/openhim/dev-openhim-config.json:/app/test-openhim-config.json
     profiles: ["dev"]
