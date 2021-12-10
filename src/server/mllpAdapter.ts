@@ -9,7 +9,7 @@ const hl7 = require('hl7')
 export default class MllpAdapter {
 
     start(callback: Function) {
-        let mllpServer = new MllpServer("localhost", config.get('app:mllpPort'), logger)
+        let mllpServer = new MllpServer("0.0.0.0", config.get('app:mllpPort'), logger)
 
         mllpServer.listen((err: Error) => callback())
 
