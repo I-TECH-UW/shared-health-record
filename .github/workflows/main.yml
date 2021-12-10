@@ -121,7 +121,10 @@ jobs:
 
       - name: Show containers
         run: docker-compose -f "ci.docker-compose.yml" ps
-      
+
+      - name: Show OpenHIM Log
+        run: docker-compose -f "ci.docker-compose.yml" logs openhim-core
+
       # Newman Container Approach
       - name: Run General Tests Collection
         env: 
