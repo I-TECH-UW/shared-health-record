@@ -26,9 +26,7 @@ if (require.main === module) {
   }
 
   // TODO: Extract to separate project / package
-  if (true) { //config.get("app:taskRunner:brokers")) {
-
+  if (config.get("taskRunner:brokers")) {
     run().catch(logger.error)
-
   }
 }

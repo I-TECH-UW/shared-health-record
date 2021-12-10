@@ -16,8 +16,5 @@
     "mpiURL": "https://openhim-core:5000/CR/fhir",
     "baseURL": "http://shr-fhir:8080/fhir"
   },
-  "fhirConverterUrl": "https://openhim-core:5000/72f",
-  "taskRunner": {
-    "brokers" : ["kafka:9092"]
-  }
+  "fhirConverterUrl": "https://openhim-core:5000/72f"
 }
