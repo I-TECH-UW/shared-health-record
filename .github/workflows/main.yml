@@ -163,6 +163,7 @@ jobs:
 
       - name: Publish Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        if: github.event_name == 'release'
         with:
           context: .
           push: true
@@ -171,3 +172,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}          
+          
