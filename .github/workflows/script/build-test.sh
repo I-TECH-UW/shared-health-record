@@ -1,5 +1,5 @@
 #!/bin/bash
-docker build ./ -t test-image:latest --build-args NODE_AUTH_TOKEN
+docker build --build-arg NODE_AUTH_TOKEN=$env:NODE_AUTH_TOKEN ./ -t test-image:latest 
 
 docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman kafka zookeeper
 docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core kafka zookeeper
