@@ -48,5 +48,8 @@ ENV NODE_ENV=$NODE_ENV
 EXPOSE 3000
 EXPOSE 3001
 
-CMD sh -c './wait-for shr-fhir:8080 -- '
+ENV FHIR_SERVER_URL="shr-fhir:8000"
+
+CMD sh -c './wait-for ${FHIR_SERVER_URL} -- '
+
 ENTRYPOINT node dist/app.js
