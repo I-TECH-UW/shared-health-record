@@ -12,6 +12,7 @@ describe('translatePimsCoding', () => {
   it('should translate a given lab test PIMS coding to ciel, loinc, and IPMS', async () => {
     let serviceRequest = <R4.IServiceRequest> (await got.get(IG_URL+"/ServiceRequest-example-bw-pims-service-request-1.json").json())
     
+    serviceRequest.code!.coding![0].code! = "3"
     let result = await LabWorkflowsBw.translatePimsCoding(serviceRequest)
     
     expect(result).toBeDefined

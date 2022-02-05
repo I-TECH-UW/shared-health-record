@@ -2,7 +2,7 @@ import MllpAdapter from '../mllpAdapter';
 import { IBundle, BundleTypeKind } from '@ahryman40k/ts-fhir-types/lib/R4';
 import { promises as fs } from 'fs';
 import path from 'path';
-import Hl7Workflows from '../../workflows/hl7';
+import Hl7Workflows from '../../workflows/hl7WorkflowsBw';
 
 describe("MllpAdapter#handleMessage", () => {
     let returnBundle: IBundle = { resourceType: "Bundle", type: BundleTypeKind._transactionResponse }
