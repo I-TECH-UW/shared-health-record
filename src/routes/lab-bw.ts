@@ -6,7 +6,7 @@ import { R4 } from '@ahryman40k/ts-fhir-types'
 import config from '../lib/config'
 import { invalidBundleMessage, invalidBundle } from "../lib/helpers"
 import { saveLabBundle } from '../hapi/lab';
-import { LaboratoryWorkflowsBw } from "../workflows/lab-bw"
+import { LabWorkflowsBw } from "../workflows/LabWorkflowsBw"
 import { or } from "ip"
 
 export const router = express.Router()
@@ -26,7 +26,7 @@ router.all('/', async (req: Request, res: Response) => {
       let resultBundle: R4.IBundle = (await saveLabBundle(orderBundle))
 
       // Trigger Background Tasks
-      LaboratoryWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)
+      LabWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)
 
       return res.status(200).json(resultBundle)
     } catch (e) {

@@ -1,4 +1,4 @@
-version: '2.4'
+version: '3.9'
 
 # Docker Compose for Github CI setup
 services:
@@ -101,6 +101,15 @@ services:
       - zookeeper
     networks:
       - test
+  # HL7 Converter
+  fhir-converter:
+    container_name: fhir-converter
+    hostname: fhir-converter
+    restart: unless-stopped
+    image: ghcr.io/b-techbw/openhim-mediator-fhir-converter:v3.1.0
+    volumes:
+      - ./config/fhir-converter/config.json:/app/config.json
+
   # Not necessary
   openhim-console:
     image: jembi/openhim-console:latest

@@ -2,7 +2,7 @@
 
 import { R4 } from "@ahryman40k/ts-fhir-types";
 
-export class LaboratoryWorkflows {
+export class LabWorkflows {
 
   static generateLabBundle(task: R4.ITask, patient: R4.IPatient, serviceRequests?: R4.IServiceRequest[],
     practitioner?: R4.IPractitioner, targetOrg?: R4.IOrganization, sourceOrg?: R4.IOrganization): R4.IBundle {

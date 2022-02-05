@@ -5,7 +5,7 @@ import got from "got/dist/source";
 import logger from '../lib/winston';
 import { R4 } from '@ahryman40k/ts-fhir-types';
 import config from '../lib/config';
-import { LaboratoryWorkflows } from "../workflows/lab";
+import { LabWorkflows } from "../workflows/labWorkflows";
 import { invalidBundleMessage, invalidBundle } from "../lib/helpers";
 import { saveLabBundle } from "../hapi/lab";
 
@@ -17,7 +17,7 @@ router.all('/', async (req: Request, res: Response) => {
     let patient: R4.IPatient = <R4.IPatient>(await got("https://i-tech-uw.github.io/laboratory-workflows-ig/Patient-example-laboratory-patient.json").json())
     
     // Temporary Testing Bundle
-    return res.status(200).send(LaboratoryWorkflows.generateLabBundle(task, patient))
+    return res.status(200).send(LabWorkflows.generateLabBundle(task, patient))
   } else {
     logger.info('Received a Lab Order bundle to save');
     let orderBundle: R4.IBundle = req.body
