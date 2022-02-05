@@ -7,7 +7,7 @@ import got from "got/dist/source";
 import URI from "urijs";
 import config from "../lib/config";
 import logger from "../lib/winston";
-import Hl7Workflows from '../workflows/hl7';
+import Hl7WorkflowsBw from '../workflows/hl7WorkflowsBw';
 
 const querystring = require('querystring');
 
@@ -18,7 +18,7 @@ router.post('/oru', async (req: Request, res: Response) => {
   try {
     let hl7Msg = req.body.trim()
 
-    let resultBundle: R4.IBundle = await Hl7Workflows.saveOruMessage(hl7Msg)
+    let resultBundle: R4.IBundle = await Hl7WorkflowsBw.saveOruMessage(hl7Msg)
 
     return res.status(200).json(resultBundle)
 

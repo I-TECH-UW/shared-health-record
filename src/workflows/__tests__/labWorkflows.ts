@@ -1,4 +1,4 @@
-import {LaboratoryWorkflows} from '../lab'
+import { LabWorkflows } from '../labWorkflows'
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import got from 'got'
 import logger from '../../lib/winston'
@@ -13,7 +13,7 @@ describe('generateLabBundle', () => {
   it ('should return a Document Bundle with the correct type', async () => {
     let task: R4.ITask = await got(IG_URL+"/Task-example-laboratory-task-simple-requested.json").json();
 
-    let result: R4.IBundle = LaboratoryWorkflows.generateLabBundle(task, patient)
+    let result: R4.IBundle = LabWorkflows.generateLabBundle(task, patient)
 
     expect(result.resourceType!).toEqual("Bundle")
     expect(result.type!).toEqual(R4.BundleTypeKind._document)
@@ -31,7 +31,7 @@ describe('generateLabBundle', () => {
     let [exampleBundle, task, serviceRequest, practitioner] = 
       await Promise.all([getBundle, getTask, getServiceRequest, getPractitioner])
     
-    let result = LaboratoryWorkflows.generateLabBundle(<R4.ITask> task, patient, 
+    let result = LabWorkflows.generateLabBundle(<R4.ITask> task, patient, 
                                   [(<R4.IServiceRequest> serviceRequest)], 
                                   <R4.IPractitioner> practitioner);
 

@@ -1,7 +1,7 @@
 import { consumer } from "../lib/kafka"
 import { sendPayload } from "../lib/kafka";
 import logger from '../lib/winston'
-import { LaboratoryWorkflowsBw } from '../workflows/lab-bw';
+import { LabWorkflowsBw } from '../workflows/labWorkflowsBw';
 import { IBundle } from '@ahryman40k/ts-fhir-types/lib/R4';
 import { saveLabBundle } from "../hapi/lab";
 import { Consumer } from "kafkajs";
@@ -30,44 +30,39 @@ export async function run() {
     await consumer.subscribe({ topic: "send-ipms-message", fromBeginning: true })
 
     await consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
-            logger.info(`Recieved message from topic ${topic}`)
+        eachMessage: async function ({ topic, partition, message }) {
+        logger.info(`Recieved message from topic ${topic}`);
 
-            let val = ""
-            let bundle: IBundle
-            let response: IBundle
+        let val = "";
+        let res = null;
 
-            if (message.value) {
-                val = message.value.toString()
-            }
+        if (message.value) {
+          val = message.value.toString();
+        }
 
-            logger.info("Received: ", {
-                partition,
-                offset: message.offset,
-                value: val
-            })
+        logger.info("Received: ", {
+          partition,
+          offset: message.offset,
+          value: val
+        });
 
-            switch (topic) {
-                case "map-concepts":
-                    logger.info("Mapping Concepts!")
-                    bundle = await LaboratoryWorkflowsBw.addBwCodings(JSON.parse(val).bundle)
-                    response = await saveLabBundle(bundle)
-                    sendPayload({bundle: bundle, response: response}, "map-locations")
-                    break
-                case "map-locations":
-                    logger.info("Mapping Locations!")
-                    bundle = await LaboratoryWorkflowsBw.addBwLocations(JSON.parse(val).bundle)
-                    response = await saveLabBundle(bundle)
-                    sendPayload({bundle: bundle, response: response}, "send-ipms-message")
-                    break
-                case "send-ipms-message":
-                    logger.info("Sending IPMS Message!")
-                    
-                    break
-                default:
-                    break
-            }
-        },
+        
+        switch (topic) {
+          case "map-concepts":
+            res = await LabWorkflowsBw.mapConcepts(JSON.parse(val).bundle)
+            break;
+          case "map-locations":
+            res = await LabWorkflowsBw.mapLocations(JSON.parse(val).bundle)
+            break;
+          case "send-ipms-message":
+            res = await LabWorkflowsBw.createIpmsOrder(JSON.parse(val).bundle)
+            break;
+          default:
+            break;
+        }
+
+        logger.info(`Result: ${res}`)
+      }
     })
 
     errorTypes.map(type => {

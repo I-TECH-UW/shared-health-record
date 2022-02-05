@@ -1,7 +1,7 @@
 import { MllpServer } from "@b-techbw/mllp";
 import config from "../lib/config"
 import logger from "../lib/winston"
-import Hl7Workflows from '../workflows/hl7';
+import Hl7WorkflowsBw from '../workflows/hl7WorkflowsBw';
 import { IBundle, BundleTypeKind } from '@ahryman40k/ts-fhir-types/lib/R4';
 
 const hl7 = require('hl7')
@@ -29,10 +29,10 @@ export default class MllpAdapter {
 
         if(msgType == 'ADT') {
             logger.info("Handling ADT Message")
-            return Hl7Workflows.saveAdtMessage(data)
+            return Hl7WorkflowsBw.saveAdtMessage(data)
         } else if (msgType == 'ORU') {
             logger.info("Handling ORU Message")
-            return Hl7Workflows.saveOruMessage(data)
+            return Hl7WorkflowsBw.saveOruMessage(data)
         } else {
             logger.error("Message unsupported!")
             return {type: BundleTypeKind._transactionResponse, resourceType: "Bundle", entry: [{response: {status: "501 Not Implemented"}}]}

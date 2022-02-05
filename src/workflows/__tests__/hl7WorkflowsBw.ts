@@ -1,4 +1,4 @@
-import  Hl7Workflows from '../hl7'
+import  Hl7WorkflowsBw from '../hl7WorkflowsBw'
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import nock from 'nock'
 import config from '../../lib/config'
@@ -9,7 +9,7 @@ import path from 'path'
 
 const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
 
-describe(Hl7Workflows.saveOruMessage, () => {
+describe(Hl7WorkflowsBw.saveOruMessage, () => {
     it('should translate and save ORU message ', async () => {
         let converterUrl = config.get("fhirConverterUrl")
         let fhirUrl = config.get('fhirServer:baseURL')
@@ -33,7 +33,7 @@ describe(Hl7Workflows.saveOruMessage, () => {
                     body.entry[0].request.method == "PUT"))
             .once().reply(200, transactionResultBundle)
 
-        let result = await Hl7Workflows.saveOruMessage(sampleOru)
+        let result = await Hl7WorkflowsBw.saveOruMessage(sampleOru)
 
         expect(result).toEqual(transactionResultBundle)
     })
