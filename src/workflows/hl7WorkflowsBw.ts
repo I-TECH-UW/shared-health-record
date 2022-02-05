@@ -22,7 +22,7 @@ export default class Hl7WorkflowsBw {
   // GET Lab Orders via HL7v2 over HTTP - ORU Message
   static async saveOruMessage(hl7Msg: string): Promise<R4.IBundle> {
     try {
-      let translatedBundle = this.getHl7Translation(hl7Msg, "ORU_R01.hbs")
+      let translatedBundle = await this.getHl7Translation(hl7Msg, "ORU_R01.hbs")
 
       if(translatedBundle != this.errorBundle) {
         // Save to SHR
@@ -42,7 +42,7 @@ export default class Hl7WorkflowsBw {
   // GET Lab Orders via HL7v2 over HTTP - ORU Message
   static async saveAdtMessage(hl7Msg: string): Promise<R4.IBundle> {
     try {
-      let translatedBundle: R4.IBundle = this.getHl7Translation(hl7Msg, "ADT_R04.hbs")
+      let translatedBundle: R4.IBundle = await this.getHl7Translation(hl7Msg, "ADT_R04.hbs")
       
       if(translatedBundle != this.errorBundle) {
         // Save to SHR
@@ -58,9 +58,9 @@ export default class Hl7WorkflowsBw {
     }
   }
 
-  static async getHl7Translation(hl7Message: string, template: string): R4.IBundle {
+  static async getHl7Translation(hl7Message: string, template: string): Promise<R4.IBundle> {
     try {
-      return await got(
+      let translatedMessage: any = await got(
         {
           url: `${config.get("fhirConverterUrl")}/convert/hl7v2/${template}`,
           headers: {
@@ -72,14 +72,17 @@ export default class Hl7WorkflowsBw {
             rejectUnauthorized: false
           }
         }
-      ).json().fhirResource  
+      ).json()
+
+      return translatedMessage.fhirResource
+
     } catch (error: any) {
       logger.error(`Could not translate HL7 message\n${hl7Message}\nwith template ${template}!\n${JSON.stringify(error)}`)
       return this.errorBundle
     }
   }
 
-  static async getFhirTranslation(bundle: R4.IBundle, template: string) {
+  static async getFhirTranslation(bundle: R4.IBundle, template: string): Promise<string> {
     try {
       return await got(
         {
@@ -87,7 +90,7 @@ export default class Hl7WorkflowsBw {
           headers: {
             'content-type': 'application/json'
           },
-          body: bundle,
+          body: JSON.stringify(bundle),
           method: "POST",
           https: {
             rejectUnauthorized: false
@@ -96,7 +99,7 @@ export default class Hl7WorkflowsBw {
       ).text()
     } catch (error: any) {
       logger.error(`Could not translate FHIR Bundle message\n${bundle}\nwith template ${template}!\n${JSON.stringify(error)}`)
-      return this.errorBundle
+      return ""
     }
   }
 }

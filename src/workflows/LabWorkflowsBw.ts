@@ -105,7 +105,7 @@ export class LabWorkflowsBw extends LabWorkflows {
    * @param labBundle 
    * @returns 
    */
-  public static async mapConcepts(labBundle: R4.IBundle): R4.IBundle {
+  public static async mapConcepts(labBundle: R4.IBundle): Promise<R4.IBundle> {
     logger.info("Mapping Concepts!");
 
     labBundle = await LabWorkflowsBw.addBwCodings(labBundle)
@@ -148,9 +148,10 @@ export class LabWorkflowsBw extends LabWorkflows {
 
 
 
-    let hl7Oru = Hl7WorkflowsBw.getHl7Translation();
+    // let hl7Oru = Hl7WorkflowsBw.getHl7Translation();
 
-    return response;
+    // return response;
+    return labBundle
   }
 }
 

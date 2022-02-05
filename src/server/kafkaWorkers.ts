@@ -34,7 +34,7 @@ export async function run() {
         logger.info(`Recieved message from topic ${topic}`);
 
         let val = "";
-        let res = "";
+        let res = null;
 
         if (message.value) {
           val = message.value.toString();
