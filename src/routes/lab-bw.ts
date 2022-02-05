@@ -6,7 +6,7 @@ import { R4 } from '@ahryman40k/ts-fhir-types'
 import config from '../lib/config'
 import { invalidBundleMessage, invalidBundle } from "../lib/helpers"
 import { saveLabBundle } from '../hapi/lab';
-import { LabWorkflowsBw } from "../workflows/LabWorkflowsBw"
+import { LabWorkflowsBw } from "../workflows/labWorkflowsBw"
 import { or } from "ip"
 
 export const router = express.Router()

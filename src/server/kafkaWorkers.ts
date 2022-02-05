@@ -1,7 +1,7 @@
 import { consumer } from "../lib/kafka"
 import { sendPayload } from "../lib/kafka";
 import logger from '../lib/winston'
-import { LabWorkflowsBw } from '../workflows/LabWorkflowsBw';
+import { LabWorkflowsBw } from '../workflows/labWorkflowsBw';
 import { IBundle } from '@ahryman40k/ts-fhir-types/lib/R4';
 import { saveLabBundle } from "../hapi/lab";
 import { Consumer } from "kafkajs";

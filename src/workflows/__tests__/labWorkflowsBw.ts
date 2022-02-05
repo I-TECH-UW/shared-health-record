@@ -1,4 +1,4 @@
-import { LabWorkflowsBw } from '../LabWorkflowsBw'
+import { LabWorkflowsBw } from '../labWorkflowsBw'
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import got from 'got'
 import logger from '../../lib/winston'
