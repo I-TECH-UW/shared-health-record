@@ -1,6 +1,6 @@
 {
   "urn": "urn:mediator:shared-health-record",
-  "version": "1.3.0-dev",
+  "version": "0.4.3-dev",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
   "config": {
@@ -17,12 +17,7 @@
   },
   "defaultChannelConfig": [
     {
-      "methods": [
-        "GET",
-        "POST",
-        "PUT",
-        "PATCH"
-      ],
+      "methods": ["GET", "POST", "PUT", "PATCH"],
       "type": "http",
       "authType": "private",
       "status": "enabled",
@@ -52,11 +47,7 @@
       "priority": 1
     },
     {
-      "methods": [
-        "GET",
-        "POST",
-        "PUT"
-      ],
+      "methods": ["GET", "POST", "PUT"],
       "type": "http",
       "whitelist": [],
       "authType": "private",
@@ -96,12 +87,7 @@
       "priority": 2
     },
     {
-      "methods": [
-        "GET",
-        "POST",
-        "DELETE",
-        "PUT"
-      ],
+      "methods": ["GET", "POST", "DELETE", "PUT"],
       "type": "http",
       "whitelist": [],
       "authType": "private",
@@ -137,12 +123,9 @@
       "priority": 3,
       "name": "SHR Lab"
     },
-    
+
     {
-      "methods": [
-        "POST",
-        "PUT"
-      ],
+      "methods": ["POST", "PUT"],
       "type": "http",
       "whitelist": [],
       "authType": "public",

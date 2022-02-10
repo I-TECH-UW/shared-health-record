@@ -1,16 +1,11 @@
 {
   "urn": "urn:mediator:shared-health-record",
-  "version": "0.1.1",
+  "version": "0.4.3",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
   "defaultChannelConfig": [
     {
-      "methods": [
-        "GET",
-        "POST",
-        "PUT",
-        "PATCH"
-      ],
+      "methods": ["GET", "POST", "PUT", "PATCH"],
       "type": "http",
       "whitelist": [],
       "authType": "private",
@@ -48,11 +43,7 @@
       "priority": 1
     },
     {
-      "methods": [
-        "GET",
-        "POST",
-        "PUT"
-      ],
+      "methods": ["GET", "POST", "PUT"],
       "type": "http",
       "whitelist": [],
       "authType": "private",
@@ -92,12 +83,7 @@
       "priority": 2
     },
     {
-      "methods": [
-        "GET",
-        "POST",
-        "DELETE",
-        "PUT"
-      ],
+      "methods": ["GET", "POST", "DELETE", "PUT"],
       "type": "http",
       "whitelist": [],
       "authType": "private",

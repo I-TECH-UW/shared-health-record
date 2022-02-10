@@ -16,8 +16,8 @@ services:
       - ./config/mediator_development.json:/app/config/mediator_docker.json
     networks:
       - hie
-    profiles: ["shr"]
-    
+    profiles: ['shr']
+
   shr-fhir:
     container_name: shr-fhir
     hostname: shr-fhir
@@ -28,7 +28,7 @@ services:
       - ./config/application.yml:/data/hapi/application.yaml
     networks:
       - hie
-    profiles: ["dev"]
+    profiles: ['dev']
     ports:
       - 8090:8080
 
@@ -41,21 +41,21 @@ services:
     image: jembi/openhim-core:latest
     restart: unless-stopped
     environment:
-      mongo_url: "mongodb://mongo-db/openhim"
-      mongo_atnaUrl: "mongodb://mongo-db/openhim"
-      NODE_ENV: "development"
+      mongo_url: 'mongodb://mongo-db/openhim'
+      mongo_atnaUrl: 'mongodb://mongo-db/openhim'
+      NODE_ENV: 'development'
     ports:
       - 8080:8080
       - 5000:5000
       - 5001:5001
     healthcheck:
-      test: "curl -sSk https://openhim-core:8080/heartbeat || exit 1"
+      test: 'curl -sSk https://openhim-core:8080/heartbeat || exit 1'
       interval: 1m
       timeout: 1m
       retries: 5
     networks:
       - hie
-    profiles: ["dev"]
+    profiles: ['dev']
 
   openhim-console:
     image: jembi/openhim-console:latest
@@ -63,17 +63,17 @@ services:
     container_name: openhim-console
     hostname: openhim-console
     ports:
-      - "80:80"
+      - '80:80'
     #volumes:
-      # - ./configs/openhim-console/default.json:/usr/share/nginx/html/config/default.json
+    # - ./configs/openhim-console/default.json:/usr/share/nginx/html/config/default.json
     healthcheck:
-      test: "curl -sS http://localhost || exit 1"
+      test: 'curl -sS http://localhost || exit 1'
       interval: 30s
       timeout: 30s
       retries: 3
     networks:
       - hie
-    profiles: ["dev"]
+    profiles: ['dev']
   mongo-db:
     image: mongo:3.4
     hostname: mongo-db
@@ -81,33 +81,35 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - "mongo-data:/data/db"
+      - 'mongo-data:/data/db'
     restart: unless-stopped
     networks:
       - hie
-    profiles: ["dev"]
-    
+    profiles: ['dev']
+
   # OpenHIM Config
+  # For WSL2, use `hostname -I` to get static IP for channel config.
+  # Then, replace `docker.host.internal` with the returned value, eg. `172.31.252.243`.
   openhim-config:
     container_name: openhim-config
     image: ghcr.io/i-tech-uw/openhim-config:v0.0.0
     volumes:
-      - ./config/openhim/dev-openhim-config.json:/app/test-openhim-config.json
-    profiles: ["dev"]
+      - ./config/openhim/wsl-openhim-config.json:/app/test-openhim-config.json
+    profiles: ['dev']
     networks:
       - hie
-  
+
   # Newman Tests
   newman:
     image: postman/newman
-    environment: 
+    environment:
       - $POSTMAN_COLLECTION
     volumes:
       - ./.postman:/.postman
     entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000 --delay-request 10000
     networks:
       - hie
-    profiles: ["test"]
+    profiles: ['test']
   # MLLP Testing
   mllp_tests:
     container_name: mllp_tests
@@ -116,7 +118,7 @@ services:
       - hie
     volumes:
       - ./test/mllp:/test
-    profiles: ["test"]
+    profiles: ['test']
 
   # Kafka Task Runners
   zookeeper:
@@ -124,41 +126,41 @@ services:
     container_name: zookeeper
     hostname: zookeeper
     volumes:
-      - "/bitnami"
+      - '/bitnami'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
       - hie
-    profiles: ["dev"]
+    profiles: ['dev']
   kafka:
     image: docker.io/bitnami/kafka:3
     container_name: kafka
     hostname: kafka
     volumes:
-      - "/bitnami"
+      - '/bitnami'
     environment:
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
       - zookeeper
     networks:
       - hie
-    profiles: ["dev"]
+    profiles: ['dev']
     ports:
-    - 9092:9092
-    # tty: true
-    # stdin_open: true
-    # entrypoint: bash
-  
+      - 9092:9092
+    entrypoint: sh -c 'sleep 30 && /opt/bitnami/scripts/kafka/entrypoint.sh /opt/bitnami/scripts/kafka/run.sh' # prevent zookeeper conflict error
+
   # HL7 Converter
   fhir-converter:
     container_name: fhir-converter
     hostname: fhir-converter
     restart: unless-stopped
-    image: ghcr.io/b-techbw/openhim-mediator-fhir-converter:v3.1.3
+    image: ghcr.io/b-techbw/openhim-mediator-fhir-converter:v3.1.4
     volumes:
-      - ./config/fhir-converter/config.json:/app/config.json  
-    profiles: ["dev"]
+      - ./config/fhir-converter/config.json:/app/config.json
+    profiles: ['dev']
     networks:
       - hie
 

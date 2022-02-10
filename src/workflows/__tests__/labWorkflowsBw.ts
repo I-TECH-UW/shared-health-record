@@ -20,20 +20,13 @@ describe('translatePimsCoding', () => {
   })
 })
 
-// describe('generateIpmsResults', () => {
-//   // it("should add random IPMS results to bundle", async () => {
-//   //   let serviceRequest: R4.IServiceRequest = await got("https://b-techbw.github.io/bw-lab-ig/ServiceRequest-example-bw-pims-service-request-1.json").json()
+describe('getTaskStatus', () => {
+  it('should get a Task status from a Bundle', async () => {
+    let bundle = <R4.IBundle>await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
 
-//   //   let bundle: R4.IBundle = {
-//   //     resourceType: "Bundle",
-//   //     type: R4.BundleTypeKind._document,
-//   //     entry: [{
-//   //       resource: serviceRequest
-//   //     }]
-//   //   }
+    // @ts-ignore
+    let result: R4.TaskStatusKind = LabWorkflowsBw.getTaskStatus(bundle)
 
-//   //   let result: R4.IBundle_Entry[] = LaboratoryWorkflowsBw.generateIpmsResults(bundle.entry!)
-
-//   //   expect(result).toHaveLength(3)
-//   // })
-// })
+    expect(result).toEqual(R4.TaskStatusKind._requested)
+  })
+})

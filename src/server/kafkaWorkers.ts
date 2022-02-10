@@ -20,16 +20,16 @@ const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
 export async function run() {
   let k: Consumer = consumer
 
-  await consumer.connect()
+  await k.connect()
 
-  await consumer.subscribe({ topic: 'map-concepts', fromBeginning: false })
-  await consumer.subscribe({ topic: 'map-locations', fromBeginning: false })
-  await consumer.subscribe({
+  await k.subscribe({ topic: 'map-concepts', fromBeginning: false })
+  await k.subscribe({ topic: 'map-locations', fromBeginning: false })
+  await k.subscribe({
     topic: 'send-ipms-message',
     fromBeginning: false,
   })
 
-  await consumer.run({
+  await k.run({
     eachMessage: async function ({ topic, partition, message }) {
       logger.info(`Recieved message from topic ${topic}`)
 
@@ -60,7 +60,7 @@ export async function run() {
           break
       }
 
-      logger.info(`\n\n##########\nResult: ${JSON.stringify(res)}\n###############`)
+      //logger.info(`\n\n##########\nResult: ${JSON.stringify(res)}\n###############`)
     },
   })
 
@@ -69,7 +69,7 @@ export async function run() {
       try {
         console.log(`process.on ${type}`)
         console.error(e)
-        await consumer.disconnect()
+        await k.disconnect()
         process.exit(0)
       } catch (_) {
         process.exit(1)
@@ -80,7 +80,7 @@ export async function run() {
   signalTraps.map(type => {
     process.once(type, async () => {
       try {
-        await consumer.disconnect()
+        await k.disconnect()
       } finally {
         process.kill(process.pid, type)
       }
