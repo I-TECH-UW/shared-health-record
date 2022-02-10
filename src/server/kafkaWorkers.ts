@@ -60,7 +60,7 @@ export async function run() {
           break
       }
 
-      logger.info(`\n\n##########\nResult: ${JSON.stringify(res)}\n###############`)
+      //logger.info(`\n\n##########\nResult: ${JSON.stringify(res)}\n###############`)
     },
   })
 

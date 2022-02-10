@@ -15,13 +15,15 @@ describe('MllpAdapter#handleMessage', () => {
   })
 
   it('should handle ADT message', async () => {
+    jest.setTimeout(30000)
     let msg = (await fs.readFile(path.join(__dirname, '../../__data__/sample_ADT.txt'))).toString()
 
     const saveAdtMessageSpy = jest
       .spyOn(Hl7Workflows, 'saveAdtMessage')
       .mockReturnValue(returnPromise)
 
-    let result = mllp['handleMessage'](msg)
+    //@ts-ignore
+    let result: R4.IBundle = await mllp.handleMessage(msg)
 
     expect(result).toEqual(returnPromise)
     expect(saveAdtMessageSpy).toHaveBeenCalledTimes(1)

@@ -111,8 +111,13 @@ export class LabWorkflowsBw extends LabWorkflows {
     return sr
   }
 
+  /**
+   * TODO: Implement!
+   * @param sr
+   * @returns
+   */
   static async translateLocations(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
-    logger.info('Not Implemented yet!')
+    // logger.info('Not Implemented yet!')
 
     return sr
   }
@@ -163,7 +168,7 @@ export class LabWorkflowsBw extends LabWorkflows {
   public static async createIpmsOrder(labBundle: R4.IBundle): Promise<R4.IBundle> {
     let status = this.getTaskStatus(labBundle)
 
-    if (status && status == TaskStatusKind._requested) {
+    if (status && status === TaskStatusKind._requested) {
       logger.info('Sending IPMS Order!')
 
       let sender = new Hl7MllpSender(config.get('mllp:targetIp'), config.get('mllp:targetPort'))
@@ -206,7 +211,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     try {
       taskResult = labBundle.entry!.find(entry => {
-        entry.resource && entry.resource.resourceType == 'Task'
+        return entry.resource && entry.resource.resourceType == 'Task'
       })
 
       if (taskResult) {
