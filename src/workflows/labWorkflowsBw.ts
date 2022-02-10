@@ -1,6 +1,7 @@
 'use strict'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
+import { TaskStatusKind } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got'
 import { saveLabBundle } from '../hapi/lab'
 import config from '../lib/config'
@@ -160,27 +161,34 @@ export class LabWorkflowsBw extends LabWorkflows {
    * @returns
    */
   public static async createIpmsOrder(labBundle: R4.IBundle): Promise<R4.IBundle> {
-    logger.info('Sending IPMS Order!')
+    let status = this.getTaskStatus(labBundle)
 
-    let sender = new Hl7MllpSender(config.get('mllp:targetIp'), config.get('mllp:targetPort'))
+    if (status && status == TaskStatusKind._requested) {
+      logger.info('Sending IPMS Order!')
 
-    let adtMessage = await Hl7WorkflowsBw.getFhirTranslation(labBundle, 'ADT_in.hbs')
+      let sender = new Hl7MllpSender(config.get('mllp:targetIp'), config.get('mllp:targetPort'))
 
-    let adtResult: any = await sender.send(adtMessage)
+      let adtMessage = await Hl7WorkflowsBw.getFhirTranslation(labBundle, 'ADT_in.hbs')
 
-    logger.info(`adt:\n${adtMessage}\nres:\n${adtResult}`)
+      let adtResult: any = await sender.send(adtMessage)
 
-    labBundle = this.updateMrn(labBundle, adtResult)
+      logger.info(`adt:\n${adtMessage}\nres:\n${adtResult}`)
 
-    let obrMessage = await Hl7WorkflowsBw.getFhirTranslation(labBundle, 'OBR.hbs')
+      labBundle = this.updateMrn(labBundle, adtResult)
 
-    let obrResult = await sender.send(obrMessage)
+      let obrMessage = await Hl7WorkflowsBw.getFhirTranslation(labBundle, 'OBR.hbs')
 
-    logger.info(`obr:\n${obrMessage}\nres:\n${obrResult}`)
+      let obrResult = await sender.send(obrMessage)
 
-    let response: R4.IBundle = await saveLabBundle(labBundle)
+      logger.info(`obr:\n${obrMessage}\nres:\n${obrResult}`)
 
-    return response
+      let response: R4.IBundle = await saveLabBundle(labBundle)
+
+      return response
+    } else {
+      logger.info('Order not ready for IPMS.')
+      return labBundle
+    }
   }
 
   /**
@@ -191,5 +199,24 @@ export class LabWorkflowsBw extends LabWorkflows {
    */
   private static updateMrn(labBundle: R4.IBundle, adtResult: string): R4.IBundle {
     return labBundle
+  }
+
+  private static getTaskStatus(labBundle: R4.IBundle): R4.TaskStatusKind | undefined {
+    let taskResult, task
+
+    try {
+      taskResult = labBundle.entry!.find(entry => {
+        entry.resource && entry.resource.resourceType == 'Task'
+      })
+
+      if (taskResult) {
+        task = <R4.ITask>taskResult
+
+        return task.status!
+      }
+    } catch (error) {
+      logger.error(`Could not get Task status for task:\n${task}`)
+      return undefined
+    }
   }
 }

@@ -1,9 +1,7 @@
 {
   "Users": [
     {
-      "groups": [
-        "admin"
-      ],
+      "groups": ["admin"],
       "firstname": "Super",
       "surname": "User",
       "email": "root@openhim.org",
@@ -42,12 +40,8 @@
           "status": 200,
           "config": {
             "method": "GET",
-            "transformRequest": [
-              null
-            ],
-            "transformResponse": [
-              null
-            ],
+            "transformRequest": [null],
+            "transformResponse": [null],
             "jsonpCallbackParam": "callback",
             "url": "config/visualizer.json",
             "headers": {
@@ -66,9 +60,7 @@
   ],
   "Clients": [
     {
-      "roles": [
-        "test"
-      ],
+      "roles": ["test"],
       "clientID": "tester",
       "name": "tester",
       "passwordAlgorithm": "sha512",
@@ -76,9 +68,7 @@
       "passwordHash": "6a9785631997f32b1805fd768ee51206ffecc8ddbe5639851debd99b78eff61c70231c0ece2b3d077c87930f5bc30840b4c15676ba3fe2bf9b4219541bb27fa9"
     },
     {
-      "roles": [
-        "test"
-      ],
+      "roles": ["test"],
       "clientID": "postman",
       "name": "postman",
       "passwordAlgorithm": "sha512",
@@ -88,16 +78,9 @@
   ],
   "Channels": [
     {
-      "methods": [
-        "GET",
-        "POST",
-        "PUT",
-        "PATCH"
-      ],
+      "methods": ["GET", "POST", "PUT", "PATCH"],
       "type": "http",
-      "allow": [
-        "test"
-      ],
+      "allow": ["test"],
       "whitelist": [],
       "authType": "private",
       "matchContentTypes": [],
@@ -143,15 +126,9 @@
       "tcpPort": null
     },
     {
-      "methods": [
-        "GET",
-        "POST",
-        "PUT"
-      ],
+      "methods": ["GET", "POST", "PUT"],
       "type": "http",
-      "allow": [
-        "test"
-      ],
+      "allow": ["test"],
       "whitelist": [],
       "authType": "private",
       "matchContentTypes": [],
@@ -190,16 +167,9 @@
       "priority": 2
     },
     {
-      "methods": [
-        "GET",
-        "POST",
-        "DELETE",
-        "PUT"
-      ],
+      "methods": ["GET", "POST", "DELETE", "PUT"],
       "type": "http",
-      "allow": [
-        "test"
-      ],
+      "allow": ["test"],
       "whitelist": [],
       "authType": "private",
       "matchContentTypes": [],
@@ -243,6 +213,96 @@
       "pollingSchedule": null,
       "tcpHost": null,
       "tcpPort": null
+    },
+    {
+      "methods": ["GET", "POST", "PUT", "PATCH"],
+      "type": "http",
+      "allow": [],
+      "whitelist": [],
+      "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "requestBody": true,
+      "responseBody": true,
+      "name": "HL7v2 Translator API Passthrough",
+      "description": "HL7v2 Translator API Passthrough",
+      "urlPattern": "^/72f/.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "Send to Translator ",
+          "secured": false,
+          "host": "fhir-converter",
+          "port": 2019,
+          "path": "",
+          "pathTransform": "s/72f/api/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "priority": 4,
+      "updatedBy": {
+        "id": "62052f1f6a85d8001343d996",
+        "name": "Super User"
+      }
+    },
+    {
+      "methods": ["POST"],
+      "type": "http",
+      "allow": [],
+      "whitelist": [],
+      "authType": "private",
+      "matchContentTypes": [],
+      "properties": [],
+      "txViewAcl": [],
+      "txViewFullAcl": [],
+      "txRerunAcl": [],
+      "status": "enabled",
+      "rewriteUrls": false,
+      "addAutoRewriteRules": true,
+      "autoRetryEnabled": false,
+      "autoRetryPeriodMinutes": 60,
+      "requestBody": true,
+      "responseBody": true,
+      "name": "FHIR --> HL7v2 API",
+      "description": "FHIR to HL7v2 Translation",
+      "urlPattern": "^/f27/.*$",
+      "routes": [
+        {
+          "type": "http",
+          "status": "enabled",
+          "forwardAuthHeader": false,
+          "name": "Send to Translator ",
+          "secured": false,
+          "host": "fhir-converter",
+          "port": 2019,
+          "path": "",
+          "pathTransform": "s/f27/api/convert/fhir/g",
+          "primary": true,
+          "username": "",
+          "password": ""
+        }
+      ],
+      "priority": 5,
+      "alerts": [],
+      "rewriteUrlsConfig": [],
+      "updatedBy": {
+        "id": "62052f1f6a85d8001343d996",
+        "name": "Super User"
+      }
     }
   ],
   "ContactGroups": []
