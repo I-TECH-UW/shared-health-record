@@ -215,7 +215,7 @@ export class LabWorkflowsBw extends LabWorkflows {
       })
 
       if (taskResult) {
-        task = <R4.ITask>taskResult
+        task = <R4.ITask>taskResult.resource!
 
         return task.status!
       }

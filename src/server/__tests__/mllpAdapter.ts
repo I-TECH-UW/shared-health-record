@@ -10,10 +10,9 @@ describe('MllpAdapter#handleMessage', () => {
     type: BundleTypeKind._transactionResponse,
   }
   let mllp = new MllpAdapter()
-  let returnPromise: Promise<IBundle> = new Promise(res => {
-    res
+  let returnPromise: Promise<IBundle> = new Promise(resolve => {
+    resolve(returnBundle)
   })
-
   it('should handle ADT message', async () => {
     jest.setTimeout(30000)
     let msg = (await fs.readFile(path.join(__dirname, '../../__data__/sample_ADT.txt'))).toString()
@@ -23,9 +22,9 @@ describe('MllpAdapter#handleMessage', () => {
       .mockReturnValue(returnPromise)
 
     //@ts-ignore
-    let result: R4.IBundle = await mllp.handleMessage(msg)
+    let result: any = await mllp.handleMessage(msg)
 
-    expect(result).toEqual(returnPromise)
+    expect(result).toEqual(returnBundle)
     expect(saveAdtMessageSpy).toHaveBeenCalledTimes(1)
 
     saveAdtMessageSpy.mockRestore()
@@ -38,9 +37,9 @@ describe('MllpAdapter#handleMessage', () => {
       .spyOn(Hl7Workflows, 'saveOruMessage')
       .mockReturnValue(returnPromise)
 
-    let result = mllp['handleMessage'](msg)
+    let result = await mllp['handleMessage'](msg)
 
-    expect(result).toEqual(returnPromise)
+    expect(result).toEqual(returnBundle)
     expect(saveOruMessageSpy).toHaveBeenCalledTimes(1)
 
     saveOruMessageSpy.mockRestore()
