@@ -1,18 +1,16 @@
-"use strict"
+'use strict'
 
-import express, { Request, Response } from "express"
-import logger from '../lib/winston'
 import { R4 } from '@ahryman40k/ts-fhir-types'
-import config from '../lib/config'
-import { invalidBundleMessage, invalidBundle } from "../lib/helpers"
-import { saveLabBundle } from '../hapi/lab';
-import { LabWorkflowsBw } from "../workflows/labWorkflowsBw"
-import { or } from "ip"
+import express, { Request, Response } from 'express'
+import { saveLabBundle } from '../hapi/lab'
+import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
+import logger from '../lib/winston'
+import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
 
 export const router = express.Router()
 
 router.all('/', async (req: Request, res: Response) => {
-  if (req.method == "POST" || req.method == "PUT") {
+  if (req.method == 'POST' || req.method == 'PUT') {
     try {
       logger.info('Received a Lab Order bundle to save.')
       let orderBundle: R4.IBundle = req.body
@@ -23,7 +21,7 @@ router.all('/', async (req: Request, res: Response) => {
       }
 
       // Save Bundle
-      let resultBundle: R4.IBundle = (await saveLabBundle(orderBundle))
+      let resultBundle: R4.IBundle = await saveLabBundle(orderBundle)
 
       // Trigger Background Tasks
       LabWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)
@@ -32,10 +30,8 @@ router.all('/', async (req: Request, res: Response) => {
     } catch (e) {
       return res.status(500).send(e)
     }
-
   }
 })
-
 
 // Get list of active orders targetting :facility
 router.get('/orders/target/:facilityId/:_lastUpdated?', (req: Request, res: Response) => {
@@ -46,6 +42,5 @@ router.get('/orders/target/:facilityId/:_lastUpdated?', (req: Request, res: Resp
 router.get('/orders/source/:facilityId/:_lastUpdated?', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
 })
-
 
 export default router
