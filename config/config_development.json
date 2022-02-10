@@ -3,6 +3,10 @@
     "port": 3000,
     "mllpPort": 3001
   },
+  "mllp": {
+    "targetIp": "localhost",
+    "targetPort": 3001
+  },
   "mediator": {
     "api": {
       "username": "root@openhim.org",

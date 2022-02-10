@@ -1,2 +1,2 @@
-declare module "openhim-mediator-utils";
-declare module "is-json";
+declare module 'openhim-mediator-utils'
+declare module 'is-json'

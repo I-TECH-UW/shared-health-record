@@ -16,5 +16,8 @@
     "mpiURL": "http://openhim-core:5000/CR/fhir",
     "baseURL": "http://shr-fhir:8080/fhir"
   },
-  "fhirConverterUrl": "http://localhost:5001/72f"
+  "fhirConverterUrl": "http://localhost:5001/72f",
+  "taskRunner": {
+    "brokers" : ["localhost:9092"]
+  }
 }
