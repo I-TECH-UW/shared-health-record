@@ -29,9 +29,9 @@ services:
     hostname: openhim-core
     restart: unless-stopped
     environment:
-      mongo_url: "mongodb://mongo-db/openhim"
-      mongo_atnaUrl: "mongodb://mongo-db/openhim"
-      NODE_ENV: "development"
+      mongo_url: 'mongodb://mongo-db/openhim'
+      mongo_atnaUrl: 'mongodb://mongo-db/openhim'
+      NODE_ENV: 'development'
     ports:
       - 8080:8080
       - 5000:5000
@@ -39,14 +39,14 @@ services:
     networks:
       - test
     healthcheck:
-      test: "curl -sSk https://localhost:8080/heartbeat || exit 1"
+      test: 'curl -sSk https://localhost:8080/heartbeat || exit 1'
       interval: 30s
       timeout: 30s
       retries: 3
   mongo-db:
     image: mongo:3.4
     volumes:
-      - "mongo-data:/data/db"
+      - 'mongo-data:/data/db'
     restart: unless-stopped
     networks:
       - test
@@ -61,7 +61,7 @@ services:
   # Newman Tests
   newman:
     image: postman/newman
-    environment: 
+    environment:
       - $POSTMAN_COLLECTION
     volumes:
       - ./.postman:/.postman
@@ -89,24 +89,22 @@ services:
     hostname: kafka
     container_name: kafka
     environment:
-      - KAFKA_BROKER_ID=1
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-    volumes:
-      - kafka-data:/bitnami/kafka
     depends_on:
       - zookeeper
     networks:
       - test
+    entrypoint: sh -c 'sleep 30 && /opt/bitnami/scripts/kafka/entrypoint.sh /opt/bitnami/scripts/kafka/run.sh'
+
   # HL7 Converter
   fhir-converter:
     container_name: fhir-converter
     hostname: fhir-converter
     restart: unless-stopped
-    image: ghcr.io/b-techbw/openhim-mediator-fhir-converter:v3.1.0
+    image: ghcr.io/b-techbw/openhim-mediator-fhir-converter:v3.1.4
     volumes:
       - ./config/fhir-converter/config.json:/app/config.json
 
@@ -115,11 +113,11 @@ services:
     image: jembi/openhim-console:latest
     restart: unless-stopped
     ports:
-      - "80:80"
+      - '80:80'
     #volumes:
-      # - ./configs/openhim-console/default.json:/usr/share/nginx/html/config/default.json
+    # - ./configs/openhim-console/default.json:/usr/share/nginx/html/config/default.json
     healthcheck:
-      test: "curl -sS http://localhost || exit 1"
+      test: 'curl -sS http://localhost || exit 1'
       interval: 30s
       timeout: 30s
       retries: 3
