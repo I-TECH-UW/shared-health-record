@@ -3,6 +3,10 @@
     "port": 3000,
     "mllpPort": 3001
   },
+  "mllp": {
+    "targetIp": "localhost",
+    "targetPort": 3001
+  },
   "mediator": {
     "api": {
       "username": "root@openhim.org",
@@ -16,8 +20,8 @@
     "mpiURL": "http://openhim-core:5001/CR/fhir",
     "baseURL": "http://shr-fhir:8080/fhir"
   },
-  "fhirConverterUrl": "https://openhim-core:5000/72f",
+  "fhirConverterUrl": "http://openhim-core:5001/72f",
   "taskRunner": {
-    "brokers" : ["kafka:9092"]
+    "brokers": ["kafka:9092"]
   }
 }
