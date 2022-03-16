@@ -12,7 +12,9 @@ services:
     volumes:
       - ./config/config_test.json:/app/config/config_docker.json
       - ./config/mediator.json:/app/config/mediator.json
-
+    tty: true
+    stdin_open: true
+    entrypoint: sh
   shr-fhir:
     image: hapiproject/hapi:latest
     restart: unless-stopped
@@ -41,19 +43,6 @@ services:
       timeout: 30s
       retries: 3
 
-  openhim-console:
-    image: jembi/openhim-console:latest
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    #volumes:
-      # - ./configs/openhim-console/default.json:/usr/share/nginx/html/config/default.json
-    healthcheck:
-      test: "curl -sS http://localhost || exit 1"
-      interval: 30s
-      timeout: 30s
-      retries: 3
-
   mongo-db:
     image: mongo:3.4
     ports:
@@ -65,3 +54,5 @@ services:
 volumes:
   mongo-data:
   hapi-data:
+  node_modules:
+  yarn_lock:
