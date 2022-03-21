@@ -140,9 +140,11 @@ jobs:
         run: docker-compose -f ci.docker-compose.yml up --exit-code-from mllp_tests mllp_tests
 
       - name: Show SHR Log
+        if: always()
         run: docker-compose -f "ci.docker-compose.yml" logs shr
       
       - name: Show kafka Log
+        if: always()
         run: docker-compose -f "ci.docker-compose.yml" logs kafka  
       
       - name: Stop containers
