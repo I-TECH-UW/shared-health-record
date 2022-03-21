@@ -179,42 +179,6 @@
 				}
 			},
 			"response": []
-		},
-		{
-			"name": "HL7v2 Translator Channel should be up",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Contains templates\", function () {",
-							"    var jsonData = pm.response.json();",
-							"    pm.expect(jsonData.templates).to.be.lengthOf.above(0);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{openhim-url}}/72f/templates",
-					"host": [
-						"{{openhim-url}}"
-					],
-					"path": [
-						"72f",
-						"templates"
-					]
-				}
-			},
-			"response": []
 		}
 	],
 	"auth": {
