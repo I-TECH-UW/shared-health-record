@@ -44,53 +44,6 @@
 			"response": []
 		},
 		{
-			"name": "CR OpenHIM Channel should be up",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "postman",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "postman",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{openhim-url}}/CR/fhir/metadata",
-					"host": [
-						"{{openhim-url}}"
-					],
-					"path": [
-						"CR",
-						"fhir",
-						"metadata"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "SHR OpenHIM channel should be up",
 			"event": [
 				{
