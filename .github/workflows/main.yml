@@ -97,7 +97,7 @@ jobs:
         run: docker-compose -f ci.docker-compose.yml up -d openhim-config
 
       - name: Sleep for 60 seconds
-        run: sleep 60s
+        run: sleep 90s
         shell: bash
 
       - name: Display docker logs for openhim config
