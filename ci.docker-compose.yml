@@ -78,20 +78,22 @@ services:
       - test
   # Task Runner
   zookeeper:
-    image: 'bitnami/zookeeper:latest'
+    image: "bitnami/zookeeper:latest"
     hostname: zookeeper
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
-      - test
+    - hie
+    volumes:
+      - /data
   kafka:
-    image: 'bitnami/kafka:latest'
+    image: "bitnami/kafka:latest"
     hostname: kafka
     container_name: kafka
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
@@ -100,15 +102,17 @@ services:
     depends_on:
       - zookeeper
     networks:
-      - test
-  # HL7 Converter
-  fhir-converter:
-    container_name: fhir-converter
-    hostname: fhir-converter
-    restart: unless-stopped
-    image: ghcr.io/b-techbw/openhim-mediator-fhir-converter:v3.1.0
-    volumes:
-      - ./config/fhir-converter/config.json:/app/config.json
+    - hie
+    entrypoint: sh -c 'sleep 30 && /opt/bitnami/scripts/kafka/entrypoint.sh /opt/bitnami/scripts/kafka/run.sh' # prevent zookeeper conflict error
+  
+  # # HL7 Converter
+  # fhir-converter:
+  #   container_name: fhir-converter
+  #   hostname: fhir-converter
+  #   restart: unless-stopped
+  #   image: ghcr.io/b-techbw/openhim-mediator-fhir-converter:v3.1.0
+  #   volumes:
+  #     - ./config/fhir-converter/config.json:/app/config.json
 
   # Not necessary
   openhim-console:
