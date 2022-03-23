@@ -54,24 +54,26 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   static async translatePimsCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
     try {
+      let options = {timeout: config.get("bwConfig:oclTimeout")}
       let pimsCoding: R4.ICoding = <R4.ICoding>(
         sr.code!.coding!.find(
           e =>
             e.system &&
-            e.system == 'https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/',
+            e.system == config.get("bwConfig:pimsSystemUrl"),
         )
       )
       let pimsCode: string = pimsCoding.code!
 
       let ipmsMapping: any = await got
         .get(
-          `https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/mappings?toConcept=${pimsCode}&toConceptSource=PIMS-LAB-TEST-DICT`,
+          `${config.get("bwConfig:oclUrl")}/orgs/B-TECHBW/sources/IPMS-LAB-TEST/mappings?toConcept=${pimsCode}&toConceptSource=PIMS-LAB-TEST-DICT`,
+          options
         )
         .json()
       let ipmsCode: string = ipmsMapping[0].from_concept_code
       if (ipmsMapping.length > 0) {
         sr.code!.coding!.push({
-          system: 'https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/',
+          system: `${config.get("bwConfig:oclUrl")}/orgs/B-TECHBW/sources/IPMS-LAB-TEST/`,
           code: ipmsCode,
           display: ipmsMapping[0].from_concept_name_resolved,
         })
@@ -79,7 +81,8 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       let cielMapping: any = await got
         .get(
-          `https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCode}`,
+          `${config.get("bwConfig:oclUrl")}/orgs/B-TECHBW/sources/IPMS-LAB-TEST/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCode}`,
+          options
         )
         .json()
       let cielCode: string = cielMapping[0].to_concept_code
@@ -93,14 +96,15 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       let loincMapping = got
         .get(
-          `https://api.openconceptlab.org/orgs/CIEL/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCode}`,
+          `${config.get("bwConfig:oclUrl")}/orgs/CIEL/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCode}`,
+          options
         )
         .json()
       await loincMapping.catch(logger.error).then((lm: any) => {
         if (lm.length > 0) {
           let loinCode: string = lm[0].to_concept_code
           sr.code!.coding!.push({
-            system: 'https://api.openconceptlab.org/orgs/Regenstrief/sources/LOINC/',
+            system: `${config.get("bwConfig:oclUrl")}/orgs/Regenstrief/sources/LOINC/`,
             code: loinCode,
           })
         }

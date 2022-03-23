@@ -27,5 +27,10 @@
   "fhirConverterUrl": "http://localhost:5001/72f",
   "taskRunner": {
     "brokers" : ["localhost:9092"]
+  },
+  "bwConfig":{
+    "pimsSystemUrl" : "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
+    "oclUrl": "https://api.openconceptlab.org/",
+    "oclTimeout": 500
   }
 }

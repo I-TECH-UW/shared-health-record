@@ -1,0 +1,350 @@
+{
+	"info": {
+		"_postman_id": "f28b488f-a40c-4723-8a72-a2b4f64bb5da",
+		"name": "2. Laboratory Workflows",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Add Requested PIMS Order Bundle To SHR",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful POST request\", function () {",
+							"    pm.expect(pm.response.code).to.be.eq(200);",
+							"    pm.response.to.be.withBody;",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"",
+							"pm.test(\"All PUTs succeeded\", function () {",
+							"    var bundle = pm.response.json();",
+							"",
+							"    pm.expect(bundle.entry.length).to.eq(10);",
+							"    ",
+							"    bundle.entry.forEach(function(e) {",
+							"        pm.expect(e.response.status.toString()).to.be.oneOf([\"201 Created\", \"200 OK\"])",
+							"    })});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "postman",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "postman",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"document\",\n  \"entry\": [\n    {\n      \"resource\": {\n        \"resourceType\": \"Composition\",\n        \"id\": \"{{PIMS_LAB_ORDER_ID}}\",\n        \"meta\": {\n          \"profile\": [\n            \"http://i-tech-uw.github.io/laboratory-workflows-ig/StructureDefinition/laboratory-composition\"\n          ]\n        },\n        \"status\": \"final\",\n        \"type\": {\n          \"coding\": [\n            {\n              \"code\": \"document\"\n            }\n          ]\n        },\n        \"subject\": {\n          \"reference\": \"Patient/{{PIMS_PATIENT_ID}}\"\n        },\n        \"date\": \"2021-08-09T00:00:00\",\n        \"author\": [\n          {\n            \"reference\": \"Practitioner/{{PIMS_PROVIDER_ID}}\"\n          }\n        ],\n        \"title\": \"Laboratory Single Order Composition\",\n        \"section\": [\n          {\n            \"entry\": [\n              {\n                \"reference\": \"Task/{{PIMS_LAB_ORDER_ID}}\"\n              }\n            ]\n          },\n          {\n            \"entry\": [\n              {\n                \"reference\": \"ServiceRequest/{{PIMS_LAB_PROFILE_ID_1}}\"\n              },\n              {\n                \"reference\": \"ServiceRequest/{{PIMS_LAB_TEST_ID_1}}\"\n              }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"Patient\",\n        \"id\": \"{{PIMS_PATIENT_ID}}\",\n        \"meta\": {\n          \"profile\": [\n            \"http://b-techbw.github.io/bw-lab-ig/StructureDefinition/bw-patient\"\n          ]\n        },\n        \"identifier\": [\n          {\n            \"system\": \"http://moh.bw.org/ext/identifier/omang\",\n            \"value\": \"{{OMANG}}\",\n            \"use\": \"official\"\n          },\n          {\n            \"value\": \"{{PIMS_PATIENT_ID}}\",\n            \"type\": {\n              \"coding\": [\n                {\n                  \"code\": \"MR\"\n                }\n              ]\n            }\n          }\n        ],\n        \"name\": [\n          {\n            \"use\": \"official\",\n            \"family\": \"{{lastName}}\",\n            \"given\": [\n              \"{{firstName}}\"\n            ]\n          }\n        ],\n        \"gender\": \"{{sex}}\",\n        \"birthDate\": \"{{birthDate}}\",\n        \"managingOrganization\": {\n          \"reference\": \"Organization/{{PIMS_FACILITY_CODE}}\"\n        }\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"Practitioner\",\n        \"id\": \"{{PIMS_PROVIDER_ID}}\",\n        \"meta\": {\n          \"profile\": [\n            \"http://i-tech-uw.github.io/laboratory-workflows-ig/StructureDefinition/laboratory-practitioner\"\n          ]\n        },\n        \"identifier\": [\n          {\n            \"system\": \"http://fhir.moh.org.bw/ext/provider/identifier\",\n            \"value\": \"{{PIMS_PROVIDER_ID}}\"\n          }\n        ],\n        \"name\": [\n          {\n            \"text\": \"Kang  Nort\"\n          }\n        ]\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{PIMS_LAB_ORDER_ID}}\",\n        \"meta\": {\n          \"profile\": [\n            \"http://i-tech-uw.github.io/laboratory-workflows-ig/StructureDefinition/laboratory-task\"\n          ]\n        },\n        \"identifier\": [\n          {\n            \"system\": \"http://i-tech-uw.github.io/lab-workflow-ig/ext/task/identifier\",\n            \"value\": \"{{PIMS_LAB_ORDER_ID}}\"\n          }\n        ],\n        \"basedOn\": [\n          {\n            \"reference\": \"ServiceRequest/{{PIMS_LAB_PROFILE_ID_1}}\",\n            \"type\": \"ServiceRequest\"\n          }\n        ],\n        \"status\": \"requested\",\n        \"intent\": \"order\",\n        \"for\": {\n          \"reference\": \"Patient/{{PIMS_PATIENT_ID}}\"\n        },\n        \"authoredOn\": \"2021-09-10\",\n        \"owner\": {\n          \"reference\": \"Organization/{{IPMS_FACILITY_CODE}}\"\n        },\n        \"location\": {\n          \"reference\": \"Location/{{PIMS_FACILITY_CODE}}\"\n        }\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"ServiceRequest\",\n        \"id\": \"{{PIMS_LAB_PROFILE_ID_1}}\",\n        \"meta\": {\n          \"profile\": [\n            \"http://i-tech-uw.github.io/laboratory-workflows-ig/StructureDefinition/laboratory-service-request\"\n          ]\n        },\n        \"status\": \"active\",\n        \"intent\": \"order\",\n        \"code\": {\n          \"coding\": [\n            {\n              \"system\": \"https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-PROFILE-DICT/\",\n              \"code\": \"1\",\n              \"display\": \"CD4\"\n            }\n          ]\n        },\n        \"subject\": {\n          \"reference\": \"Patient/{{PIMS_PATIENT_ID}}\"\n        },\n        \"requester\": {\n          \"reference\": \"Organization/{{PIMS_FACILITY_CODE}}\"\n        },\n        \"performer\": [\n          {\n            \"reference\": \"Organization/{{IPMS_FACILITY_CODE}}\"\n          }\n        ],\n        \"locationReference\": [\n          {\n            \"reference\": \"Location/{{IPMS_FACILITY_CODE}}\"\n          }\n        ]\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"ServiceRequest\",\n        \"id\": \"{{PIMS_LAB_TEST_ID_1}}\",\n        \"meta\": {\n          \"profile\": [\n            \"http://i-tech-uw.github.io/laboratory-workflows-ig/StructureDefinition/laboratory-service-request\"\n          ]\n        },\n        \"status\": \"active\",\n        \"intent\": \"order\",\n        \"code\": {\n          \"coding\": [\n            {\n              \"system\": \"https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/\",\n              \"code\": \"1\",\n              \"display\": \"CD4 count\"\n            }\n          ]\n        },\n        \"basedOn\": [\n          {\n            \"reference\": \"ServiceRequest/{{PIMS_LAB_PROFILE_ID_1}}\"\n          }\n        ],\n        \"subject\": {\n          \"reference\": \"Patient/{{PIMS_PATIENT_ID}}\"\n        },\n        \"requester\": {\n          \"reference\": \"Organization/{{PIMS_FACILITY_CODE}}\"\n        },\n        \"performer\": [\n          {\n            \"reference\": \"Organization/{{IPMS_FACILITY_CODE}}\"\n          }\n        ],\n        \"locationReference\": [\n          {\n            \"reference\": \"Location/{{IPMS_FACILITY_CODE}}\"\n          }\n        ]\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"Organization\",\n        \"id\": \"{{PIMS_FACILITY_CODE}}\",\n        \"identifier\": [\n          {\n            \"system\": \"http://moh.bw.org/ext/mfl/facility-code\",\n            \"value\": \"{{PIMS_FACILITY_CODE}}\"\n          }\n        ],\n        \"active\": true,\n        \"type\": [\n          {\n            \"coding\": [\n              {\n                \"system\": \"http://moh.bw.org/ext/mfl/facility-type\",\n                \"code\": \"PIMS\"\n              }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"Location\",\n        \"id\": \"{{PIMS_FACILITY_CODE}}\",\n        \"status\": \"active\",\n        \"managingOrganization\": {\n          \"reference\": \"Organization/{{PIMS_FACILITY_CODE}}\"\n        }\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"Organization\",\n        \"id\": \"{{IPMS_FACILITY_CODE}}\",\n        \"identifier\": [\n          {\n            \"system\": \"http://moh.bw.org/ext/mfl/facility-code\",\n            \"value\": \"{{IPMS_FACILITY_CODE}}\"\n          }\n        ],\n        \"active\": true,\n        \"type\": [\n          {\n            \"coding\": [\n              {\n                \"system\": \"http://moh.bw.org/ext/mfl/facility-type\",\n                \"code\": \"IPMS-LAB\"\n              }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"resource\": {\n        \"resourceType\": \"Location\",\n        \"id\": \"{{IPMS_FACILITY_CODE}}\",\n        \"status\": \"active\",\n        \"managingOrganization\": {\n          \"reference\": \"Organization/{{IPMS_FACILITY_CODE}}\"\n        }\n      }\n    }\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{openhim-url}}/SHR/lab",
+					"host": [
+						"{{openhim-url}}"
+					],
+					"path": [
+						"SHR",
+						"lab"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validate SHR Task",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    pm.response.to.be.withBody;",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Single task found with the right status.\", function () {",
+							"    pm.expect(jsonData.total).to.eql(1);",
+							"    pm.expect(jsonData.entry[0].resource.status == \"draft\")",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "postman",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "postman",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{openhim-url}}/SHR/fhir/Task?_id={{PIMS_LAB_ORDER_ID}}&_include=*",
+					"host": [
+						"{{openhim-url}}"
+					],
+					"path": [
+						"SHR",
+						"fhir",
+						"Task"
+					],
+					"query": [
+						{
+							"key": "_id",
+							"value": "{{PIMS_LAB_ORDER_ID}}"
+						},
+						{
+							"key": "_include",
+							"value": "*"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validate Mappings",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    pm.response.to.be.withBody;",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"",
+							"pm.test(\"ServiceRequest has the right mappings\", function () {",
+							"    pm.expect(jsonData.total).to.eql(1);",
+							"    pm.expect(jsonData.entry[0].resource.code.coding.length > 1)",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "postman",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "postman",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{openhim-url}}/SHR/fhir/ServiceRequest?_id={{PIMS_LAB_TEST_ID_1}}",
+					"host": [
+						"{{openhim-url}}"
+					],
+					"path": [
+						"SHR",
+						"fhir",
+						"ServiceRequest"
+					],
+					"query": [
+						{
+							"key": "_id",
+							"value": "{{PIMS_LAB_TEST_ID_1}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "postman",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "postman",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "patientMRN",
+			"value": ""
+		},
+		{
+			"key": "omang",
+			"value": ""
+		},
+		{
+			"key": "birthDate",
+			"value": ""
+		},
+		{
+			"key": "sex",
+			"value": ""
+		},
+		{
+			"key": "firstName",
+			"value": ""
+		},
+		{
+			"key": "lastName",
+			"value": ""
+		},
+		{
+			"key": "practitionerId",
+			"value": ""
+		},
+		{
+			"key": "taskId",
+			"value": ""
+		},
+		{
+			"key": "serviceRequestId",
+			"value": ""
+		},
+		{
+			"key": "compositionId",
+			"value": ""
+		},
+		{
+			"key": "PIMS_PATIENT_ID",
+			"value": ""
+		},
+		{
+			"key": "PIMS_FACILITY_CODE",
+			"value": ""
+		},
+		{
+			"key": "IPMS_FACILITY_CODE",
+			"value": ""
+		},
+		{
+			"key": "PIMS_LAB_ORDER_ID",
+			"value": ""
+		},
+		{
+			"key": "PIMS_LAB_PROFILE_ID_1",
+			"value": ""
+		},
+		{
+			"key": "PIMS_LAB_TEST_ID_1",
+			"value": ""
+		},
+		{
+			"key": "PIMS_LAB_TEST_ID_2",
+			"value": ""
+		},
+		{
+			"key": "PIMS_PROVIDER_ID",
+			"value": ""
+		},
+		{
+			"key": "OMANG",
+			"value": ""
+		},
+		{
+			"key": "PIMS_LAB_TEST_CODE",
+			"value": "3",
+			"type": "string"
+		},
+		{
+			"key": "IPMS_LAB_TEST_CODE",
+			"value": ""
+		},
+		{
+			"key": "CIEL_CODE",
+			"value": ""
+		},
+		{
+			"key": "LOINC_CODE",
+			"value": ""
+		},
+		{
+			"key": "patientCRUID",
+			"value": ""
+		}
+	]
+}
