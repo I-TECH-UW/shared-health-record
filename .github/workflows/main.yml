@@ -135,7 +135,8 @@ jobs:
         env: 
           POSTMAN_COLLECTION: /.postman/collections/2_laboratory_workflows.json
         run: docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman
-      
+        continue-on-error: true
+
       - name: Run MLLP Tests
         run: docker-compose -f ci.docker-compose.yml up --exit-code-from mllp_tests mllp_tests
 
