@@ -1,10 +1,10 @@
-version: '3.9'
+version: '3.8'
 
-## Container debugging: 
-# 1. append the following lines to desired container 
+## Container debugging:
+# 1. append the following lines to desired container
 # 2. boot up the container using `docker-compose up -d`
 # 3 run `docker exec -it <container-name> bash` to start interactive shell
-# 
+#
 #    tty: true
 #    stdin_open: true
 #    entrypoint: bash
@@ -14,18 +14,16 @@ services:
   shr:
     container_name: shr
     hostname: shr
+    image: ghcr.io/i-tech-uw/shared-health-record:${SHR_VERSION-latest}
     build: .
     ports:
       - 3000:3000
     environment:
       - NODE_ENV=docker
     volumes:
-      - ./config/config_development.json:/app/config/config_docker.json
-      - ./config/mediator_development.json:/app/config/mediator_docker.json
-    networks:
-      - hie
-    profiles: ["shr"]
-    
+      - ./config/config_ci.json:/app/config/config_docker.json
+      - ./config/mediator_ci.json:/app/config/mediator_docker.json
+
   shr-fhir:
     container_name: shr-fhir
     hostname: shr-fhir
@@ -33,11 +31,6 @@ services:
     restart: unless-stopped
     volumes:
       - hapi-data:/data/hapi
-    networks:
-      - hie
-    profiles: ["dev"]
-    ports:
-      - 8090:8080
 
   # Kafka Task Runners
   zookeeper:
@@ -45,21 +38,77 @@ services:
     hostname: zookeeper
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    volumes:
+      - /data
   kafka:
     image: 'bitnami/kafka:latest'
     hostname: kafka
-    ports:
-      - '9092:9092'
+    container_name: kafka
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
     volumes:
-      - /bitnami/kafka
-networks:
-  hie:
-    external: true
-    name: hie-botswana_hie
+      - kafka-data:/bitnami/kafka
+    depends_on:
+      - zookeeper
+    entrypoint: sh -c 'sleep 30 && /opt/bitnami/scripts/kafka/entrypoint.sh /opt/bitnami/scripts/kafka/run.sh' # prevent zookeeper conflict error
+
+  ###
+  # OpenHIM
+  ###
+  openhim-core:
+    profiles: ['openhim']
+    image: jembi/openhim-core:latest
+    hostname: openhim-core
+    restart: unless-stopped
+    environment:
+      mongo_url: 'mongodb://mongo-db/openhim'
+      mongo_atnaUrl: 'mongodb://mongo-db/openhim'
+      NODE_ENV: 'development'
+    ports:
+      - 8080:8080
+      - 5000:5000
+      - 5001:5001
+    healthcheck:
+      test: 'curl -sSk https://localhost:8080/heartbeat || exit 1'
+      interval: 30s
+      timeout: 30s
+      retries: 3
+  mongo-db:
+    profiles: ['openhim']
+    image: mongo:3.4
+    volumes:
+      - 'mongo-data:/data/db'
+    restart: unless-stopped
+  # OpenHIM Config
+  openhim-config:
+    profiles: ['openhim']
+    container_name: openhim-config
+    image: ghcr.io/i-tech-uw/openhim-config:v0.0.0
+    volumes:
+      - ./config/openhim/ci-openhim-config.json:/app/test-openhim-config.json
+
+  # Newman Tests
+  newman:
+    profiles: ['test']
+    image: postman/newman
+    environment:
+      - $POSTMAN_COLLECTION
+    volumes:
+      - ./.postman:/.postman
+    entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000 --delay-request 10000
+    networks:
+      - test
+  # MLLP Tests
+  mllp_tests:
+    profiles: ['test']
+    container_name: mllp_tests
+    image: ghcr.io/b-techbw/mllp-tester:main
+    volumes:
+      - ./test/mllp:/test
+    networks:
+      - test
