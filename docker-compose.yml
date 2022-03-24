@@ -94,7 +94,7 @@ services:
 
   # Newman Tests
   newman:
-    profiles: ['test']
+    # profiles: ['test']
     image: postman/newman
     environment:
       - $POSTMAN_COLLECTION
@@ -104,7 +104,7 @@ services:
 
   # MLLP Tests
   mllp_tests:
-    profiles: ['test']
+    # profiles: ['test']
     container_name: mllp_tests
     image: ghcr.io/b-techbw/mllp-tester:main
     volumes:
