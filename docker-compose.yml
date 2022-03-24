@@ -30,7 +30,7 @@ services:
     image: hapiproject/hapi:latest
     restart: unless-stopped
     volumes:
-      - hapi-data:/data/hapi
+      - /data/hapi
 
   # Kafka Task Runners
   zookeeper:
@@ -52,7 +52,7 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
     volumes:
-      - kafka-data:/bitnami/kafka
+      - /bitnami/kafka
     depends_on:
       - zookeeper
     entrypoint: sh -c 'sleep 30 && /opt/bitnami/scripts/kafka/entrypoint.sh /opt/bitnami/scripts/kafka/run.sh' # prevent zookeeper conflict error
@@ -82,7 +82,7 @@ services:
     profiles: ['openhim']
     image: mongo:3.4
     volumes:
-      - 'mongo-data:/data/db'
+      - '/data/db'
     restart: unless-stopped
   # OpenHIM Config
   openhim-config:
@@ -101,8 +101,7 @@ services:
     volumes:
       - ./.postman:/.postman
     entrypoint: newman run $POSTMAN_COLLECTION -e /.postman/ci.postman_environment.json --insecure --timeout-request 10000 --delay-request 10000
-    networks:
-      - test
+
   # MLLP Tests
   mllp_tests:
     profiles: ['test']
@@ -110,5 +109,3 @@ services:
     image: ghcr.io/b-techbw/mllp-tester:main
     volumes:
       - ./test/mllp:/test
-    networks:
-      - test
