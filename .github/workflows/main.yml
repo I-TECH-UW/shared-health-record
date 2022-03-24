@@ -130,7 +130,7 @@ jobs:
       - name: Run General Tests Collection
         env:
           POSTMAN_COLLECTION: /.postman/collections/1_general_tests.json
-        run: docker-compose up --exit-code-from newman newman
+        run: docker-compose up -d newman
 
       - name: Run Laboratory Workflows Collection (collection/1525496-f28b488f-a40c-4723-8a72-a2b4f64bb5da)
         env:
