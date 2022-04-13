@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
   release:
     types: [published]
   workflow_dispatch:
@@ -12,6 +12,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  SHR_VERSION: ci
 
 jobs:
   unit-test:
@@ -19,29 +20,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v1
-    
-    - uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-        cache: 'yarn'
-        registry-url: https://npm.pkg.github.com
-        scope: '@b-techbw'
-  
-    - run: cat .npmrc
+      - name: Checkout
+        uses: actions/checkout@v1
 
-    - name: Yarn
-      run: yarn -D
-      env: 
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
-    - name: Build
-      run: yarn tsc
-    
-    - name: Run Jest Tests
-      run: yarn test:unit
-  
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+          cache: 'yarn'
+          registry-url: https://npm.pkg.github.com
+          scope: '@b-techbw'
+
+      - run: cat .npmrc
+
+      - name: Yarn
+        run: yarn -D
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build
+        run: yarn tsc
+
+      - name: Run Jest Tests
+        run: yarn test:unit
+
   build-test-push:
     timeout-minutes: 10
     runs-on: ubuntu-latest
@@ -58,99 +59,99 @@ jobs:
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      
+
       - name: Change repo info to lowercase
         id: string
         uses: ASzc/change-string-case-action@v1
         with:
           string: ${{ github.repository }}
-    
+
       - name: Get Package Version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@master
-      
+
       - name: Check custom tag
-        run: echo ${{ env.REGISTRY }}/${{ steps.string.outputs.lowercase }}:${{steps.package-version.outputs.current-version}} 
-        
+        run: echo ${{ env.REGISTRY }}/${{ steps.string.outputs.lowercase }}:${{steps.package-version.outputs.current-version}}
+
       - name: Build SHR
         uses: docker/build-push-action@v2
         with:
-          tags: test-image:latest
+          tags: ghcr.io/i-tech-uw/shared-health-record:ci
           push: false
           load: true
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
-      
+
       - name: Pull containers
-        run: docker-compose -f ci.docker-compose.yml pull shr-fhir openhim-core mongo-db newman kafka zookeeper
+        run: docker-compose pull shr-fhir openhim-core mongo-db newman kafka zookeeper
 
       - name: Cache containers
         uses: satackey/action-docker-layer-caching@v0.0.11
         continue-on-error: true
 
       - name: Start containers
-        run: docker-compose -f ci.docker-compose.yml up -d shr-fhir mongo-db openhim-core kafka zookeeper
-        
+        run: docker-compose up -d shr-fhir mongo-db openhim-core kafka zookeeper
+
       - name: Load openhim config
-        run: docker-compose -f ci.docker-compose.yml up -d openhim-config
+        run: docker-compose up -d openhim-config
 
       - name: Sleep for 60 seconds
         run: sleep 90s
         shell: bash
 
       - name: Display docker logs for openhim config
-        run: docker-compose -f ci.docker-compose.yml logs openhim-config
+        run: docker-compose logs openhim-config
 
       - name: Run SHR image
-        run: docker-compose -f ci.docker-compose.yml up -d shr
-      
+        run: docker-compose up -d shr
+
       - name: Sleep for 30 seconds
         run: sleep 30s
         shell: bash
 
       - name: Show SHR Log
-        run: docker-compose -f "ci.docker-compose.yml" logs shr
-      
+        run: docker-compose logs shr
+
       - name: Show kafka Log
-        run: docker-compose -f "ci.docker-compose.yml" logs kafka
-      
+        run: docker-compose logs kafka
+
       - name: Check openhim-core
         run: curl -sSk https://localhost:8080/heartbeat
 
       - name: Show containers
-        run: docker-compose -f "ci.docker-compose.yml" ps
+        run: docker-compose ps
 
       - name: Show OpenHIM Log
-        run: docker-compose -f "ci.docker-compose.yml" logs openhim-core
+        run: docker-compose logs openhim-core
 
       # Postman Testing - see https://www.postman.com/itechuw/workspace/shared-health-record/
       - name: Run General Tests Collection
-        env: 
+        env:
           POSTMAN_COLLECTION: /.postman/collections/1_general_tests.json
-        run: docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman 
+        run: docker-compose up -d newman
 
       - name: Run Laboratory Workflows Collection (collection/1525496-f28b488f-a40c-4723-8a72-a2b4f64bb5da)
-        env: 
+        env:
           POSTMAN_COLLECTION: /.postman/collections/2_laboratory_workflows.json
-        run: docker-compose -f ci.docker-compose.yml up --exit-code-from newman newman
+        run: docker-compose up --exit-code-from newman newman
         continue-on-error: true
 
       - name: Run MLLP Tests
-        run: docker-compose -f ci.docker-compose.yml up --exit-code-from mllp_tests mllp_tests
+        run: docker-compose up --exit-code-from mllp_tests mllp_tests
 
       - name: Show SHR Log
         if: always()
-        run: docker-compose -f "ci.docker-compose.yml" logs shr
-      
+        run: docker-compose logs shr
+
       - name: Show kafka Log
         if: always()
-        run: docker-compose -f "ci.docker-compose.yml" logs kafka  
-      
+        run: docker-compose logs kafka
+
       - name: Stop containers
         if: always()
-        run: docker-compose -f "dev.docker-compose.yml" down
+        run: docker-compose down
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -165,9 +166,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }},${{ env.REGISTRY }}/${{ steps.string.outputs.lowercase }}:${{steps.package-version.outputs.current-version}} 
+          tags: ${{ steps.meta.outputs.tags }},${{ env.REGISTRY }}/${{ steps.string.outputs.lowercase }}:${{steps.package-version.outputs.current-version}}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}          
-          
+          build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
