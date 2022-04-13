@@ -20,7 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "@ahryman40k/ts-fhir-types": "^4.0.34",
-    "@b-techbw/mllp": ">=3.0.6",
+    "@b-techbw/mllp": ">=3.1.0",
     "@types/got": "^9.6.12",
     "acorn": ">=7.1.1",
     "async": "^3.1.0",
