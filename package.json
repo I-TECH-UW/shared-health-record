@@ -43,7 +43,7 @@
     "metaphone": "^1.0.6",
     "minimist": ">=1.2.6",
     "moment": "^2.29.2",
-    "nconf": "^0.10.0",
+    "nconf": "^0.11.4",
     "openhim-mediator-utils": "^0.2.3",
     "querystring": "^0.2.1",
     "request-promise-native": "^1.0.8",
