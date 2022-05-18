@@ -2,7 +2,7 @@
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import express, { Request, Response } from 'express'
 import got from 'got/dist/source'
-import { saveLabBundle } from '../hapi/lab'
+import { saveBundle } from '../hapi/lab'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { LabWorkflows } from '../workflows/labWorkflows'
@@ -36,7 +36,7 @@ router.all('/', async (req: Request, res: Response) => {
     let resultBundle: R4.IBundle
 
     try {
-      resultBundle = <R4.IBundle>await saveLabBundle(orderBundle)
+      resultBundle = <R4.IBundle>await saveBundle(orderBundle)
     } catch (error) {
       logger.error(error)
       return res.status(500).send(error)

@@ -27,10 +27,10 @@ export default class MllpAdapter {
 
     if (msgType == 'ADT') {
       logger.info('Handling ADT Message')
-      return Hl7WorkflowsBw.saveAdtMessage(data)
+      return Hl7WorkflowsBw.handleAdtMessage(data)
     } else if (msgType == 'ORU') {
       logger.info('Handling ORU Message')
-      return Hl7WorkflowsBw.saveOruMessage(data)
+      return Hl7WorkflowsBw.handleOruMessage(data)
     } else {
       logger.error('Message unsupported!')
       return {

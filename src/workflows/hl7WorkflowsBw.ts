@@ -3,9 +3,11 @@
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
-import { saveLabBundle } from '../hapi/lab'
+import { saveBundle } from '../hapi/lab'
 import config from '../lib/config'
 import logger from '../lib/winston'
+import { sendPayload } from '../lib/kafka'
+import { topicList } from './labWorkflowsBw'
 
 export default class Hl7WorkflowsBw {
   public static errorBundle: IBundle = {
@@ -21,13 +23,19 @@ export default class Hl7WorkflowsBw {
   }
 
   // GET Lab Orders via HL7v2 over HTTP - ORU Message
-  static async saveOruMessage(hl7Msg: string): Promise<R4.IBundle> {
+  static async handleOruMessage(hl7Msg: string): Promise<R4.IBundle> {
     try {
-      let translatedBundle = await this.getHl7Translation(hl7Msg, 'ORU_R01.hbs')
+      let translatedBundle: R4.IBundle = await this.getHl7Translation(
+        hl7Msg,
+        config.get('bwConfig:fromIpmsOruTemplate'),
+      )
 
       if (translatedBundle != this.errorBundle) {
         // Save to SHR
-        let resultBundle: R4.IBundle = await saveLabBundle(translatedBundle)
+        let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
+
+        // TODO: handle matching to update the Task and ServiceRequests with status/results
+
         return resultBundle
       } else {
         return this.errorBundle
@@ -38,14 +46,22 @@ export default class Hl7WorkflowsBw {
     }
   }
 
-  // GET Lab Orders via HL7v2 over HTTP - ORU Message
-  static async saveAdtMessage(hl7Msg: string): Promise<R4.IBundle> {
+  static async handleAdtMessage(hl7Msg: string): Promise<R4.IBundle> {
     try {
-      let translatedBundle: R4.IBundle = await this.getHl7Translation(hl7Msg, 'ADT_R04.hbs')
+      let translatedBundle: R4.IBundle = await this.getHl7Translation(
+        hl7Msg,
+        config.get('bwConfig:fromIpmsAdtTemplate'),
+      )
 
       if (translatedBundle != this.errorBundle) {
         // Save to SHR
-        let resultBundle: R4.IBundle = await saveLabBundle(translatedBundle)
+        let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
+
+        sendPayload(
+          { bundle: translatedBundle, response: resultBundle },
+          topicList.SAVE_IPMS_PATIENT,
+        )
+
         return resultBundle
       } else {
         return this.errorBundle

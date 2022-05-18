@@ -19,7 +19,7 @@ router.get('/', (req: Request, res: Response) => {
 router.get('/Patient/cruid/:id/:lastUpdated?', async (req: Request, res: Response) => {
   const cruid = req.params.id
   const lastUpdated = req.params.lastUpdated
-  const mpiUrl = config.get('fhirServer:mpiURL')
+  const mpiUrl = config.get('clientRegistryUrl')
   const shrUrl = config.get('fhirServer:baseURL')
 
   logger.info(
@@ -55,7 +55,7 @@ router.get('/Patient/cruid/:id/:lastUpdated?', async (req: Request, res: Respons
 router.get('/Patient/:id/:lastUpdated?', async (req: Request, res: Response) => {
   const patientId = req.params.id
   const lastUpdated = req.params.lastUpdated
-  const mpiUrl = config.get('fhirServer:mpiURL')
+  const mpiUrl = config.get('clientRegistryUrl')
   const shrUrl = config.get('fhirServer:baseURL')
 
   logger.info(
