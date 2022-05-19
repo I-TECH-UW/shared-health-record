@@ -23,6 +23,6 @@
   "bwConfig": {
     "pimsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
     "oclUrl": "https://api.openconceptlab.org",
-    "oclTimeout": 500
+    "requestTimeout": 500
   }
 }

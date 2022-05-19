@@ -20,23 +20,32 @@ export default class MllpAdapter {
   }
 
   private async handleMessage(data: any): Promise<IBundle> {
-    logger.info('received payload:', data)
-    // Determine Message Type
-    let parsed = hl7.parseString(data)
-    let msgType: string = parsed[0][9][0][0]
+    try {
+      logger.info('received payload:', data)
+      // Determine Message Type
+      let parsed = hl7.parseString(data)
+      let msgType: string = parsed[0][9][0][0]
 
-    if (msgType == 'ADT') {
-      logger.info('Handling ADT Message')
-      return Hl7WorkflowsBw.handleAdtMessage(data)
-    } else if (msgType == 'ORU') {
-      logger.info('Handling ORU Message')
-      return Hl7WorkflowsBw.handleOruMessage(data)
-    } else {
-      logger.error('Message unsupported!')
+      if (msgType == 'ADT') {
+        logger.info('Handling ADT Message')
+        return Hl7WorkflowsBw.handleAdtMessage(data)
+      } else if (msgType == 'ORU') {
+        logger.info('Handling ORU Message')
+        return Hl7WorkflowsBw.handleOruMessage(data)
+      } else {
+        logger.error('Message unsupported!')
+        return {
+          type: BundleTypeKind._transactionResponse,
+          resourceType: 'Bundle',
+          entry: [{ response: { status: '501 Not Implemented' } }],
+        }
+      }
+    } catch (error) {
+      logger.error(error)
       return {
         type: BundleTypeKind._transactionResponse,
         resourceType: 'Bundle',
-        entry: [{ response: { status: '501 Not Implemented' } }],
+        entry: [{ response: { status: '500 Server Error' } }],
       }
     }
   }

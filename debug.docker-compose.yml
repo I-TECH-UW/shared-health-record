@@ -26,7 +26,7 @@ services:
     volumes:
       - ./config/config_docker.json:/app/config/config_docker.json
     # - ./config/mediator_ci.json:/app/config/mediator_docker.json
-    entrypoint: node --inspect=0.0.0.0:9229 ./dist/app.js
+    entrypoint: node --inspect-brk=0.0.0.0:9229 ./dist/app.js
     # tty: true
     # stdin_open: true
     # entrypoint: bash

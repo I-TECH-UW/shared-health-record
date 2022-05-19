@@ -1,7 +1,7 @@
 'use strict'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
-import { IBundle, IPatient, TaskStatusKind } from '@ahryman40k/ts-fhir-types/lib/R4'
+import { IBundle, IPatient, RTTI_Bundle, TaskStatusKind } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got'
 import { send } from 'process'
 import { saveBundle } from '../hapi/lab'
@@ -59,29 +59,32 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   static async executeTopicWorkflow(topic: String, val: any) {
     let res
-    switch (topic) {
-      case topicList.MAP_CONCEPTS:
-        res = await LabWorkflowsBw.mapConcepts(JSON.parse(val).bundle)
-        break
-      case topicList.MAP_LOCATIONS:
-        res = await LabWorkflowsBw.mapLocations(JSON.parse(val).bundle)
-        break
-      case topicList.SAVE_PIMS_PATIENT:
-        res = await LabWorkflowsBw.updateCrPatient(JSON.parse(val).bundle)
-        break
-      case topicList.SEND_ADT_TO_IPMS:
-        res = await LabWorkflowsBw.sendAdtToIpms(JSON.parse(val).bundle)
-        break
-      case topicList.SAVE_IPMS_PATIENT:
-        res = await LabWorkflowsBw.saveIpmsPatient(JSON.parse(val).bundle)
-        break
-      case topicList.SEND_ORM_TO_IPMS:
-        res = await LabWorkflowsBw.sendOrmToIpms(JSON.parse(val).bundle)
-        break
-      default:
-        break
+    try {
+      switch (topic) {
+        case topicList.MAP_CONCEPTS:
+          res = await LabWorkflowsBw.mapConcepts(JSON.parse(val).bundle)
+          break
+        case topicList.MAP_LOCATIONS:
+          res = await LabWorkflowsBw.mapLocations(JSON.parse(val).bundle)
+          break
+        case topicList.SAVE_PIMS_PATIENT:
+          res = await LabWorkflowsBw.updateCrPatient(JSON.parse(val).bundle)
+          break
+        case topicList.SEND_ADT_TO_IPMS:
+          res = await LabWorkflowsBw.sendAdtToIpms(JSON.parse(val).bundle)
+          break
+        case topicList.SAVE_IPMS_PATIENT:
+          res = await LabWorkflowsBw.saveIpmsPatient(JSON.parse(val).bundle)
+          break
+        case topicList.SEND_ORM_TO_IPMS:
+          res = await LabWorkflowsBw.sendOrmToIpms(JSON.parse(val).bundle)
+          break
+        default:
+          break
+      }
+    } catch (e) {
+      logger.error(e)
     }
-    return res
   }
 
   // Add coding mappings info to bundle
@@ -116,7 +119,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   static async translatePimsCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
     try {
-      let options = { timeout: config.get('bwConfig:oclTimeout') }
+      let options = { timeout: config.get('bwConfig:requestTimeout') }
       let pimsCoding: R4.ICoding = <R4.ICoding>(
         sr.code!.coding!.find(e => e.system && e.system == config.get('bwConfig:pimsSystemUrl'))
       )
@@ -264,15 +267,15 @@ export class LabWorkflowsBw extends LabWorkflows {
     })
 
     let options = {
-      timeout: config.get('bwConfig:oclTimeout'),
+      timeout: config.get('bwConfig:requestTimeout'),
       username: config.get('mediator:client:username'),
       password: config.get('mediator:client:password'),
-      body: '',
+      json: {},
     }
 
     if (patResult) {
       pat = <R4.IPatient>patResult.resource!
-      options.body = pat.toString()
+      options.json = pat
     }
 
     let crResult = await got.post(`${crUrl}`, options).json()
@@ -316,8 +319,8 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   public static async handleAdtFromIpms(registrationBundle: R4.IBundle): Promise<R4.IBundle> {
     let options = {
-      timeout: config.get('bwConfig:oclTimeout'),
-      form: {},
+      timeout: config.get('bwConfig:requestTimeout'),
+      searchParams: {},
     }
 
     let patient: IPatient, omang: String
@@ -339,33 +342,39 @@ export class LabWorkflowsBw extends LabWorkflows {
       }
 
       // Find all patients with this Omang.
-      options.form = {
+      options.searchParams = {
         identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
         _revinclude: 'Task:patient',
       }
 
-      let patientTasks: IBundle = await got
-        .get(`${config.get('fhirServer:baseURL')}/Patient`, options)
-        .json()
+      let patientTasks: IBundle
+      try {
+        patientTasks = await got.get(`${config.get('fhirServer:baseURL')}/Patient`, options).json()
+      } catch (e) {
+        patientTasks = { resourceType: 'Bundle' }
+        logger.error(e)
+      }
 
-      // Get all Tasks with `requested` status
-      for (const e of patientTasks.entry!) {
-        if (
-          e.resource &&
-          e.resource.resourceType == 'Task' &&
-          e.resource.status == TaskStatusKind._requested
-        ) {
-          // Grab bundle for task:
-          options.form = {
-            _include: '*',
-            _id: e.resource.id,
+      if (patientTasks && patientTasks.entry) {
+        // Get all Tasks with `requested` status
+        for (const e of patientTasks.entry!) {
+          if (
+            e.resource &&
+            e.resource.resourceType == 'Task' &&
+            e.resource.status == TaskStatusKind._requested
+          ) {
+            // Grab bundle for task:
+            options.searchParams = {
+              _include: '*',
+              _id: e.resource.id,
+            }
+
+            let taskBundle: IBundle = await got
+              .get(`${config.get('fhirServer:baseURL')}/Task`, options)
+              .json()
+
+            sendPayload(taskBundle, topicList.SEND_ORM_TO_IPMS)
           }
-
-          let taskBundle: IBundle = await got
-            .get(`${config.get('fhirServer:baseURL')}/Task`, options)
-            .json()
-
-          sendPayload(taskBundle, topicList.SEND_ORM_TO_IPMS)
         }
       }
     }

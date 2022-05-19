@@ -84,6 +84,8 @@ export default class Hl7WorkflowsBw {
         https: {
           rejectUnauthorized: false,
         },
+        username: config.get('mediator:client:username'),
+        password: config.get('mediator:client:password'),
       }).json()
 
       return translatedMessage.fhirResource
@@ -109,6 +111,8 @@ export default class Hl7WorkflowsBw {
         https: {
           rejectUnauthorized: false,
         },
+        username: config.get('mediator:client:username'),
+        password: config.get('mediator:client:password'),
       }).text()
     } catch (error: any) {
       logger.error(
