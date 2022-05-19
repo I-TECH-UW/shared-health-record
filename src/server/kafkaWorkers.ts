@@ -1,7 +1,7 @@
 import { Consumer } from 'kafkajs'
 import { consumer } from '../lib/kafka'
 import logger from '../lib/winston'
-import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
+import { LabWorkflowsBw, topicList } from '../workflows/labWorkflowsBw'
 const errorTypes = ['unhandledRejection', 'uncaughtException']
 const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
 
@@ -22,42 +22,33 @@ export async function run() {
 
   await k.connect()
 
-  await k.subscribe({ topic: 'map-concepts', fromBeginning: false })
-  await k.subscribe({ topic: 'map-locations', fromBeginning: false })
-  await k.subscribe({
-    topic: 'send-ipms-message',
-    fromBeginning: false,
-  })
+  for (const val of Object.values(topicList)) {
+    await k.subscribe({ topic: val, fromBeginning: false })
+  }
 
   await k.run({
     eachMessage: async function ({ topic, partition, message }) {
       logger.info(`Recieved message from topic ${topic}`)
 
-      let val = ''
-      let res = null
+      try {
+        let val = ''
+        let res = null
 
-      if (message.value) {
-        val = message.value.toString()
-      }
+        if (message.value) {
+          val = message.value.toString()
+        }
 
-      // logger.info("\n\n#########\nReceived: ", {
-      //   partition,
-      //   offset: message.offset,
-      //   value: val
-      // });
+        // logger.info("\n\n#########\nReceived: ", {
+        //   partition,
+        //   offset: message.offset,
+        //   value: val
+        // });
 
-      switch (topic) {
-        case 'map-concepts':
-          res = await LabWorkflowsBw.mapConcepts(JSON.parse(val).bundle)
-          break
-        case 'map-locations':
-          res = await LabWorkflowsBw.mapLocations(JSON.parse(val).bundle)
-          break
-        case 'send-ipms-message':
-          res = await LabWorkflowsBw.createIpmsOrder(JSON.parse(val).bundle)
-          break
-        default:
-          break
+        LabWorkflowsBw.executeTopicWorkflow(topic, val)
+      } catch (error) {
+        logger.error(`Could not complete task from topic ${topic}!`)
+
+        logger.error(error)
       }
 
       //logger.info(`\n\n##########\nResult: ${JSON.stringify(res)}\n###############`)

@@ -2,7 +2,7 @@
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import express, { Request, Response } from 'express'
-import { saveLabBundle } from '../hapi/lab'
+import { saveBundle } from '../hapi/lab'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
@@ -21,7 +21,7 @@ router.all('/', async (req: Request, res: Response) => {
       }
 
       // Save Bundle
-      let resultBundle: R4.IBundle = await saveLabBundle(orderBundle)
+      let resultBundle: R4.IBundle = await saveBundle(orderBundle)
 
       // Trigger Background Tasks
       LabWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)

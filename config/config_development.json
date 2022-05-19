@@ -5,13 +5,13 @@
   },
   "mllp": {
     "targetIp": "localhost",
-    "targetPort": 3001
+    "targetPort": 2100
   },
   "mediator": {
     "api": {
       "username": "root@openhim.org",
       "password": "openhim",
-      "apiURL": "https://localhost:8080",
+      "apiURL": "https://localhost:8091",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     },
@@ -26,11 +26,11 @@
   },
   "fhirConverterUrl": "http://localhost:5001/72f",
   "taskRunner": {
-    "brokers" : ["localhost:9092"]
+    "brokers": ["localhost:9092"]
   },
-  "bwConfig":{
-    "pimsSystemUrl" : "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
+  "bwConfig": {
+    "pimsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
     "oclUrl": "https://api.openconceptlab.org/",
-    "oclTimeout": 500
+    "requestTimeout": 5000
   }
 }

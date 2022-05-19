@@ -71,7 +71,7 @@ export async function getTaskBundle(patientId: string, locationId: string) {
   return got.get(uri.toString()).json()
 }
 
-export async function saveLabBundle(bundle: R4.IBundle): Promise<R4.IBundle> {
+export async function saveBundle(bundle: R4.IBundle): Promise<R4.IBundle> {
   logger.info(`Posting ${bundle.resourceType} to ${uri.toString()}`)
 
   if (!bundle.type || bundle.type != BundleTypeKind._transaction) {

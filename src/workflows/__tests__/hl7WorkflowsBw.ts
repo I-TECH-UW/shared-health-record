@@ -8,7 +8,7 @@ import Hl7WorkflowsBw from '../hl7WorkflowsBw'
 
 const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
 
-describe(Hl7WorkflowsBw.saveOruMessage, () => {
+describe(Hl7WorkflowsBw.handleOruMessage, () => {
   it('should translate and save ORU message ', async () => {
     let converterUrl = config.get('fhirConverterUrl')
     let fhirUrl = config.get('fhirServer:baseURL')
@@ -26,7 +26,7 @@ describe(Hl7WorkflowsBw.saveOruMessage, () => {
 
     // Mock Translator
     const translator = nock(converterUrl)
-      .post('/convert/hl7v2/ORU_R01.hbs', sampleOru)
+      .post(`/convert/hl7v2/${config.get('bwConfig:fromIpmsOruTemplate')}`, sampleOru)
       .once()
       .reply(200, { fhirResource: transactionBundle })
 
@@ -43,7 +43,7 @@ describe(Hl7WorkflowsBw.saveOruMessage, () => {
       .once()
       .reply(200, transactionResultBundle)
 
-    let result = await Hl7WorkflowsBw.saveOruMessage(sampleOru)
+    let result = await Hl7WorkflowsBw.handleOruMessage(sampleOru)
 
     expect(result).toEqual(transactionResultBundle)
   })

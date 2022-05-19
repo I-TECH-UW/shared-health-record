@@ -3,13 +3,13 @@ import { BundleTypeKind } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
 import nock from 'nock'
 import { config } from '../../lib/config'
-import { getResource, saveLabBundle, translateToTransactionBundle } from '../lab'
+import { getResource, saveBundle, translateToTransactionBundle } from '../lab'
 
 const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
 
 let fhirUrl: string = config.get('fhirServer:baseURL')
 
-describe('saveLabBundle', () => {
+describe('saveBundle', () => {
   it('should save a a document bundle', async () => {
     // Load data
     let transactionBundle: R4.IBundle = await got(
@@ -32,7 +32,7 @@ describe('saveLabBundle', () => {
       .once()
       .reply(200, transactionResultBundle)
 
-    let result = await saveLabBundle(transactionBundle)
+    let result = await saveBundle(transactionBundle)
 
     expect(result).toEqual(transactionResultBundle)
   })

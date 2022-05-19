@@ -1,0 +1,38 @@
+version: '3.8'
+
+## Container debugging:
+# 1. append the following lines to desired container
+# 2. boot up the container using `docker-compose up -d`
+# 3 run `docker exec -it <container-name> bash` to start interactive shell
+#
+#    tty: true
+#    stdin_open: true
+#    entrypoint: bash
+
+services:
+  # shr: Run natively using yarn, or see docker-compose.yml
+  shr:
+    container_name: shr
+    hostname: shr
+    build:
+      context: ./
+      args:
+        - NODE_AUTH_TOKEN
+    ports:
+      - 3000:3000
+      - '9229:9229'
+    environment:
+      - NODE_ENV=docker
+    volumes:
+      - ./config/config_docker.json:/app/config/config_docker.json
+    # - ./config/mediator_ci.json:/app/config/mediator_docker.json
+    entrypoint: node --inspect-brk=0.0.0.0:9229 ./dist/app.js
+    # tty: true
+    # stdin_open: true
+    # entrypoint: bash
+    networks:
+      - hie
+networks:
+  hie:
+    external: true
+    name: hie-botswana_hie

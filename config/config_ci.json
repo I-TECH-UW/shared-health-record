@@ -18,11 +18,11 @@
   },
   "fhirConverterUrl": "https://openhim-core:5000/72f",
   "taskRunner": {
-    "brokers" : ["kafka:9092"]
+    "brokers": ["kafka:9092"]
   },
-  "bwConfig":{
-    "pimsSystemUrl" : "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
-    "oclUrl": "https://api.openconceptlab.org/",
-    "oclTimeout": 500
+  "bwConfig": {
+    "pimsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
+    "oclUrl": "https://api.openconceptlab.org",
+    "requestTimeout": 5000
   }
 }
