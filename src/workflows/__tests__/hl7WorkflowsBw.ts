@@ -26,7 +26,7 @@ describe(Hl7WorkflowsBw.handleOruMessage, () => {
 
     // Mock Translator
     const translator = nock(converterUrl)
-      .post('/convert/hl7v2/ORU_R01.hbs', sampleOru)
+      .post(`/convert/hl7v2/${config.get('bwConfig:fromIpmsOruTemplate')}`, sampleOru)
       .once()
       .reply(200, { fhirResource: transactionBundle })
 
