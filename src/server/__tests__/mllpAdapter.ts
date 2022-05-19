@@ -18,7 +18,7 @@ describe('MllpAdapter#handleMessage', () => {
     let msg = (await fs.readFile(path.join(__dirname, '../../__data__/sample_ADT.txt'))).toString()
 
     const saveAdtMessageSpy = jest
-      .spyOn(Hl7Workflows, 'saveAdtMessage')
+      .spyOn(Hl7Workflows, 'handleAdtMessage')
       .mockReturnValue(returnPromise)
 
     //@ts-ignore
@@ -34,7 +34,7 @@ describe('MllpAdapter#handleMessage', () => {
     let msg = (await fs.readFile(path.join(__dirname, '../../__data__/sample_ORU.txt'))).toString()
 
     const saveOruMessageSpy = jest
-      .spyOn(Hl7Workflows, 'saveOruMessage')
+      .spyOn(Hl7Workflows, 'handleOruMessage')
       .mockReturnValue(returnPromise)
 
     let result = await mllp['handleMessage'](msg)
