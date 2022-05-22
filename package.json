@@ -23,7 +23,7 @@
     "@b-techbw/mllp": ">=3.1.0",
     "@types/got": "^9.6.12",
     "acorn": ">=7.1.1",
-    "async": "^3.1.0",
+    "async": "^3.2.1",
     "axios": "^0.21.1",
     "cookie-parser": "^1.4.5",
     "damerau-levenshtein": "^1.0.5",
