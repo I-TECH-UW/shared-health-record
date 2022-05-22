@@ -79,7 +79,7 @@ export default class Hl7WorkflowsBw {
         headers: {
           'content-type': 'text/plain',
         },
-        body: hl7Message,
+        body: hl7Message.replace(/\r/g, '\n'),
         method: 'POST',
         https: {
           rejectUnauthorized: false,
