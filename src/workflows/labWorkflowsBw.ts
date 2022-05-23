@@ -318,66 +318,73 @@ export class LabWorkflowsBw extends LabWorkflows {
   }
 
   public static async handleAdtFromIpms(registrationBundle: R4.IBundle): Promise<R4.IBundle> {
-    let options = {
-      timeout: config.get('bwConfig:requestTimeout'),
-      searchParams: {},
-    }
-
-    let patient: IPatient, omang: String
-    let patEntry = registrationBundle.entry!.find(entry => {
-      return entry.resource && entry.resource.resourceType == 'Patient'
-    })
-
-    if (patEntry) {
-      patient = <IPatient>patEntry
-
-      let omangEntry = patient.identifier?.find(
-        i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
-      )
-
-      if (omangEntry) {
-        omang = omangEntry.value!
-      } else {
-        omang = ''
+    try {
+      let options = {
+        timeout: config.get('bwConfig:requestTimeout'),
+        searchParams: {},
       }
 
-      // Find all patients with this Omang.
-      options.searchParams = {
-        identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
-        _revinclude: 'Task:patient',
-      }
+      let patient: IPatient, omang: String
+      let patEntry = registrationBundle.entry!.find(entry => {
+        return entry.resource && entry.resource.resourceType == 'Patient'
+      })
 
-      let patientTasks: IBundle
-      try {
-        patientTasks = await got.get(`${config.get('fhirServer:baseURL')}/Patient`, options).json()
-      } catch (e) {
-        patientTasks = { resourceType: 'Bundle' }
-        logger.error(e)
-      }
+      if (patEntry) {
+        patient = <IPatient>patEntry
 
-      if (patientTasks && patientTasks.entry) {
-        // Get all Tasks with `requested` status
-        for (const e of patientTasks.entry!) {
-          if (
-            e.resource &&
-            e.resource.resourceType == 'Task' &&
-            e.resource.status == TaskStatusKind._requested
-          ) {
-            // Grab bundle for task:
-            options.searchParams = {
-              _include: '*',
-              _id: e.resource.id,
+        let omangEntry = patient.identifier?.find(
+          i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
+        )
+
+        if (omangEntry) {
+          omang = omangEntry.value!
+        } else {
+          omang = ''
+        }
+
+        // Find all patients with this Omang.
+        options.searchParams = {
+          identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
+          _revinclude: 'Task:patient',
+        }
+
+        let patientTasks: IBundle
+        try {
+          patientTasks = await got
+            .get(`${config.get('fhirServer:baseURL')}/Patient`, options)
+            .json()
+        } catch (e) {
+          patientTasks = { resourceType: 'Bundle' }
+          logger.error(e)
+        }
+
+        if (patientTasks && patientTasks.entry) {
+          // Get all Tasks with `requested` status
+          for (const e of patientTasks.entry!) {
+            if (
+              e.resource &&
+              e.resource.resourceType == 'Task' &&
+              e.resource.status == TaskStatusKind._requested
+            ) {
+              // Grab bundle for task:
+              options.searchParams = {
+                _include: '*',
+                _id: e.resource.id,
+              }
+
+              let taskBundle: IBundle = await got
+                .get(`${config.get('fhirServer:baseURL')}/Task`, options)
+                .json()
+
+              sendPayload(taskBundle, topicList.SEND_ORM_TO_IPMS)
             }
-
-            let taskBundle: IBundle = await got
-              .get(`${config.get('fhirServer:baseURL')}/Task`, options)
-              .json()
-
-            sendPayload(taskBundle, topicList.SEND_ORM_TO_IPMS)
           }
         }
       }
+    } catch (e) {
+      logger.error(e)
     }
+
     // let obrMessage = await Hl7WorkflowsBw.getFhirTranslation(labBundle, 'OBR.hbs')
 
     // let obrResult = await sender.send(obrMessage)

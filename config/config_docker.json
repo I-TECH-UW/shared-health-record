@@ -30,14 +30,14 @@
     "pimsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
     "omangSystemUrl": "http://moh.bw.org/ext/identifier/omang",
     "oclUrl": "https://api.openconceptlab.org",
-    "requestTimeout": 5000,
+    "requestTimeout": 10000,
     "toIpmsAdtTemplate": "ADT_A04_TO_IPMS.hbs",
     "fromIpmsAdtTemplate": "ADT_A04_FROM_IPMS.hbs",
     "toIpmsOrmTemplate": "ORM_O01_TO_IPMS.hbs",
-    "fromIpmsOruTemplate": "ORU_R01_FROM_IPMS",
+    "fromIpmsOruTemplate": "ORU_R01_FROM_IPMS.hbs",
     "mllp": {
-      "targetIp": "shr",
-      "targetPort": 3001
+      "targetIp": "172.17.0.1",
+      "targetPort": 2100
     }
   }
 }
