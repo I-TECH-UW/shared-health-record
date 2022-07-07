@@ -298,7 +298,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       let sender = new Hl7MllpSender(
         config.get('bwConfig:mllp:targetIp'),
-        config.get('bwConfig:mllp:targetPort'),
+        config.get('bwConfig:mllp:targetAdtPort'),
       )
 
       let adtMessage = await Hl7WorkflowsBw.getFhirTranslation(
@@ -308,12 +308,40 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       logger.info(`adt:\n${adtMessage}`)
 
-      let adtResult: any = await sender.send(adtMessage)
+      let adtResult: String = <String>await sender.send(adtMessage)
 
+      if (adtResult.includes('AA')) {
+        labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._accepted)
+      }
       logger.info(`res:\n${adtResult}`)
     } else {
       logger.info('Order not ready for IPMS.')
     }
+    return labBundle
+  }
+
+  public static async sendOrmToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> {
+    let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
+      labBundle,
+      config.get('bwConfig:toIpmsOrmTemplate'),
+    )
+
+    let sender = new Hl7MllpSender(
+      config.get('bwConfig:mllp:targetIp'),
+      config.get('bwConfig:mllp:targetOrmPort'),
+    )
+
+    logger.info('Sending ORM message to IPMS!')
+
+    logger.info(`orm:\n${ormMessage}\n`)
+
+    let result: any = await sender.send(ormMessage)
+
+    if (result.includes('AA')) {
+      labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
+    }
+    logger.info(`*result:\n${result}\n`)
+
     return labBundle
   }
 
@@ -395,27 +423,6 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     return registrationBundle
   }
-  public static async sendOrmToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> {
-    let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
-      labBundle,
-      config.get('bwConfig:toIpmsOrmTemplate'),
-    )
-
-    let sender = new Hl7MllpSender(
-      config.get('bwConfig:mllp:targetIp'),
-      config.get('bwConfig:mllp:targetPort'),
-    )
-
-    logger.info('Sending ORM message to IPMS!')
-
-    logger.info(`orm:\n${ormMessage}\n`)
-
-    let result: any = await sender.send(ormMessage)
-
-    logger.info(`*result:\n${result}\n`)
-
-    return labBundle
-  }
 
   private static getTaskStatus(labBundle: R4.IBundle): R4.TaskStatusKind | undefined {
     let taskResult, task
@@ -433,6 +440,24 @@ export class LabWorkflowsBw extends LabWorkflows {
     } catch (error) {
       logger.error(`Could not get Task status for task:\n${task}`)
       return undefined
+    }
+  }
+
+  private static setTaskStatus(labBundle: R4.IBundle, status: R4.TaskStatusKind): R4.IBundle {
+    let taskIndex, task
+
+    try {
+      taskIndex = labBundle.entry!.findIndex(entry => {
+        return entry.resource && entry.resource.resourceType == 'Task'
+      })
+
+      if (labBundle.entry && labBundle.entry.length > 0 && taskIndex >= 0) {
+        ;(<R4.ITask>labBundle.entry[taskIndex].resource!).status = status
+      }
+      return labBundle
+    } catch (error) {
+      logger.error(`Could not get Task status for task:\n${task}`)
+      return labBundle
     }
   }
 }
