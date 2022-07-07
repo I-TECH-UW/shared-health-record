@@ -36,8 +36,9 @@
     "toIpmsOrmTemplate": "ORM_O01_TO_IPMS.hbs",
     "fromIpmsOruTemplate": "ORU_R01_FROM_IPMS.hbs",
     "mllp": {
-      "targetIp": "172.17.0.1",
-      "targetPort": 2100
+      "targetIp": "127.0.0.1",
+      "targetAdtPort": 1234,
+      "targetOrmPort": 1234
     }
   }
 }

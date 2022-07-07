@@ -116,9 +116,9 @@ export default class Hl7WorkflowsBw {
       }).text()
     } catch (error: any) {
       logger.error(
-        `Could not translate FHIR Bundle message\n${bundle}\nwith template ${template}!\n${JSON.stringify(
-          error,
-        )}`,
+        `Could not translate FHIR Bundle message\n${JSON.stringify(
+          bundle,
+        )}\n with template ${template}!\n${JSON.stringify(error)}`,
       )
       return ''
     }
