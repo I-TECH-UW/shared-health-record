@@ -55,7 +55,7 @@ describe('lab Workflows for Botswana should', () => {
 
     beforeAll((done: () => void) => {
       jest.setTimeout(1000000)
-      server = new MllpServer('127.0.0.1', 1234)
+      server = new MllpServer('127.0.0.1', 2100)
       server.listen()
 
       hl7 = fs.readFileSync('./src/__data__/sample_ADT.txt').toString().split('\n').join('\r')
