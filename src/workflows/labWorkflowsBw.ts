@@ -280,7 +280,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     let crResult = await got.post(`${crUrl}`, options).json()
 
-    logger.info(`CR Patient Update Result: ${crResult}`)
+    logger.info(`CR Patient Update Result: ${JSON.stringify(crResult)}`)
 
     return bundle
   }
@@ -307,6 +307,8 @@ export class LabWorkflowsBw extends LabWorkflows {
       )
 
       logger.info(`adt:\n${adtMessage}`)
+
+      adtMessage = adtMessage.replace(/[\n\r]/g, '\r');
 
       let adtResult: String = <String>await sender.send(adtMessage)
 

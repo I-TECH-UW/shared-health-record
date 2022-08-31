@@ -3,12 +3,6 @@
     "port": 3000,
     "mllpPort": 3001
   },
-  "mllp": {
-    "targetIp": "localhost",
-    "targetPort": 2100,
-    "targetAdtPort": 2100,
-    "targetOrmPort": 2100
-  },
   "mediator": {
     "api": {
       "username": "root@openhim.org",
@@ -42,9 +36,9 @@
     "toIpmsOrmTemplate": "ORM_O01_TO_IPMS.hbs",
     "fromIpmsOruTemplate": "ORU_R01_FROM_IPMS.hbs",
     "mllp": {
-      "targetIp": "127.0.0.1",
-      "targetAdtPort": 1234,
-      "targetOrmPort": 1234
+      "targetIp": "host.docker.internal",
+      "targetAdtPort": 2100,
+      "targetOrmPort": 2100
     }
   }
 }
