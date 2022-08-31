@@ -19,8 +19,9 @@ services:
       args:
         - NODE_AUTH_TOKEN
     ports:
-      - 3000:3000
+      - 4000:3000
       - 3001:3001
+      - 3002:3002
       - '9229:9229'
     environment:
       - NODE_ENV=docker
