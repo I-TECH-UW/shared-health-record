@@ -14,9 +14,10 @@ services:
   shr:
     container_name: shr
     hostname: shr
+    restart: unless-stopped
     build:
       context: ./
-      args: 
+      args:
         - NODE_AUTH_TOKEN
         - NODE_ENV=docker
     ports:
@@ -25,7 +26,7 @@ services:
       - 3002:3002
       - '9229:9229'
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     environment:
       - NODE_ENV=docker
     volumes:

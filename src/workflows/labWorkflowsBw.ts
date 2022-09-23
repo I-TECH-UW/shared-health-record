@@ -308,7 +308,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       logger.info(`adt:\n${adtMessage}`)
 
-      adtMessage = adtMessage.replace(/[\n\r]/g, '\r');
+      adtMessage = adtMessage.replace(/[\n\r]/g, '\r')
 
       let adtResult: String = <String>await sender.send(adtMessage)
 
@@ -337,12 +337,13 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     logger.info(`orm:\n${ormMessage}\n`)
 
-    let result: any = await sender.send(ormMessage)
-
-    if (result.includes('AA')) {
-      labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
+    if (ormMessage && ormMessage != '') {
+      let result: any = await sender.send(ormMessage)
+      if (result.includes('AA')) {
+        labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
+      }
+      logger.info(`*result:\n${result}\n`)
     }
-    logger.info(`*result:\n${result}\n`)
 
     return labBundle
   }
@@ -359,8 +360,8 @@ export class LabWorkflowsBw extends LabWorkflows {
         return entry.resource && entry.resource.resourceType == 'Patient'
       })
 
-      if (patEntry) {
-        patient = <IPatient>patEntry
+      if (patEntry && patEntry.resource) {
+        patient = <IPatient>patEntry.resource
 
         let omangEntry = patient.identifier?.find(
           i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
@@ -406,7 +407,7 @@ export class LabWorkflowsBw extends LabWorkflows {
                 .get(`${config.get('fhirServer:baseURL')}/Task`, options)
                 .json()
 
-              sendPayload(taskBundle, topicList.SEND_ORM_TO_IPMS)
+              sendPayload({ bundle: taskBundle }, topicList.SEND_ORM_TO_IPMS)
             }
           }
         }

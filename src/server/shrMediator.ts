@@ -65,23 +65,31 @@ export class ShrMediator {
 
   private static startupCallback(callback: Function) {
     return () => {
-      config.set('mediator:api:urn', medConfig.urn)
-      logger.info('Successfully registered mediator!')
+      try {
+        config.set('mediator:api:urn', medConfig.urn)
+        logger.info('Successfully registered mediator!')
 
-      const app = shrApp()
-      const port = config.get('app:port')
+        const app = shrApp()
+        const port = config.get('app:port')
 
-      // Start up server on 3000 (default)
-      const server = app.listen(port, () => {
-        // Activate heartbeat for OpenHIM mediator
-        const configEmitter = medUtils.activateHeartbeat(config.get('mediator:api'))
+        // Start up server on 3000 (default)
+        const server = app.listen(port, () => {
+          // Activate heartbeat for OpenHIM mediator
+          try {
+            const configEmitter = medUtils.activateHeartbeat(config.get('mediator:api'))
 
-        // Updates config based on what's sent from the server
-        configEmitter.on('config', ShrMediator.updateCallback)
+            // Updates config based on what's sent from the server
+            configEmitter.on('config', ShrMediator.updateCallback)
 
-        // Runs initial callback
-        callback(server)
-      })
+            // Runs initial callback
+            callback(server)
+          } catch (error) {
+            logger.error(error)
+          }
+        })
+      } catch (error) {
+        logger.error(error)
+      }
     }
   }
 

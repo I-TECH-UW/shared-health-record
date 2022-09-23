@@ -12,8 +12,8 @@
       "urn": "urn:mediator:shared-health-record"
     },
     "client": {
-      "username": "tester",
-      "password": "tester"
+      "username": "shr",
+      "password": "shr"
     }
   },
   "fhirServer": {
@@ -30,13 +30,13 @@
     "pimsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
     "omangSystemUrl": "http://moh.bw.org/ext/identifier/omang",
     "oclUrl": "https://api.openconceptlab.org",
-    "requestTimeout": 10000,
+    "requestTimeout": 60000,
     "toIpmsAdtTemplate": "ADT_A04_TO_IPMS.hbs",
     "fromIpmsAdtTemplate": "ADT_A04_FROM_IPMS.hbs",
     "toIpmsOrmTemplate": "ORM_O01_TO_IPMS.hbs",
     "fromIpmsOruTemplate": "ORU_R01_FROM_IPMS.hbs",
     "mllp": {
-      "targetIp": "localhost",
+      "targetIp": "host.docker.internal",
       "targetAdtPort": 2100,
       "targetOrmPort": 2100
     }
