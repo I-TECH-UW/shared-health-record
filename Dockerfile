@@ -18,7 +18,7 @@ COPY ./package.json /app
 
 COPY ./.npmrc /app
 
-RUN yarn install --ignore-scripts --production=false
+RUN yarn install --ignore-scripts --production=false --network-timeout 1000000
 
 COPY ./src /app/src
 

@@ -137,7 +137,7 @@ export class LabWorkflowsBw extends LabWorkflows {
       if (ipmsMapping.length > 0) {
         sr.code!.coding!.push({
           system: `${config.get('bwConfig:oclUrl')}/orgs/B-TECHBW/sources/IPMS-LAB-TEST/`,
-          code: ipmsCode,
+          code: ipmsMapping[0].from_concept_code,
           display: ipmsMapping[0].from_concept_name_resolved,
         })
       }
@@ -323,28 +323,56 @@ export class LabWorkflowsBw extends LabWorkflows {
   }
 
   public static async sendOrmToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> {
-    let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
-      labBundle,
-      config.get('bwConfig:toIpmsOrmTemplate'),
-    )
+    let srBundle: IBundle = { resourceType: 'Bundle', entry: [] }
 
-    let sender = new Hl7MllpSender(
-      config.get('bwConfig:mllp:targetIp'),
-      config.get('bwConfig:mllp:targetOrmPort'),
-    )
-
-    logger.info('Sending ORM message to IPMS!')
-
-    logger.info(`orm:\n${ormMessage}\n`)
-
-    if (ormMessage && ormMessage != '') {
-      let result: any = await sender.send(ormMessage)
-      if (result.includes('AA')) {
-        labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
+    try {
+      let options = {
+        timeout: config.get('bwConfig:requestTimeout'),
+        searchParams: {},
       }
-      logger.info(`*result:\n${result}\n`)
-    }
 
+      for (const entry of labBundle.entry!) {
+        if (entry.resource && entry.resource.resourceType == 'ServiceRequest') {
+          options.searchParams = {
+            'based-on': entry.resource.id,
+          }
+
+          srBundle = await got
+            .get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options)
+            .json()
+        }
+      }
+
+      for (const sr of srBundle.entry!) {
+        let sendBundle = labBundle
+
+        sendBundle.entry!.push(sr)
+
+        let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
+          sendBundle,
+          config.get('bwConfig:toIpmsOrmTemplate'),
+        )
+
+        let sender = new Hl7MllpSender(
+          config.get('bwConfig:mllp:targetIp'),
+          config.get('bwConfig:mllp:targetOrmPort'),
+        )
+
+        logger.info('Sending ORM message to IPMS!')
+
+        logger.info(`orm:\n${ormMessage}\n`)
+
+        if (ormMessage && ormMessage != '') {
+          let result: any = await sender.send(ormMessage)
+          if (result.includes('AA')) {
+            labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
+          }
+          logger.info(`*result:\n${result}\n`)
+        }
+      }
+    } catch (e) {
+      logger.error(e)
+    }
     return labBundle
   }
 
