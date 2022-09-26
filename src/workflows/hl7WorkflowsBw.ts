@@ -3,9 +3,12 @@
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import {
   BundleTypeKind,
+  Bundle_RequestMethodKind,
   IBundle,
   IDiagnosticReport,
+  IObservation,
   IPatient,
+  IReference,
   IServiceRequest,
 } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
@@ -48,6 +51,10 @@ export default class Hl7WorkflowsBw {
           )!.resource!
         )
 
+        let obs: IObservation = <IObservation>(
+          translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Observation')!
+            .resource!
+        )
         let drCode =
           dr.code && dr.code.coding && dr.code.coding.length > 0 ? dr.code.coding[0].code : ''
 
@@ -91,7 +98,7 @@ export default class Hl7WorkflowsBw {
             )
             .map(e => <IServiceRequest>e.resource)
 
-          let primaryCandidate: IServiceRequest = candidates.find(c => {
+          let primaryCandidate: IServiceRequest | undefined = candidates.find(c => {
             if (c && c.code && c.code.coding) {
               let candidateCode = c.code.coding.find(
                 co =>
@@ -105,11 +112,38 @@ export default class Hl7WorkflowsBw {
 
           // Update DR based on primary candidate details
           // Update Obs based on primary candidate details
-          // Save
+          if (primaryCandidate && primaryCandidate.code && primaryCandidate.code.coding) {
+            if (dr.code && dr.code.coding) dr.code.coding.concat(primaryCandidate.code.coding)
+            if (obs.code && obs.code.coding) obs.code.coding.concat(primaryCandidate.code.coding)
+
+            let srRef: IReference = {}
+            srRef.type = 'ServiceRequest'
+            srRef.reference = primaryCandidate.id
+
+            dr.basedOn = [srRef]
+            obs.basedOn = [srRef]
+          }
         }
 
         // Save to SHR
-        let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
+        let resultBundle: R4.IBundle = await saveBundle({
+          resourceType: 'Bundle',
+          type: BundleTypeKind._transaction,
+          entry: [
+            {
+              resource: patient,
+              request: { method: Bundle_RequestMethodKind._put, url: 'Patient/' + patient.id },
+            },
+            {
+              resource: dr,
+              request: { method: Bundle_RequestMethodKind._put, url: 'DiagnosticReport/' + dr.id },
+            },
+            {
+              resource: obs,
+              request: { method: Bundle_RequestMethodKind._put, url: 'Observation/' + obs.id },
+            },
+          ],
+        })
 
         return resultBundle
       } else {
