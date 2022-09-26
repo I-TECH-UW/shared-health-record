@@ -1,7 +1,13 @@
 'use strict'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
-import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
+import {
+  BundleTypeKind,
+  IBundle,
+  IDiagnosticReport,
+  IPatient,
+  IServiceRequest,
+} from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
 import { saveBundle } from '../hapi/lab'
 import config from '../lib/config'
@@ -30,11 +36,80 @@ export default class Hl7WorkflowsBw {
         config.get('bwConfig:fromIpmsOruTemplate'),
       )
 
-      if (translatedBundle != this.errorBundle) {
+      if (translatedBundle != this.errorBundle && translatedBundle.entry) {
+        let patient: IPatient = <IPatient>(
+          translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Patient')!
+            .resource!
+        )
+
+        let dr: IDiagnosticReport = <IDiagnosticReport>(
+          translatedBundle.entry.find(
+            e => e.resource && e.resource.resourceType == 'DiagnosticReport',
+          )!.resource!
+        )
+
+        let drCode =
+          dr.code && dr.code.coding && dr.code.coding.length > 0 ? dr.code.coding[0].code : ''
+
+        let omang
+        let omangEntry = patient.identifier?.find(
+          i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
+        )
+
+        if (omangEntry) {
+          omang = omangEntry.value!
+        } else {
+          omang = ''
+        }
+
+        let options = {
+          timeout: config.get('bwConfig:requestTimeout'),
+          searchParams: {},
+        }
+
+        // Find all active service requests with dr code with this Omang.
+        options.searchParams = {
+          identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
+          _revinclude: 'ServiceRequest:patient',
+        }
+
+        let patientBundle: IBundle = await got
+          .get(`${config.get('fhirServer:baseURL')}/Patient`, options)
+          .json()
+
+        if (patientBundle && patientBundle.entry && patientBundle.entry.length > 0) {
+          let candidates: IServiceRequest[] = patientBundle.entry
+            .filter(
+              e =>
+                e.resource &&
+                e.resource.resourceType == 'ServiceRequest' &&
+                e.resource.status &&
+                e.resource.status == 'active' &&
+                e.resource.code &&
+                e.resource.code.coding &&
+                e.resource.code.coding.length > 0,
+            )
+            .map(e => <IServiceRequest>e.resource)
+
+          let primaryCandidate: IServiceRequest = candidates.find(c => {
+            if (c && c.code && c.code.coding) {
+              let candidateCode = c.code.coding.find(
+                co =>
+                  co.system ==
+                  'https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/',
+              )
+              return candidateCode && candidateCode.code == drCode
+            }
+            return false
+          })
+
+          // Update DR based on primary candidate details
+          // Update Obs based on primary candidate details
+          // Save
+        }
+
         // Save to SHR
         let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
-
-        // TODO: handle matching to update the Task and ServiceRequests with status/results
 
         return resultBundle
       } else {

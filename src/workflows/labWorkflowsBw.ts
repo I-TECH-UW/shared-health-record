@@ -455,6 +455,16 @@ export class LabWorkflowsBw extends LabWorkflows {
     return registrationBundle
   }
 
+  public static async handleOruFromIpms(labResultBundle: R4.IBundle): Promise<R4.IBundle> {
+    // Get Patient By Omang
+
+    // Get ServiceRequests by status and code
+
+    // Match Results to Service Requests
+
+    return labResultBundle
+  }
+
   private static getTaskStatus(labBundle: R4.IBundle): R4.TaskStatusKind | undefined {
     let taskResult, task
 
