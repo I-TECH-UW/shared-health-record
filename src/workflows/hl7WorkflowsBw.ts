@@ -113,20 +113,21 @@ export default class Hl7WorkflowsBw {
           // Update DR based on primary candidate details
           // Update Obs based on primary candidate details
           if (primaryCandidate && primaryCandidate.code && primaryCandidate.code.coding) {
-            if (dr.code && dr.code.coding) dr.code.coding.concat(primaryCandidate.code.coding)
-            if (obs.code && obs.code.coding) obs.code.coding.concat(primaryCandidate.code.coding)
+            if (dr.code && dr.code.coding)
+              dr.code.coding = dr.code.coding.concat(primaryCandidate.code.coding)
+            if (obs.code && obs.code.coding)
+              obs.code.coding = obs.code.coding.concat(primaryCandidate.code.coding)
 
             let srRef: IReference = {}
             srRef.type = 'ServiceRequest'
-            srRef.reference = primaryCandidate.id
+            srRef.reference = 'ServiceRequest/' + primaryCandidate.id
 
             dr.basedOn = [srRef]
             obs.basedOn = [srRef]
           }
         }
 
-        // Save to SHR
-        let resultBundle: R4.IBundle = await saveBundle({
+        let sendBundle: R4.IBundle = {
           resourceType: 'Bundle',
           type: BundleTypeKind._transaction,
           entry: [
@@ -143,7 +144,10 @@ export default class Hl7WorkflowsBw {
               request: { method: Bundle_RequestMethodKind._put, url: 'Observation/' + obs.id },
             },
           ],
-        })
+        }
+
+        // Save to SHR
+        let resultBundle: R4.IBundle = await saveBundle(sendBundle)
 
         return resultBundle
       } else {
