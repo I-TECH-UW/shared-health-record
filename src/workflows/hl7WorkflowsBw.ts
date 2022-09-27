@@ -40,10 +40,7 @@ export default class Hl7WorkflowsBw {
       )
 
       if (translatedBundle != this.errorBundle && translatedBundle.entry) {
-        sendPayload(
-          { bundle: translatedBundle },
-          topicList.HANDLE_ORU_MESSAGE,
-        )
+        sendPayload({ bundle: translatedBundle }, topicList.HANDLE_ORU_FROM_IPMS)
         return translatedBundle
       } else {
         return this.errorBundle
