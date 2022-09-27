@@ -9,7 +9,7 @@ import Hl7WorkflowsBw from '../hl7WorkflowsBw'
 const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
 
 describe(Hl7WorkflowsBw.handleOruMessage, () => {
-  it('should translate and save ORU message ', async () => {
+  it.skip('should translate and save ORU message ', async () => {
     let converterUrl = config.get('fhirConverterUrl')
     let fhirUrl = config.get('fhirServer:baseURL')
 

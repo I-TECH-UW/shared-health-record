@@ -1,7 +1,18 @@
 'use strict'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
-import { IBundle, IPatient, RTTI_Bundle, TaskStatusKind } from '@ahryman40k/ts-fhir-types/lib/R4'
+import {
+  BundleTypeKind,
+  Bundle_RequestMethodKind,
+  IBundle,
+  IDiagnosticReport,
+  IObservation,
+  IPatient,
+  IReference,
+  IServiceRequest,
+  RTTI_Bundle,
+  TaskStatusKind,
+} from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got'
 import { send } from 'process'
 import { saveBundle } from '../hapi/lab'
@@ -21,6 +32,7 @@ export const topicList = {
   SEND_ORM_TO_IPMS: 'send-orm-to-ipms',
   SAVE_PIMS_PATIENT: 'save-pims-patient',
   SAVE_IPMS_PATIENT: 'save-ipms-patient',
+  HANDLE_ORU_FROM_IPMS: 'handle-oru-from-ipms',
 }
 
 export class LabWorkflowsBw extends LabWorkflows {
@@ -79,6 +91,8 @@ export class LabWorkflowsBw extends LabWorkflows {
         case topicList.SEND_ORM_TO_IPMS:
           res = await LabWorkflowsBw.sendOrmToIpms(JSON.parse(val).bundle)
           break
+        case topicList.HANDLE_ORU_FROM_IPMS:
+          res = await LabWorkflowsBw.handleOruFromIpms(JSON.parse(val).bundle)
         default:
           break
       }
@@ -137,7 +151,7 @@ export class LabWorkflowsBw extends LabWorkflows {
       if (ipmsMapping.length > 0) {
         sr.code!.coding!.push({
           system: `${config.get('bwConfig:oclUrl')}/orgs/B-TECHBW/sources/IPMS-LAB-TEST/`,
-          code: ipmsCode,
+          code: ipmsMapping[0].from_concept_code,
           display: ipmsMapping[0].from_concept_name_resolved,
         })
       }
@@ -308,7 +322,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       logger.info(`adt:\n${adtMessage}`)
 
-      adtMessage = adtMessage.replace(/[\n\r]/g, '\r');
+      adtMessage = adtMessage.replace(/[\n\r]/g, '\r')
 
       let adtResult: String = <String>await sender.send(adtMessage)
 
@@ -323,27 +337,56 @@ export class LabWorkflowsBw extends LabWorkflows {
   }
 
   public static async sendOrmToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> {
-    let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
-      labBundle,
-      config.get('bwConfig:toIpmsOrmTemplate'),
-    )
+    let srBundle: IBundle = { resourceType: 'Bundle', entry: [] }
 
-    let sender = new Hl7MllpSender(
-      config.get('bwConfig:mllp:targetIp'),
-      config.get('bwConfig:mllp:targetOrmPort'),
-    )
+    try {
+      let options = {
+        timeout: config.get('bwConfig:requestTimeout'),
+        searchParams: {},
+      }
 
-    logger.info('Sending ORM message to IPMS!')
+      for (const entry of labBundle.entry!) {
+        if (entry.resource && entry.resource.resourceType == 'ServiceRequest') {
+          options.searchParams = {
+            'based-on': entry.resource.id,
+          }
 
-    logger.info(`orm:\n${ormMessage}\n`)
+          srBundle = await got
+            .get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options)
+            .json()
+        }
+      }
 
-    let result: any = await sender.send(ormMessage)
+      for (const sr of srBundle.entry!) {
+        let sendBundle = labBundle
 
-    if (result.includes('AA')) {
-      labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
+        sendBundle.entry!.push(sr)
+
+        let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
+          sendBundle,
+          config.get('bwConfig:toIpmsOrmTemplate'),
+        )
+
+        let sender = new Hl7MllpSender(
+          config.get('bwConfig:mllp:targetIp'),
+          config.get('bwConfig:mllp:targetOrmPort'),
+        )
+
+        logger.info('Sending ORM message to IPMS!')
+
+        logger.info(`orm:\n${ormMessage}\n`)
+
+        if (ormMessage && ormMessage != '') {
+          let result: any = await sender.send(ormMessage)
+          if (result.includes('AA')) {
+            labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
+          }
+          logger.info(`*result:\n${result}\n`)
+        }
+      }
+    } catch (e) {
+      logger.error(e)
     }
-    logger.info(`*result:\n${result}\n`)
-
     return labBundle
   }
 
@@ -359,8 +402,8 @@ export class LabWorkflowsBw extends LabWorkflows {
         return entry.resource && entry.resource.resourceType == 'Patient'
       })
 
-      if (patEntry) {
-        patient = <IPatient>patEntry
+      if (patEntry && patEntry.resource) {
+        patient = <IPatient>patEntry.resource
 
         let omangEntry = patient.identifier?.find(
           i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
@@ -406,7 +449,7 @@ export class LabWorkflowsBw extends LabWorkflows {
                 .get(`${config.get('fhirServer:baseURL')}/Task`, options)
                 .json()
 
-              sendPayload(taskBundle, topicList.SEND_ORM_TO_IPMS)
+              sendPayload({ bundle: taskBundle }, topicList.SEND_ORM_TO_IPMS)
             }
           }
         }
@@ -424,6 +467,129 @@ export class LabWorkflowsBw extends LabWorkflows {
     // let response: R4.IBundle = await saveLabBundle(labBundle)
 
     return registrationBundle
+  }
+
+  public static async handleOruFromIpms(translatedBundle: R4.IBundle): Promise<R4.IBundle> {
+    // Get Patient By Omang
+
+    // Get ServiceRequests by status and code
+
+    // Match Results to Service Requests
+    try {
+      if (translatedBundle && translatedBundle.entry) {
+        let patient: IPatient = <IPatient>(
+          translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Patient')!
+            .resource!
+        )
+
+        let dr: IDiagnosticReport = <IDiagnosticReport>(
+          translatedBundle.entry.find(
+            e => e.resource && e.resource.resourceType == 'DiagnosticReport',
+          )!.resource!
+        )
+
+        let obs: IObservation = <IObservation>(
+          translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Observation')!
+            .resource!
+        )
+        let drCode =
+          dr.code && dr.code.coding && dr.code.coding.length > 0 ? dr.code.coding[0].code : ''
+
+        let omang
+        let omangEntry = patient.identifier?.find(
+          i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
+        )
+
+        if (omangEntry) {
+          omang = omangEntry.value!
+        } else {
+          omang = ''
+        }
+
+        let options = {
+          timeout: config.get('bwConfig:requestTimeout'),
+          searchParams: {},
+        }
+
+        // Find all active service requests with dr code with this Omang.
+        options.searchParams = {
+          identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
+          _revinclude: 'ServiceRequest:patient',
+        }
+
+        let patientBundle: IBundle = await got
+          .get(`${config.get('fhirServer:baseURL')}/Patient`, options)
+          .json()
+
+        if (patientBundle && patientBundle.entry && patientBundle.entry.length > 0) {
+          let candidates: IServiceRequest[] = patientBundle.entry
+            .filter(
+              e =>
+                e.resource &&
+                e.resource.resourceType == 'ServiceRequest' &&
+                e.resource.status &&
+                e.resource.status == 'active' &&
+                e.resource.code &&
+                e.resource.code.coding &&
+                e.resource.code.coding.length > 0,
+            )
+            .map(e => <IServiceRequest>e.resource)
+
+          let primaryCandidate: IServiceRequest | undefined = candidates.find(c => {
+            if (c && c.code && c.code.coding) {
+              let candidateCode = c.code.coding.find(
+                co =>
+                  co.system ==
+                  'https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/',
+              )
+              return candidateCode && candidateCode.code == drCode
+            }
+            return false
+          })
+
+          // Update DR based on primary candidate details
+          // Update Obs based on primary candidate details
+          if (primaryCandidate && primaryCandidate.code && primaryCandidate.code.coding) {
+            if (dr.code && dr.code.coding)
+              dr.code.coding = dr.code.coding.concat(primaryCandidate.code.coding)
+            if (obs.code && obs.code.coding)
+              obs.code.coding = obs.code.coding.concat(primaryCandidate.code.coding)
+
+            let srRef: IReference = {}
+            srRef.type = 'ServiceRequest'
+            srRef.reference = 'ServiceRequest/' + primaryCandidate.id
+
+            dr.basedOn = [srRef]
+            obs.basedOn = [srRef]
+          }
+        }
+
+        let sendBundle: R4.IBundle = {
+          resourceType: 'Bundle',
+          type: BundleTypeKind._transaction,
+          entry: [
+            {
+              resource: patient,
+              request: { method: Bundle_RequestMethodKind._put, url: 'Patient/' + patient.id },
+            },
+            {
+              resource: dr,
+              request: { method: Bundle_RequestMethodKind._put, url: 'DiagnosticReport/' + dr.id },
+            },
+            {
+              resource: obs,
+              request: { method: Bundle_RequestMethodKind._put, url: 'Observation/' + obs.id },
+            },
+          ],
+        }
+
+        // Save to SHR
+        let resultBundle: R4.IBundle = await saveBundle(sendBundle)
+        return resultBundle
+      }
+    } catch (error) {}
+
+    return translatedBundle
   }
 
   private static getTaskStatus(labBundle: R4.IBundle): R4.TaskStatusKind | undefined {

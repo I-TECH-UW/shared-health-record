@@ -1,7 +1,16 @@
 'use strict'
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
-import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
+import {
+  BundleTypeKind,
+  Bundle_RequestMethodKind,
+  IBundle,
+  IDiagnosticReport,
+  IObservation,
+  IPatient,
+  IReference,
+  IServiceRequest,
+} from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
 import { saveBundle } from '../hapi/lab'
 import config from '../lib/config'
@@ -30,13 +39,9 @@ export default class Hl7WorkflowsBw {
         config.get('bwConfig:fromIpmsOruTemplate'),
       )
 
-      if (translatedBundle != this.errorBundle) {
-        // Save to SHR
-        let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
-
-        // TODO: handle matching to update the Task and ServiceRequests with status/results
-
-        return resultBundle
+      if (translatedBundle != this.errorBundle && translatedBundle.entry) {
+        sendPayload({ bundle: translatedBundle }, topicList.HANDLE_ORU_FROM_IPMS)
+        return translatedBundle
       } else {
         return this.errorBundle
       }
