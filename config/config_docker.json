@@ -36,9 +36,9 @@
     "toIpmsOrmTemplate": "ORM_O01_TO_IPMS.hbs",
     "fromIpmsOruTemplate": "ORU_R01_FROM_IPMS.hbs",
     "mllp": {
-      "targetIp": "host.docker.internal",
-      "targetAdtPort": 2100,
-      "targetOrmPort": 2100
+      "targetIp": "10.175.5.69",
+      "targetAdtPort": 3001,
+      "targetOrmPort": 3002
     }
   }
 }

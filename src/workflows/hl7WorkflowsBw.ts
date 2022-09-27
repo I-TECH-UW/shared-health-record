@@ -60,14 +60,14 @@ export default class Hl7WorkflowsBw {
 
       if (translatedBundle != this.errorBundle) {
         // Save to SHR
-        let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
+        // let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
 
         sendPayload(
-          { bundle: translatedBundle, response: resultBundle },
+          { bundle: translatedBundle },
           topicList.SAVE_IPMS_PATIENT,
         )
 
-        return resultBundle
+        return translatedBundle
       } else {
         return this.errorBundle
       }

@@ -13,8 +13,10 @@ services:
   # shr: Run natively using yarn, or see docker-compose.yml
   shr:
     container_name: shr
+    restart: unless-stopped
     hostname: shr
     restart: unless-stopped
+    image: ghcr.io/i-tech-uw/shared-health-record:local
     build:
       context: ./
       args:
