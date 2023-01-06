@@ -10,12 +10,17 @@ export default class MllpAdapter {
   start(callback: Function) {
     let mllpServer = new MllpServer('0.0.0.0', config.get('app:mllpPort'), logger)
 
-    mllpServer.listen((err: Error) => callback())
-
     mllpServer.on('hl7', async data => {
-      let response: IBundle = await this.handleMessage(data)
+      let start: string = data.substring(0,3)
+      let checkChar: string = data[data.length-1]
+      if(checkChar == '\r') {
+        let response: IBundle = await this.handleMessage(data)
 
-      logger.info('HL7 Response:\n' + JSON.stringify(response))
+        logger.info('HL7 Response:\n' + JSON.stringify(response))
+      } else {
+        logger.warn('Malformed HL7 Message:\n'+data)
+      }
+      
     })
   }
 
