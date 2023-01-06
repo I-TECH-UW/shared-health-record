@@ -12,7 +12,7 @@ export default class MllpAdapter {
 
     mllpServer.listen((err: Error) => callback())
 
-    mllpServer.on('hl7', async data => {
+    mllpServer.on('hl7', async (data: any) => {
       let start: string = data.substring(0,3)
       let checkChar: string = data[data.length-1]
       if(checkChar == '\r') {
