@@ -1,5 +1,5 @@
 import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
-import { MllpServer } from '@b-techbw/mllp'
+import { MllpServer } from '@i-tech-uw/mllp-server'
 import config from '../lib/config'
 import logger from '../lib/winston'
 import Hl7WorkflowsBw from '../workflows/hl7WorkflowsBw'
@@ -9,6 +9,8 @@ const hl7 = require('hl7')
 export default class MllpAdapter {
   start(callback: Function) {
     let mllpServer = new MllpServer('0.0.0.0', config.get('app:mllpPort'), logger)
+
+    mllpServer.listen((err: Error) => callback())
 
     mllpServer.on('hl7', async data => {
       let start: string = data.substring(0,3)
@@ -20,7 +22,7 @@ export default class MllpAdapter {
       } else {
         logger.warn('Malformed HL7 Message:\n'+data)
       }
-      
+
     })
   }
 
