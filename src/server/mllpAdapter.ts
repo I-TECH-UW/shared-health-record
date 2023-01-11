@@ -1,5 +1,5 @@
 import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
-import { MllpServer } from '@b-techbw/mllp'
+import { MllpServer } from '@i-tech-uw/mllp-server'
 import config from '../lib/config'
 import logger from '../lib/winston'
 import Hl7WorkflowsBw from '../workflows/hl7WorkflowsBw'
@@ -12,10 +12,17 @@ export default class MllpAdapter {
 
     mllpServer.listen((err: Error) => callback())
 
-    mllpServer.on('hl7', async data => {
-      let response: IBundle = await this.handleMessage(data)
+    mllpServer.on('hl7', async (data: any) => {
+      let start: string = data.substring(0,3)
+      let checkChar: string = data[data.length-1]
+      if(checkChar == '\r') {
+        let response: IBundle = await this.handleMessage(data)
 
-      logger.info('HL7 Response:\n' + JSON.stringify(response))
+        logger.info('HL7 Response:\n' + JSON.stringify(response))
+      } else {
+        logger.warn('Malformed HL7 Message:\n'+data)
+      }
+
     })
   }
 

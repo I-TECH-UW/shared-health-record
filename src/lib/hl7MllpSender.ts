@@ -1,4 +1,4 @@
-import { MllpServer } from '@b-techbw/mllp'
+import { MllpServer } from '@i-tech-uw/mllp-server'
 import logger from './winston'
 
 export default class Hl7MllpSender {

@@ -1,5 +1,5 @@
 import { R4 } from '@ahryman40k/ts-fhir-types'
-import { MllpServer } from '@b-techbw/mllp'
+import { MllpServer } from '@i-tech-uw/mllp-server'
 import got from 'got'
 import nock from 'nock'
 import config from '../../lib/config'
