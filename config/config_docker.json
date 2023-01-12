@@ -12,8 +12,8 @@
       "urn": "urn:mediator:shared-health-record"
     },
     "client": {
-      "username": "shr",
-      "password": "shr"
+      "username": "shr-client",
+      "password": "shr-client"
     }
   },
   "fhirServer": {
