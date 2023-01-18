@@ -89,7 +89,8 @@ export class LabWorkflowsBw extends LabWorkflows {
           res = await LabWorkflowsBw.saveIpmsPatient(JSON.parse(val).bundle)
           break
         case topicList.SEND_ORM_TO_IPMS:
-          res = await LabWorkflowsBw.sendOrmToIpms(JSON.parse(val).bundle)
+          let parsed = JSON.parse(val)
+          res = await LabWorkflowsBw.sendOrmToIpms(parsed)
           break
         case topicList.HANDLE_ORU_FROM_IPMS:
           res = await LabWorkflowsBw.handleOruFromIpms(JSON.parse(val).bundle)
@@ -322,8 +323,6 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       logger.info(`adt:\n${adtMessage}`)
 
-      adtMessage = adtMessage.replace(/[\n\r]/g, '\r')
-
       let adtResult: String = <String>await sender.send(adtMessage)
 
       if (adtResult.includes('AA')) {
@@ -336,15 +335,28 @@ export class LabWorkflowsBw extends LabWorkflows {
     return labBundle
   }
 
-  public static async sendOrmToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> {
+
+  public static async sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
     let srBundle: IBundle = { resourceType: 'Bundle', entry: [] }
+    let labBundle = bundles.taskBundle
+    let patient = bundles.patient
+
+    logger.info(`task bundle:\n${JSON.stringify(bundles.taskBundle)}\npatient:\n${JSON.stringify(bundles.patient)}`)
 
     try {
+      // Replace Patient Resource with one From Lab System
+      let pindex = labBundle.entry!.findIndex((entry: any) => {
+        return entry.resource && entry.resource.resourceType == 'Patient'
+      })
+
+      labBundle.entry[pindex].resource = patient
+
       let options = {
         timeout: config.get('bwConfig:requestTimeout'),
         searchParams: {},
       }
 
+      // Get Service Request Resources
       for (const entry of labBundle.entry!) {
         if (entry.resource && entry.resource.resourceType == 'ServiceRequest') {
           options.searchParams = {
@@ -360,7 +372,13 @@ export class LabWorkflowsBw extends LabWorkflows {
       for (const sr of srBundle.entry!) {
         let sendBundle = labBundle
 
+        // Send one ORM for each ServiceRequest
         sendBundle.entry!.push(sr)
+
+        // // Attach Patient from Registration ADT
+        // sendBundle.entry!.push({
+        //   resource: patient
+        // })
 
         let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
           sendBundle,
@@ -449,7 +467,7 @@ export class LabWorkflowsBw extends LabWorkflows {
                 .get(`${config.get('fhirServer:baseURL')}/Task`, options)
                 .json()
 
-              sendPayload({ bundle: taskBundle }, topicList.SEND_ORM_TO_IPMS)
+              sendPayload({ taskBundle: taskBundle, patient: patient }, topicList.SEND_ORM_TO_IPMS)
             }
           }
         }

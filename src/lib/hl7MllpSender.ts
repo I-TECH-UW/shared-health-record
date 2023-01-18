@@ -17,6 +17,7 @@ export default class Hl7MllpSender {
    * @returns Promise
    */
   send(message: string) {
+    message = message.replace(/[\n\r]/g, '\r')
     return new Promise((resolve, reject) => {
       this.mllpServer.send(this.targetIp, this.targetPort, message, (err: any, ackData: any) => {
         logger.info(`Sent message!\nerr: ${err}\nackData: ${ackData}`)

@@ -18,6 +18,10 @@ COPY ./package.json /app
 
 COPY ./.npmrc /app
 
+COPY ./yarn.lock /app
+
+COPY ./.yarnrc.yml /app
+
 RUN yarn install --ignore-scripts --production=false --network-timeout 1000000
 
 COPY ./src /app/src
