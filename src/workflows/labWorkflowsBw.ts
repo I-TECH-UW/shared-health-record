@@ -323,8 +323,6 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       logger.info(`adt:\n${adtMessage}`)
 
-      adtMessage = adtMessage.replace(/[\n\r]/g, '\r')
-
       let adtResult: String = <String>await sender.send(adtMessage)
 
       if (adtResult.includes('AA')) {

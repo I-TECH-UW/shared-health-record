@@ -106,7 +106,7 @@ export default class Hl7WorkflowsBw {
 
   static async getFhirTranslation(bundle: R4.IBundle, template: string): Promise<string> {
     try {
-      return await got({
+      return await (got({
         url: `${config.get('fhirConverterUrl')}/convert/fhir/${template}`,
         headers: {
           'content-type': 'application/json',
@@ -118,7 +118,7 @@ export default class Hl7WorkflowsBw {
         },
         username: config.get('mediator:client:username'),
         password: config.get('mediator:client:password'),
-      }).text()
+      }).text())
     } catch (error: any) {
       logger.error(
         `Could not translate FHIR Bundle message\n${JSON.stringify(
