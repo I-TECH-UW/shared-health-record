@@ -133,6 +133,8 @@ export class LabWorkflowsBw extends LabWorkflows {
         default:
           break
       }
+      await new Promise(resolve => setTimeout(resolve, 300))
+
       return res
     } catch (e) {
       logger.error(e)
@@ -150,6 +152,7 @@ export class LabWorkflowsBw extends LabWorkflows {
           e.resource.code.coding &&
           e.resource.code.coding.length > 0
         ) {
+          logger.info`Translating ServiceRequest Codings`
           e.resource = await this.translateCoding(e.resource)
         }
       }
@@ -317,10 +320,14 @@ export class LabWorkflowsBw extends LabWorkflows {
         pimsCoding = this.getCoding(sr, config.get('bwConfig:pimsSystemUrl'))
         cielCoding = this.getCoding(sr, config.get('bwConfig:cielSystemUrl'))
 
+        logger.info(`PIMS Coding: ${JSON.stringify(pimsCoding)}`)
+        logger.info(`CIEL Coding: ${JSON.stringify(cielCoding)}`)
+
         if (pimsCoding && pimsCoding.code) {
           // Translate from PIMS to CIEL and IPMS
           ipmsCoding = await this.getIpmsCode(
             `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${pimsCoding.code}&toConceptSource=PIMSLAB`,
+            pimsCoding.code,
           )
 
           if (ipmsCoding && ipmsCoding.code) {
@@ -340,16 +347,25 @@ export class LabWorkflowsBw extends LabWorkflows {
           // Translate from CIEL to IPMS
           ipmsCoding = await this.getIpmsCode(
             `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${cielCoding.code}&toConceptSource=CIEL`,
+            cielCoding.code,
           )
         }
 
         // Add IPMS Coding
         if (ipmsCoding && ipmsCoding.code) {
-          sr.code.coding.push({
+          const ipmsOrderTypeExt = {
+            url: config.get('bwConfig:ipmsOrderTypeSystemUrl'),
+            valueString: ipmsCoding.hl7Flag,
+          }
+
+          const srCoding = {
             system: config.get('bwConfig:ipmsSystemUrl'),
             code: ipmsCoding.mnemonic,
             display: ipmsCoding.display,
-          })
+            extension: [ipmsOrderTypeExt],
+          }
+
+          sr.code.coding.push(srCoding)
         }
 
         // Get LOINC Coding
@@ -944,17 +960,23 @@ export class LabWorkflowsBw extends LabWorkflows {
     }
   }
 
-  private static async getIpmsCode(q: string) {
+  private static async getIpmsCode(q: string, c = '') {
     try {
       const ipmsMappings = await this.getOclMapping(q)
 
+      //logger.info(`IPMS Mappings: ${JSON.stringify(ipmsMappings)}`)
+
       // Prioritize "Broader Than Mappings"
       //TODO: Figure out if this is proper way to handle panels / broad to narrow
-      let mappingIndex = ipmsMappings.findIndex((x: any) => x.map_type == 'BROADER-THAN')
+      let mappingIndex = ipmsMappings.findIndex(
+        (x: any) => x.map_type == 'BROADER-THAN' && x.to_concept_code == c,
+      )
 
       // Fall back to "SAME AS"
       if (mappingIndex < 0) {
-        mappingIndex = ipmsMappings.findIndex((x: any) => x.map_type == 'SAME-AS')
+        mappingIndex = ipmsMappings.findIndex(
+          (x: any) => x.map_type == 'SAME-AS' && x.to_concept_code == c,
+        )
       }
 
       if (mappingIndex >= 0) {
@@ -963,12 +985,17 @@ export class LabWorkflowsBw extends LabWorkflows {
         const ipmsCodingInfo: any = await this.getOclMapping(
           `/orgs/I-TECH-UW/sources/IPMSLAB/concepts/${ipmsCode}`,
         )
-        let ipmsMnemonic
+        // logger.info(`IPMS Coding Info: ${JSON.stringify(ipmsCodingInfo)}`)
+        let ipmsMnemonic, hl7Flag
         if (ipmsCodingInfo) {
           ipmsMnemonic = ipmsCodingInfo.names.find((x: any) => x.name_type == 'Short').name
+          hl7Flag =
+            ipmsCodingInfo.extras && ipmsCodingInfo.extras.IPMS_HL7_ORM_TYPE
+              ? ipmsCodingInfo.extras.IPMS_HL7_ORM_TYPE
+              : 'LAB'
         }
 
-        return { code: ipmsCode, display: ipmsDisplay, mnemonic: ipmsMnemonic }
+        return { code: ipmsCode, display: ipmsDisplay, mnemonic: ipmsMnemonic, hl7Flag: hl7Flag }
       } else {
         return null
       }
@@ -981,6 +1008,8 @@ export class LabWorkflowsBw extends LabWorkflows {
   private static async getMappedCode(q: string): Promise<any> {
     try {
       const codeMapping = await this.getOclMapping(q)
+
+      //logger.info(`Code Mapping: ${JSON.stringify(codeMapping)}`)
 
       if (codeMapping && codeMapping.length > 0) {
         return {
@@ -999,7 +1028,20 @@ export class LabWorkflowsBw extends LabWorkflows {
   private static async getOclMapping(queryString: string): Promise<any[]> {
     const options = { timeout: config.get('bwConfig:requestTimeout') | 1000 }
 
+    logger.info(`${config.get('bwConfig:oclUrl')}${queryString}`)
+
     return got.get(`${config.get('bwConfig:oclUrl')}${queryString}`, options).json()
+  }
+
+  private static async getOclConcept(conceptCode: string): Promise<any> {
+    const options = { timeout: config.get('bwConfig:requestTimeout') | 1000 }
+
+    return got
+      .get(
+        `${config.get('bwConfig:oclUrl')}/orgs/I-TECH-UW/sources/IPMSLAB/concepts/${conceptCode}`,
+        options,
+      )
+      .json()
   }
 }
 

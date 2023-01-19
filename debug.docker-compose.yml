@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
     hostname: shr
     restart: unless-stopped
-    image: ghcr.io/i-tech-uw/shared-health-record:local
+    image: ghcr.io/i-tech-uw/shared-health-record:debug-2
     build:
       context: ./
       args:

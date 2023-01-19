@@ -8,7 +8,6 @@ type FacilityMapping = {
   provider: string
   patientType: string
   patientStatus: string
-  futurePatientStatus: string
   xLocation: string
 }
 
@@ -22,23 +21,22 @@ async function getFacilityMappings() {
 
   const workbook = new Excel.Workbook()
   const content = await workbook.xlsx.readFile(locationMapFile)
-  const worksheet = content.getWorksheet('HIE')
+  const worksheet = content.getWorksheet('LIVE')
 
   const rowStartIndex = 2
-  const rowEndIndex = 11
+  const rowEndIndex = 90
 
   const rows = worksheet.getRows(rowStartIndex, rowEndIndex) ?? []
 
   const mappings = rows.map((row: Excel.Row): FacilityMapping => {
     return {
       index: parseInt(getCellValue(row, 1)),
-      orderingFacility: getCellValue(row, 2),
-      receivingFacility: getCellValue(row, 3),
-      provider: getCellValue(row, 5),
-      patientType: getCellValue(row, 6),
+      orderingFacility: getCellValue(row, 4),
+      receivingFacility: getCellValue(row, 2),
+      provider: getCellValue(row, 6),
+      patientType: getCellValue(row, 8),
       patientStatus: getCellValue(row, 7),
-      futurePatientStatus: getCellValue(row, 8),
-      xLocation: getCellValue(row, 9),
+      xLocation: getCellValue(row, 3),
     }
   })
 
