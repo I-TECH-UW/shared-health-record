@@ -28,7 +28,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: '16'
           cache: 'yarn'
           registry-url: https://npm.pkg.github.com
           scope: '@i-tech-uw'
@@ -36,7 +36,7 @@ jobs:
       - run: cat .npmrc
 
       - name: Yarn
-        run: yarn -D
+        run: yarn install
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
