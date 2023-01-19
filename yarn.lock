@@ -7165,13 +7165,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-sdsl@npm:^4.1.4":
-  version: 4.3.0
-  resolution: "js-sdsl@npm:4.3.0"
-  checksum: ce908257cf6909e213af580af3a691a736f5ee8b16315454768f917a682a4ea0c11bde1b241bbfaecedc0eb67b72101b2c2df2ffaed32aed5d539fca816f054e
-  languageName: node
-  linkType: hard
-
 "js-sha512@npm:0.8.0":
   version: 0.8.0
   resolution: "js-sha512@npm:0.8.0"

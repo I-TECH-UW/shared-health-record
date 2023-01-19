@@ -27,11 +27,13 @@ services:
   shr-fhir:
     container_name: shr-fhir
     hostname: shr-fhir
-    image: hapiproject/hapi:latest
+    image: hapiproject/hapi:latest-tomcat
     restart: unless-stopped
+    configs:
+      - source: hapi
+        target: /data/hapi/application.yaml
     volumes:
       - /data/hapi
-      - ./config/application.yml:/data/hapi/application.yaml
     environment:
       SPRING_CONFIG_LOCATION: 'file:///data/hapi/application.yaml'
 
@@ -112,3 +114,6 @@ services:
     image: ghcr.io/b-techbw/mllp-tester:main
     volumes:
       - ./test/mllp:/test
+configs:
+  hapi:
+     file: true

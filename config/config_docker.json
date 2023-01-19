@@ -30,6 +30,9 @@
   },
   "bwConfig": {
     "pimsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
+    "ipmsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/",
+    "cielSystemUrl": "https://openconceptlab.org/orgs/CIEL/sources/CIEL",
+    "loincSystemUrl": "https://api.openconceptlab.org/orgs/Regenstrief/sources/LOINC/",
     "omangSystemUrl": "http://moh.bw.org/ext/identifier/omang",
     "oclUrl": "https://api.openconceptlab.org",
     "requestTimeout": 60000,

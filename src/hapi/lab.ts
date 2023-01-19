@@ -80,7 +80,7 @@ export async function saveBundle(bundle: R4.IBundle): Promise<R4.IBundle> {
   try {
     logger.info(JSON.stringify(bundle))
 
-    const ret = await got.post(uri.toString(), { json: bundle }).json()
+    let ret = await got.post(uri.toString(), { json: bundle }).json()
 
     return <R4.IBundle>ret
   } catch (error: any) {
