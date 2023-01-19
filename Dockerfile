@@ -20,9 +20,11 @@ COPY ./.npmrc /app
 
 COPY ./yarn.lock /app
 
+COPY ./.yarn/releases /app/.yarn/releases
+
 COPY ./.yarnrc.yml /app
 
-RUN yarn install --ignore-scripts --production=false --network-timeout 1000000
+RUN yarn install --network-timeout 1000000
 
 COPY ./src /app/src
 

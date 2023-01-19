@@ -23,10 +23,13 @@ router.all('/', async (req: Request, res: Response) => {
       // Save Bundle
       let resultBundle: R4.IBundle = await saveBundle(orderBundle)
 
-      // Trigger Background Tasks
-      LabWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)
-
-      return res.status(200).json(resultBundle)
+      // Trigger Background Tasks if bundle saved correctly
+      if(resultBundle && resultBundle.entry && orderBundle.entry && (resultBundle.entry.length == orderBundle.entry.length)) {
+        LabWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)
+        return res.status(200).json(resultBundle)
+      } else {
+        return res.status(400).send(resultBundle)
+      }
     } catch (e) {
       return res.status(500).send(e)
     }
