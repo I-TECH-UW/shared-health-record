@@ -5,6 +5,7 @@ import URI from 'urijs'
 import config from '../lib/config'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
+import { generateSimpleIpsBundle } from '../workflows/ips'
 
 export const router = express.Router()
 const fhirWrapper = require('../lib/fhir')()
@@ -13,7 +14,8 @@ router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
 })
 
-router.get('/:resource/:id?', async (req, res) => {
+router.get('/:resource/:id?/:operation?', async (req, res) => {
+  let result = {}
   try {
     let uri = URI(config.get('fhirServer:baseURL'))
     uri = uri.segment(req.params.resource)
@@ -28,8 +30,36 @@ router.get('/:resource/:id?', async (req, res) => {
 
     logger.info(`Getting ${uri.toString()}`)
 
-    let result = await got.get(uri.toString()).json()
+    let options = {
+      username: config.get('fhirServer:username'),
+      password: config.get('fhirServer:password')
+    }
 
+    if(req.params.id && req.params.resource == "Patient" && (req.params.id == "$summary" || req.params.operation == "$summary")) {
+      // Handle IPS Generation. 
+      
+      if(req.params.id && req.params.id.length > 0 && req.params.id[0] != "$"){
+        // ** If using logical id of the Patient object, create summary from objects directly connected to the patient. 
+        result = await generateSimpleIpsBundle(req.params.id)
+      } else if(req.params.id == "$summary") {
+        /**
+         * If not using logical id, use the Client Registry to resolve patient identity:
+         * 1. Each time a Patient Object is Created or Updated, a copy is sent to the attached CR
+         * 2. Assumption: The CR is set up to correctly match the Patient to other sources.
+         * 3. When IPS is requested with an identifier query parameter and no logical id parameter:
+         *   a. The Client Registry is queried with an $ihe-pix request to get identifiers cross-referenced with the given identifier. 
+         *   b. All Patient IDs from the SHR are filtered (in query or post-process)
+         *   c. Patient data is composed of multiple patient resources, the golden record resource, and all owned data
+         * */
+      } else {
+        // Unsupported Operation
+      }
+      
+      
+    } else {
+      result = await got.get(uri.toString(), options).json()
+    }
+    
     res.status(200).json(result)
   } catch (error) {
     return res.status(500).json(error)

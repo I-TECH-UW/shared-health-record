@@ -1,6 +1,6 @@
 {
   "name": "shared-health-registry",
-  "version": "0.9.2",
+  "version": "0.10.0-alpha",
   "description": "Open Implementation of an OpenHIE Shared Health Record",
   "main": "app.js",
   "scripts": {
@@ -47,6 +47,7 @@
     "openhim-mediator-utils": "^0.2.3",
     "querystring": "^0.2.1",
     "request-promise-native": "^1.0.8",
+    "rimraf": "^4.1.2",
     "slashes": "^1.0.5",
     "soundex-code": "^1.0.4",
     "sprintf-js": "^1.1.2",

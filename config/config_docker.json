@@ -7,17 +7,19 @@
     "api": {
       "username": "root@openhim.org",
       "password": "openhim",
-      "apiURL": "https://openhim-core:8080",
+      "apiURL": "https://tap-demo.openelisci.org/openhim-api",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     },
     "client": {
-      "username": "shr-client",
-      "password": "shr-client"
+      "username": "shr",
+      "password": "shr"
     }
   },
   "fhirServer": {
-    "baseURL": "http://shr-fhir:8080/fhir"
+    "baseURL": "http://hub.openelis-global.org:5001/fhir",
+    "username": "shr",
+    "password": "shr"
   },
   "clientRegistryUrl": "http://openhim-core:5001/CR/fhir",
   "fhirConverterUrl": "http://openhim-core:5001/72f",

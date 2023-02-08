@@ -2,6 +2,13 @@
 
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import Client from 'fhirclient/lib/Client'
+import fhirClient from 'fhirclient'
+import URI from 'urijs'
+import config from '../lib/config'
+import got from 'got'
+import { RightCurriedFunction5 } from 'lodash'
+import logger from '../lib/winston'
+
 
 // Generating an IPS Bundle (https://build.fhir.org/ig/HL7/fhir-ips/)
 // List of Resources:
@@ -103,6 +110,122 @@ export async function generateIpsbundle(
 
   return ipsBundle
 }
+export async function generateSimpleIpsBundle(
+  patientId: string
+): Promise<R4.IBundle> {
+  let ipsBundle: R4.IBundle = {
+    resourceType: 'Bundle',
+  }
+
+  let ipsCompositionType: R4.ICodeableConcept = {
+    coding: [
+      {
+        system: 'http://loinc.org',
+        code: '60591-5',
+        display: 'Patient summary Document',
+      },
+    ],
+  }
+
+  // Fetch SHR components
+  /**
+   * Get Encounters where: relevant to medical summary
+   * Get AllergyIntolerance
+   * Get observations relevant to problem lists
+   * Get observations relevant to immunizations
+   * Get observations relevant to diagnostic results
+   * Get observations relevant to labs
+   * Get plan of care?
+   */
+  try {
+    // TODO: get pagination implemented
+    let searchBundle = <R4.IBundle>(await got.get(`${config.get('fhirServer:baseURL')}/Patient?_id=${patientId}&_include=*&_revinclude=*`, {
+      username: config.get('fhirServer:username'),
+      password: config.get('fhirServer:password')
+    }).json())
+    let ipsSections: any = {
+      Patient: [],
+      Encounter: [],
+      ServiceRequest: [],
+      DiagnosticResult: [],
+      Observation: []
+    }
+
+    if (searchBundle && searchBundle.entry && searchBundle.entry.length > 0) {
+      searchBundle.entry.map((e) => {
+        if (e.resource) {
+          let resourceType = e.resource.resourceType
+          let resourceKey = resourceType.toString() as keyof any
+
+          if (!ipsSections[resourceKey] || ipsSections[resourceKey].length == 0) {
+            ipsSections[resourceKey] = []
+          }
+
+          ipsSections[resourceKey].push(e.resource)
+        }
+      })
+
+    }
+
+    if (ipsSections["Patient"] && ipsSections["Patient"].length == 1) {
+      let ipsComposition: R4.IComposition = {
+        resourceType: 'Composition',
+        type: ipsCompositionType,
+        author: [{ display: 'SHR System' }],
+        subject: {reference: `Patient/${ipsSections["Patient"][0].id}`},
+        section: [
+          {
+            title: 'Patient Records',
+            entry: ipsSections["Patient"].map((p: R4.IPatient) => {
+              return { reference: `Patient/${p.id!}` }
+            }),
+          },
+          {
+            title: 'Encounters',
+            entry: ipsSections["Encounter"].map((e: R4.IEncounter) => {
+              return { reference: `Encounter/${e.id!}` }
+            }),
+          },
+          {
+            title: 'Service Requests',
+            entry: ipsSections["ServiceRequest"].map((sr: R4.IServiceRequest) => {
+              return { reference: `ServiceRequest/${sr.id!}` }
+            }),
+          },
+          {
+            title: 'Diagnostic Reports',
+            entry: ipsSections["DiagnosticReport"].map((dr: R4.IDiagnosticReport) => {
+              return { reference: `DiagnosticReport/${dr.id!}` }
+            }),
+          },
+          {
+            title: 'Observations',
+            entry: ipsSections["Observation"].map((o: R4.IObservation) => {
+              return { reference: `Observation/${o.id!}` }
+            }),
+          }
+        ],
+      }
+
+      ipsBundle.type = R4.BundleTypeKind._document
+      ipsBundle.entry = []
+      ipsBundle.entry.push(ipsComposition)
+      
+      let bundleTypes = ["Patient", "Encounter", "ServiceRequest", "DiagnosticReport", "Observation"]
+      bundleTypes.forEach((rt: string) => {
+        if(ipsSections[rt] && ipsSections[rt].length > 0 && ipsBundle.entry) {
+          ipsBundle.entry = ipsBundle.entry.concat(ipsSections[rt])
+        }
+      })
+    } else {
+      // TODO: Return Error Bundle
+      logger.error(`Cant generate IPS for patient ${patientId}`)
+    }
+  } catch (e) {
+    logger.error(`Cant generate IPS for patient ${patientId}:\n${e}`)
+  }
+  return ipsBundle
+}
 
 export function generateUpdateBundle(
   values: R4.IDomainResource[][],
@@ -192,4 +315,22 @@ function grabTargetIdentifiers(patients: R4.IPatient[], system: string): string[
       return ''
     })
     .filter(i => i != '')
+}
+
+async function getRelatedResources(patientId: string, resourceType: string): Promise<R4.IResource[]> {
+  // TODO: Consider bulk export
+  const query = new URLSearchParams()
+
+  let options = {
+    username: config.get('fhirServer:username'),
+    password: config.get('fhirServer:password')
+  }
+
+  let uri = URI(config.get('fhirServer:baseURL'))
+
+  query.set('subject', `Patient/${patientId}`)
+
+  let resources = await got.get(`${uri.toString()}/${resourceType}?${query}`, options).json()
+
+  return <R4.IResource[]>resources
 }

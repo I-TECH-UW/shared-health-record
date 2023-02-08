@@ -1,6 +1,6 @@
 {
   "urn": "urn:mediator:shared-health-record",
-  "version": "0.4.3-ci",
+  "version": "0.10.0-alpha",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
   "defaultChannelConfig": [
@@ -41,46 +41,6 @@
         }
       ],
       "priority": 1
-    },
-    {
-      "methods": ["GET", "POST", "PUT"],
-      "type": "http",
-      "whitelist": [],
-      "authType": "private",
-      "matchContentTypes": [],
-      "properties": [],
-      "txViewAcl": [],
-      "txViewFullAcl": [],
-      "txRerunAcl": [],
-      "status": "enabled",
-      "rewriteUrls": false,
-      "addAutoRewriteRules": true,
-      "autoRetryEnabled": false,
-      "autoRetryPeriodMinutes": 60,
-      "name": "SHR - Get/Update IPS",
-      "requestBody": true,
-      "responseBody": true,
-      "description": "Get or Update the International Patient Summary Bundle from the SHR",
-      "urlPattern": "^/SHR/fhir/ips.*$",
-      "routes": [
-        {
-          "type": "http",
-          "status": "enabled",
-          "forwardAuthHeader": false,
-          "name": "SHR - Get IPS",
-          "secured": false,
-          "host": "shr",
-          "port": 3000,
-          "path": "",
-          "pathTransform": "s/SHR\\/fhir\\/ips/ips/g",
-          "primary": true,
-          "username": "",
-          "password": ""
-        }
-      ],
-      "alerts": [],
-      "rewriteUrlsConfig": [],
-      "priority": 2
     },
     {
       "methods": ["GET", "POST", "DELETE", "PUT"],
