@@ -7,13 +7,13 @@ export const router = express.Router()
 
 router.post('/forward/:targetIp/:targetPort', async (req: Request, res: Response) => {
   try {
-    let hl7Msg: string = req.body.trim()
+    const hl7Msg: string = req.body.trim()
     const targetIp: string = req.params.targetIp
     const targetPort = Number(req.params.targetPort)
 
-    let sender = new Hl7MllpSender(targetIp, targetPort)
+    const sender = new Hl7MllpSender(targetIp, targetPort)
 
-    let ack = await sender.send(hl7Msg)
+    const ack = await sender.send(hl7Msg)
 
     res.status(200)
     res.send(ack)

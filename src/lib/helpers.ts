@@ -1,6 +1,6 @@
 'use strict'
 
-export function invalidBundle(resource: any): Boolean {
+export function invalidBundle(resource: any): boolean {
   return (
     !resource.resourceType ||
     (resource.resourceType && resource.resourceType !== 'Bundle') ||

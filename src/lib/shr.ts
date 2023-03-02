@@ -5,8 +5,8 @@ import hl7Routes from '../routes/hl7'
 import ipsRoutes from '../routes/ips'
 import labBwRoutes from '../routes/lab-bw'
 
-const swaggerUi = require('swagger-ui-express')
-const swaggerJSDoc = require('swagger-jsdoc')
+const swaggerUi = import('swagger-ui-express')
+const swaggerJSDoc = import('swagger-jsdoc')
 
 const swaggerSpec = swaggerJSDoc({
   swaggerDefinition: {

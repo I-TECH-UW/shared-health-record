@@ -10,11 +10,11 @@ beforeAll(async () => {
 
 describe('generateLabBundle', () => {
   it('should return a Document Bundle with the correct type', async () => {
-    let task: R4.ITask = await got(
+    const task: R4.ITask = await got(
       IG_URL + '/Task-example-laboratory-task-simple-requested.json',
     ).json()
 
-    let result: R4.IBundle = LabWorkflows.generateLabBundle(task, patient)
+    const result: R4.IBundle = LabWorkflows.generateLabBundle(task, patient)
 
     expect(result.resourceType!).toEqual('Bundle')
     expect(result.type!).toEqual(R4.BundleTypeKind._document)
@@ -23,23 +23,23 @@ describe('generateLabBundle', () => {
       // Load Example Data
       patient = await got(IG_URL + '/Patient-example-laboratory-patient.json').json()
 
-      let getBundle = got(IG_URL + '/Bundle-example-laboratory-simple-bundle.json').json()
-      let getTask = got(IG_URL + '/Task-example-laboratory-task-simple-requested.json').json()
-      let getServiceRequest = got(
+      const getBundle = got(IG_URL + '/Bundle-example-laboratory-simple-bundle.json').json()
+      const getTask = got(IG_URL + '/Task-example-laboratory-task-simple-requested.json').json()
+      const getServiceRequest = got(
         IG_URL + '/ServiceRequest-example-laboratory-service-request.json',
       ).json()
-      let getPractitioner = got(
+      const getPractitioner = got(
         IG_URL + '/Practitioner-example-laboratory-practitioner.json',
       ).json()
 
-      let [exampleBundle, task, serviceRequest, practitioner] = await Promise.all([
+      const [exampleBundle, task, serviceRequest, practitioner] = await Promise.all([
         getBundle,
         getTask,
         getServiceRequest,
         getPractitioner,
       ])
 
-      let result = LabWorkflows.generateLabBundle(
+      const result = LabWorkflows.generateLabBundle(
         <R4.ITask>task,
         patient,
         [<R4.IServiceRequest>serviceRequest],

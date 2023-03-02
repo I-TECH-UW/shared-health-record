@@ -7,15 +7,15 @@ import { getResource, saveBundle, translateToTransactionBundle } from '../lab'
 
 const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
 
-let fhirUrl: string = config.get('fhirServer:baseURL')
+const fhirUrl: string = config.get('fhirServer:baseURL')
 
 describe('saveBundle', () => {
   it('should save a a document bundle', async () => {
     // Load data
-    let transactionBundle: R4.IBundle = await got(
+    const transactionBundle: R4.IBundle = await got(
       IG_URL + '/Bundle-example-laboratory-simple-bundle-transaction.json',
     ).json()
-    let transactionResultBundle: R4.IBundle = await got(
+    const transactionResultBundle: R4.IBundle = await got(
       IG_URL + '/Bundle-example-transaction-response-bundle.json',
     ).json()
 
@@ -32,7 +32,7 @@ describe('saveBundle', () => {
       .once()
       .reply(200, transactionResultBundle)
 
-    let result = await saveBundle(transactionBundle)
+    const result = await saveBundle(transactionBundle)
 
     expect(result).toEqual(transactionResultBundle)
   })
@@ -40,26 +40,26 @@ describe('saveBundle', () => {
 
 describe(translateToTransactionBundle, () => {
   it('should translate document bundle to transaction bundle', async () => {
-    let docBundle: R4.IBundle = await got(
+    const docBundle: R4.IBundle = await got(
       IG_URL + '/Bundle-example-laboratory-simple-bundle.json',
     ).json()
 
-    let result = translateToTransactionBundle(docBundle)
+    const result = translateToTransactionBundle(docBundle)
 
     expect(result.type).toEqual(BundleTypeKind._transaction)
   })
 })
 describe('getResource', () => {
   it('should return resource of given type', async () => {
-    let resource: R4.IPatient = await got(
+    const resource: R4.IPatient = await got(
       IG_URL + '/Patient-example-laboratory-patient.json',
     ).json()
-    let type: string = 'Patient'
-    let id: string = resource.id!
+    const type = 'Patient'
+    const id: string = resource.id!
 
     const scope = nock(fhirUrl).get(`/${type}/${id}`).once().reply(200, resource)
 
-    let result: R4.IPatient = await getResource(type, id)
+    const result: R4.IPatient = await getResource(type, id)
 
     expect(result).toEqual(resource)
   })

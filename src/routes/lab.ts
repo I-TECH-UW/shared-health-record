@@ -11,12 +11,12 @@ export const router = express.Router()
 
 router.all('/', async (req: Request, res: Response) => {
   if (req.method == 'GET') {
-    let task: R4.ITask = <R4.ITask>(
+    const task: R4.ITask = <R4.ITask>(
       await got(
         'https://b-techbw.github.io/bw-lab-ig/Task-example-laboratory-task-simple-requested.json',
       ).json()
     )
-    let patient: R4.IPatient = <R4.IPatient>(
+    const patient: R4.IPatient = <R4.IPatient>(
       await got(
         'https://i-tech-uw.github.io/laboratory-workflows-ig/Patient-example-laboratory-patient.json',
       ).json()
@@ -26,7 +26,7 @@ router.all('/', async (req: Request, res: Response) => {
     return res.status(200).send(LabWorkflows.generateLabBundle(task, patient))
   } else {
     logger.info('Received a Lab Order bundle to save')
-    let orderBundle: R4.IBundle = req.body
+    const orderBundle: R4.IBundle = req.body
 
     // Validate Bundle
     if (invalidBundle(orderBundle)) {
@@ -47,7 +47,7 @@ router.all('/', async (req: Request, res: Response) => {
 })
 
 router.get('/example-result', async (req: Request, res: Response) => {
-  let bundle: R4.IBundle = <R4.IBundle>(
+  const bundle: R4.IBundle = <R4.IBundle>(
     await got(
       'https://b-techbw.github.io/bw-lab-ig/Bundle-example-bw-lab-results-bundle.json',
     ).json()

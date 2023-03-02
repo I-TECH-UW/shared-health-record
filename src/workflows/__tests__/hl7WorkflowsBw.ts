@@ -10,17 +10,17 @@ const IG_URL = 'https://i-tech-uw.github.io/laboratory-workflows-ig'
 
 describe(Hl7WorkflowsBw.handleOruMessage, () => {
   it.skip('should translate and save ORU message ', async () => {
-    let converterUrl = config.get('fhirConverterUrl')
-    let fhirUrl = config.get('fhirServer:baseURL')
+    const converterUrl = config.get('fhirConverterUrl')
+    const fhirUrl = config.get('fhirServer:baseURL')
 
-    let sampleOru = (
+    const sampleOru = (
       await fs.readFile(path.join(__dirname, '../../__data__/sample_ORU.txt'))
     ).toString()
 
-    let transactionBundle: R4.IBundle = await got(
+    const transactionBundle: R4.IBundle = await got(
       IG_URL + '/Bundle-example-laboratory-simple-bundle-transaction.json',
     ).json()
-    let transactionResultBundle: R4.IBundle = await got(
+    const transactionResultBundle: R4.IBundle = await got(
       IG_URL + '/Bundle-example-transaction-response-bundle.json',
     ).json()
 
@@ -43,7 +43,7 @@ describe(Hl7WorkflowsBw.handleOruMessage, () => {
       .once()
       .reply(200, transactionResultBundle)
 
-    let result = await Hl7WorkflowsBw.handleOruMessage(sampleOru)
+    const result = await Hl7WorkflowsBw.handleOruMessage(sampleOru)
 
     expect(result).toEqual(transactionResultBundle)
   })

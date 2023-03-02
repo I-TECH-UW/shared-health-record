@@ -4,13 +4,13 @@ import express, { Request, Response } from 'express'
 import fhirClient from 'fhirclient'
 import config from '../lib/config'
 import logger from '../lib/winston'
-import { generateIpsbundle, generateUpdateBundle } from '../workflows/ips'
+import { generateIpsbundle, generateUpdateBundle } from '../workflows/ipsWorkflows'
 
 export const router = express.Router()
 
-var sprintf = require('sprintf-js').sprintf
+const sprintf = import('sprintf-js').sprintf
 
-let system = config.get('app:mpiSystem')
+const system = config.get('app:mpiSystem')
 
 router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
@@ -42,12 +42,12 @@ router.get('/Patient/cruid/:id/:lastUpdated?', async (req: Request, res: Respons
   })
 
   // Fetch records for linked patients from MPI
-  let mpiPatients = await mpiClient.request<R4.IPatient[]>(
+  const mpiPatients = await mpiClient.request<R4.IPatient[]>(
     `Patient?_id=${cruid}&_include=Patient:link`,
     { flat: true },
   )
 
-  let ipsBundle = await generateIpsbundle(mpiPatients, shrClient, lastUpdated, system)
+  const ipsBundle = await generateIpsbundle(mpiPatients, shrClient, lastUpdated, system)
 
   res.status(200).json(ipsBundle)
 })
@@ -80,21 +80,21 @@ router.get('/Patient/:id/:lastUpdated?', async (req: Request, res: Response) => 
 
   // Query MPI to get all patients
   // TODO: parameterize identifier specifics and account for diffent types of identifiers
-  let goldenRecordRes = await mpiClient.request<R4.IPatient[]>(
+  const goldenRecordRes = await mpiClient.request<R4.IPatient[]>(
     `Patient?identifier=${system}|${patientId}&_include=Patient:link`,
     { flat: true },
   )
-  let goldenRecord = goldenRecordRes.find(
+  const goldenRecord = goldenRecordRes.find(
     x => x.meta && x.meta.tag && x.meta.tag[0].code === '5c827da5-4858-4f3d-a50c-62ece001efea',
   )
 
   if (goldenRecord) {
-    let cruid = goldenRecord.id
-    let mpiPatients = await mpiClient.request<R4.IPatient[]>(
+    const cruid = goldenRecord.id
+    const mpiPatients = await mpiClient.request<R4.IPatient[]>(
       `Patient?_id=${cruid}&_include=Patient:link`,
       { flat: true },
     )
-    let ipsBundle = await generateIpsbundle(mpiPatients, shrClient, lastUpdated, system)
+    const ipsBundle = await generateIpsbundle(mpiPatients, shrClient, lastUpdated, system)
     res.status(200).send(ipsBundle)
   } else {
     res.sendStatus(500)
@@ -135,7 +135,7 @@ router.get('/:location?/:lastUpdated?', (req: Request, res: Response) => {
    *
    */
 
-  let patientP = client.request<R4.IPatient[]>(`Patient?${query}`, {
+  const patientP = client.request<R4.IPatient[]>(`Patient?${query}`, {
     flat: true,
   })
 
@@ -143,10 +143,10 @@ router.get('/:location?/:lastUpdated?', (req: Request, res: Response) => {
     query.set('location', location)
     obsQuery.set('encounter.location', location)
   }
-  let encounterP = client.request<R4.IEncounter[]>(`Encounter?${query}`, {
+  const encounterP = client.request<R4.IEncounter[]>(`Encounter?${query}`, {
     flat: true,
   })
-  let obsP = client.request<R4.IObservation[]>(`Observation?${obsQuery}`, {
+  const obsP = client.request<R4.IObservation[]>(`Observation?${obsQuery}`, {
     flat: true,
   })
 

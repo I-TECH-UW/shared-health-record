@@ -5,10 +5,10 @@ import URI from 'urijs'
 import config from '../lib/config'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
-import { generateSimpleIpsBundle } from '../workflows/ips'
+import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
 
 export const router = express.Router()
-const fhirWrapper = require('../lib/fhir')()
+const fhirWrapper = import('../lib/fhir')()
 
 router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
@@ -30,36 +30,38 @@ router.get('/:resource/:id?/:operation?', async (req, res) => {
 
     logger.info(`Getting ${uri.toString()}`)
 
-    let options = {
+    const options = {
       username: config.get('fhirServer:username'),
-      password: config.get('fhirServer:password')
+      password: config.get('fhirServer:password'),
     }
 
-    if(req.params.id && req.params.resource == "Patient" && (req.params.id == "$summary" || req.params.operation == "$summary")) {
-      // Handle IPS Generation. 
-      
-      if(req.params.id && req.params.id.length > 0 && req.params.id[0] != "$"){
-        // ** If using logical id of the Patient object, create summary from objects directly connected to the patient. 
+    if (
+      req.params.id &&
+      req.params.resource == 'Patient' &&
+      (req.params.id == '$summary' || req.params.operation == '$summary')
+    ) {
+      // Handle IPS Generation.
+
+      if (req.params.id && req.params.id.length > 0 && req.params.id[0] != '$') {
+        // ** If using logical id of the Patient object, create summary from objects directly connected to the patient.
         result = await generateSimpleIpsBundle(req.params.id)
-      } else if(req.params.id == "$summary") {
+      } else if (req.params.id == '$summary') {
         /**
          * If not using logical id, use the Client Registry to resolve patient identity:
          * 1. Each time a Patient Object is Created or Updated, a copy is sent to the attached CR
          * 2. Assumption: The CR is set up to correctly match the Patient to other sources.
          * 3. When IPS is requested with an identifier query parameter and no logical id parameter:
-         *   a. The Client Registry is queried with an $ihe-pix request to get identifiers cross-referenced with the given identifier. 
+         *   a. The Client Registry is queried with an $ihe-pix request to get identifiers cross-referenced with the given identifier.
          *   b. All Patient IDs from the SHR are filtered (in query or post-process)
          *   c. Patient data is composed of multiple patient resources, the golden record resource, and all owned data
          * */
       } else {
         // Unsupported Operation
       }
-      
-      
     } else {
       result = await got.get(uri.toString(), options).json()
     }
-    
+
     res.status(200).json(result)
   } catch (error) {
     return res.status(500).json(error)
@@ -109,7 +111,7 @@ router.put('/:resourceType/:id', (req, res) => {
 
 /** Helpers */
 
-function getResource({ req, noCaching }: { req: any; noCaching: boolean }, callback: Function) {
+function getResource({ req, noCaching }: { req: any; noCaching: boolean }, callback) {
   const resource = req.params.resource
   const id = req.params.id
 
@@ -125,7 +127,7 @@ function getResource({ req, noCaching }: { req: any; noCaching: boolean }, callb
   for (const param in req.query) {
     uri.addQuery(param, req.query[param])
   }
-  let url: string = uri.toString()
+  const url: string = uri.toString()
   logger.info(`Getting ${url}`)
 
   fhirWrapper.getResource(
@@ -140,9 +142,9 @@ function getResource({ req, noCaching }: { req: any; noCaching: boolean }, callb
 }
 
 function saveResource(req: any, res: any) {
-  let resource = req.body
-  let resourceType = req.params.resourceType
-  let id = req.params.id
+  const resource = req.body
+  const resourceType = req.params.resourceType
+  const id = req.params.id
   if (id && !resource.id) {
     resource.id = id
   }

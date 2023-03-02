@@ -5,18 +5,16 @@ import { BundleTypeKind } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
 import URI from 'urijs'
 import config from '../lib/config'
-import util = require('util')
+const util = import('util')
 
-import logger = require('../lib/winston')
+import logger from '../lib/winston'
 
-const fhirWrapper = require('../lib/fhir')()
+const fhirWrapper = import('../lib/fhir')
 
 let uri = URI(config.get('fhirServer:baseURL'))
 
 // TODO: change source utils to use got() & await pattern
 // Promisify fns
-let create = util.promisify(fhirWrapper.create)
-let get = util.promisify(fhirWrapper.getResource)
 
 // const mpiClient = fhirClient(req, res).client({ serverUrl: mpiUrl, username: config.get('fhirServer:username'), password: config.get('fhirServer:password')});
 // const shrClient = fhirClient(req, res).client({ serverUrl: shrUrl, username: config.get('fhirServer:username'), password: config.get('fhirServer:password')});
@@ -40,7 +38,7 @@ export async function getResource(type: string, id: string, params?: any, noCach
       uri.addQuery(param, params[param])
     }
   }
-  let url: string = uri.toString()
+  const url: string = uri.toString()
 
   logger.info(`Getting ${url}`)
 
@@ -55,12 +53,14 @@ export async function getResource(type: string, id: string, params?: any, noCach
 }
 
 // TODO
-export async function saveResource() {}
+export async function saveResource() {
+  return
+}
 
 export async function getTaskBundle(patientId: string, locationId: string) {
   logger.info(`Getting Bundle for patient ${patientId} and location ${locationId}`)
 
-  let requestUri = uri
+  const requestUri = uri
     .segment('Task')
     .addQuery('patient', patientId)
     .addQuery('owner', locationId)
@@ -80,7 +80,7 @@ export async function saveBundle(bundle: R4.IBundle): Promise<R4.IBundle> {
   try {
     logger.info(JSON.stringify(bundle))
 
-    let ret = await got.post(uri.toString(), { json: bundle }).json()
+    const ret = await got.post(uri.toString(), { json: bundle }).json()
 
     return <R4.IBundle>ret
   } catch (error: any) {
@@ -111,9 +111,9 @@ export function translateToTransactionBundle(bundle: R4.IBundle): R4.IBundle {
     ]
 
     if (bundle.entry) {
-      for (let entry of bundle.entry) {
+      for (const entry of bundle.entry) {
         if (entry.resource) {
-          let resource = entry.resource
+          const resource = entry.resource
           entry.request = {
             method: R4.Bundle_RequestMethodKind._put,
             url: `${resource.resourceType}/${resource.id}`,

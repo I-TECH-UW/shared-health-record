@@ -5,15 +5,15 @@ export class IpmsDataGen {
   static generateIpmsResults(entries: R4.IBundle_Entry[]): R4.IBundle_Entry[] {
     let generatedResults: R4.IBundle_Entry[] = []
 
-    for (let entry of entries) {
-      let resource = entry.resource
+    for (const entry of entries) {
+      const resource = entry.resource
       if (
         resource &&
         resource.resourceType == 'ServiceRequest' &&
         resource.basedOn &&
         resource.status! == 'active'
       ) {
-        let sr = resource
+        const sr = resource
         if (sr.code && sr.code.coding && sr.code.coding.length > 0) {
           if (
             sr.code.coding[0].code == '1' &&
@@ -36,9 +36,9 @@ export class IpmsDataGen {
   }
 
   private static generateCD4Results(sr: R4.IServiceRequest): R4.IBundle_Entry[] {
-    let cellCount = Math.floor(Math.random() * 40)
-    let obsId = 'ipms-obs-' + uuidv4()
-    let obs: R4.IObservation = {
+    const cellCount = Math.floor(Math.random() * 40)
+    const obsId = 'ipms-obs-' + uuidv4()
+    const obs: R4.IObservation = {
       resourceType: 'Observation',
       id: obsId,
       code: sr.code!,
@@ -79,15 +79,15 @@ export class IpmsDataGen {
       basedOn: [{ reference: 'ServiceRequest/' + sr.id }],
     }
 
-    let dr = this.getTemplateDR(sr, obsId)
+    const dr = this.getTemplateDR(sr, obsId)
 
     return this.packageResults(dr, obs)
   }
 
   private static generateViralLoadResults(sr: R4.IServiceRequest): R4.IBundle_Entry[] {
-    let viralLoad = Math.floor(Math.random() * 100000) + 50000
-    let obsId = 'ipms-obs-' + uuidv4()
-    let obs: R4.IObservation = {
+    const viralLoad = Math.floor(Math.random() * 100000) + 50000
+    const obsId = 'ipms-obs-' + uuidv4()
+    const obs: R4.IObservation = {
       resourceType: 'Observation',
       id: obsId,
       code: sr.code!,
@@ -122,7 +122,7 @@ export class IpmsDataGen {
       basedOn: [{ reference: 'ServiceRequest/' + sr.id }],
     }
 
-    let dr = this.getTemplateDR(sr, obsId)
+    const dr = this.getTemplateDR(sr, obsId)
 
     return this.packageResults(dr, obs)
   }
@@ -131,7 +131,7 @@ export class IpmsDataGen {
     dr: R4.IDiagnosticReport,
     obs: R4.IObservation,
   ): R4.IBundle_Entry[] {
-    let resPackage: R4.IBundle_Entry[] = []
+    const resPackage: R4.IBundle_Entry[] = []
 
     resPackage.push({
       resource: dr,
@@ -145,7 +145,7 @@ export class IpmsDataGen {
   }
 
   private static getTemplateDR(sr: R4.IServiceRequest, obsId: string): R4.IDiagnosticReport {
-    let drId = 'ipms-dr-' + uuidv4()
+    const drId = 'ipms-dr-' + uuidv4()
 
     return {
       id: drId,

@@ -10,11 +10,9 @@ import {
   IPatient,
   IReference,
   IServiceRequest,
-  RTTI_Bundle,
   TaskStatusKind,
 } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got'
-import { send } from 'process'
 import { saveBundle } from '../hapi/lab'
 import config from '../lib/config'
 import Hl7MllpSender from '../lib/hl7MllpSender'
@@ -23,6 +21,7 @@ import logger from '../lib/winston'
 import Hl7WorkflowsBw from './hl7WorkflowsBw'
 import { LabWorkflows } from './labWorkflows'
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const hl7 = require('hl7')
 
 export const topicList = {
@@ -69,7 +68,7 @@ export class LabWorkflowsBw extends LabWorkflows {
     }
   }
 
-  static async executeTopicWorkflow(topic: String, val: any) {
+  static async executeTopicWorkflow(topic: string, val: any) {
     let res
     try {
       switch (topic) {
@@ -89,14 +88,15 @@ export class LabWorkflowsBw extends LabWorkflows {
           res = await LabWorkflowsBw.saveIpmsPatient(JSON.parse(val).bundle)
           break
         case topicList.SEND_ORM_TO_IPMS:
-          let parsed = JSON.parse(val)
-          res = await LabWorkflowsBw.sendOrmToIpms(parsed)
+          res = await LabWorkflowsBw.sendOrmToIpms(JSON.parse(val))
           break
         case topicList.HANDLE_ORU_FROM_IPMS:
           res = await LabWorkflowsBw.handleOruFromIpms(JSON.parse(val).bundle)
+          break
         default:
           break
       }
+      return res
     } catch (e) {
       logger.error(e)
     }
@@ -120,9 +120,11 @@ export class LabWorkflowsBw extends LabWorkflows {
   // Add location info to bundle
   static async addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
     try {
-      for (const e of bundle.entry!) {
-        if (e.resource && e.resource.resourceType == 'ServiceRequest' && e.resource.basedOn) {
-          e.resource = await this.translateLocations(e.resource)
+      if (bundle && bundle.entry) {
+        for (const e of bundle.entry) {
+          if (e.resource && e.resource.resourceType == 'ServiceRequest' && e.resource.basedOn) {
+            e.resource = await this.translateLocations(e.resource)
+          }
         }
       }
     } catch (e) {
@@ -134,13 +136,13 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   static async translatePimsCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
     try {
-      let options = { timeout: config.get('bwConfig:requestTimeout') }
-      let pimsCoding: R4.ICoding = <R4.ICoding>(
-        sr.code!.coding!.find(e => e.system && e.system == config.get('bwConfig:pimsSystemUrl'))
+      const options = { timeout: config.get('bwConfig:requestTimeout') }
+      const pimsCoding: R4.ICoding = <R4.ICoding>(
+        sr.code?.coding?.find(e => e.system && e.system == config.get('bwConfig:pimsSystemUrl'))
       )
-      let pimsCode: string = pimsCoding.code!
+      const pimsCode: string = pimsCoding.code!
 
-      let ipmsMapping: any = await got
+      const ipmsMapping: any = await got
         .get(
           `${config.get(
             'bwConfig:oclUrl',
@@ -148,16 +150,16 @@ export class LabWorkflowsBw extends LabWorkflows {
           options,
         )
         .json()
-      let ipmsCode: string = ipmsMapping[0].from_concept_code
+      const ipmsCode: string = ipmsMapping[0].from_concept_code
       if (ipmsMapping.length > 0) {
-        sr.code!.coding!.push({
+        sr.code?.coding?.push({
           system: `${config.get('bwConfig:oclUrl')}/orgs/B-TECHBW/sources/IPMS-LAB-TEST/`,
           code: ipmsMapping[0].from_concept_code,
           display: ipmsMapping[0].from_concept_name_resolved,
         })
       }
 
-      let cielMapping: any = await got
+      const cielMapping: any = await got
         .get(
           `${config.get(
             'bwConfig:oclUrl',
@@ -165,7 +167,7 @@ export class LabWorkflowsBw extends LabWorkflows {
           options,
         )
         .json()
-      let cielCode: string = cielMapping[0].to_concept_code
+      const cielCode: string = cielMapping[0].to_concept_code
       if (cielMapping.length > 0) {
         sr.code!.coding!.push({
           system: 'https://api.openconceptlab.org/orgs/CIEL/sources/CIEL/',
@@ -174,7 +176,7 @@ export class LabWorkflowsBw extends LabWorkflows {
         })
       }
 
-      let loincMapping = got
+      const loincMapping = got
         .get(
           `${config.get(
             'bwConfig:oclUrl',
@@ -184,7 +186,7 @@ export class LabWorkflowsBw extends LabWorkflows {
         .json()
       await loincMapping.catch(logger.error).then((lm: any) => {
         if (lm.length > 0) {
-          let loinCode: string = lm[0].to_concept_code
+          const loinCode: string = lm[0].to_concept_code
           sr.code!.coding!.push({
             system: `${config.get('bwConfig:oclUrl')}/orgs/Regenstrief/sources/LOINC/`,
             code: loinCode,
@@ -218,7 +220,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     labBundle = await LabWorkflowsBw.addBwCodings(labBundle)
 
-    let response: R4.IBundle = await saveBundle(labBundle)
+    const response: R4.IBundle = await saveBundle(labBundle)
 
     sendPayload({ bundle: labBundle }, topicList.MAP_LOCATIONS)
 
@@ -248,7 +250,7 @@ export class LabWorkflowsBw extends LabWorkflows {
    * @returns
    */
   public static async savePimsPatient(labBundle: R4.IBundle): Promise<R4.IBundle> {
-    let resultBundle = this.updateCrPatient(labBundle)
+    const resultBundle = this.updateCrPatient(labBundle)
 
     return resultBundle
   }
@@ -260,7 +262,7 @@ export class LabWorkflowsBw extends LabWorkflows {
    */
   public static async saveIpmsPatient(registrationBundle: R4.IBundle): Promise<R4.IBundle> {
     // Save to CR
-    let resultBundle = this.updateCrPatient(registrationBundle)
+    const resultBundle = this.updateCrPatient(registrationBundle)
 
     // Handle order entry
     this.handleAdtFromIpms(registrationBundle)
@@ -277,11 +279,11 @@ export class LabWorkflowsBw extends LabWorkflows {
     const crUrl = `${config.get('clientRegistryUrl')}/Patient`
     let pat: IPatient
 
-    let patResult = bundle.entry!.find(entry => {
+    const patResult = bundle.entry!.find(entry => {
       return entry.resource && entry.resource.resourceType == 'Patient'
     })
 
-    let options = {
+    const options = {
       timeout: config.get('bwConfig:requestTimeout'),
       username: config.get('mediator:client:username'),
       password: config.get('mediator:client:password'),
@@ -293,7 +295,7 @@ export class LabWorkflowsBw extends LabWorkflows {
       options.json = pat
     }
 
-    let crResult = await got.post(`${crUrl}`, options).json()
+    const crResult = await got.post(`${crUrl}`, options).json()
 
     logger.info(`CR Patient Update Result: ${JSON.stringify(crResult)}`)
 
@@ -306,24 +308,24 @@ export class LabWorkflowsBw extends LabWorkflows {
    * @returns
    */
   public static async sendAdtToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> {
-    let status = this.getTaskStatus(labBundle)
+    const status = this.getTaskStatus(labBundle)
 
     if (status && status === TaskStatusKind._requested) {
       logger.info('Sending ADT message to IPMS!')
 
-      let sender = new Hl7MllpSender(
+      const sender = new Hl7MllpSender(
         config.get('bwConfig:mllp:targetIp'),
         config.get('bwConfig:mllp:targetAdtPort'),
       )
 
-      let adtMessage = await Hl7WorkflowsBw.getFhirTranslation(
+      const adtMessage = await Hl7WorkflowsBw.getFhirTranslation(
         labBundle,
         config.get('bwConfig:toIpmsAdtTemplate'),
       )
 
       logger.info(`adt:\n${adtMessage}`)
 
-      let adtResult: String = <String>await sender.send(adtMessage)
+      const adtResult: string = <string>await sender.send(adtMessage)
 
       if (adtResult.includes('AA')) {
         labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._accepted)
@@ -335,23 +337,26 @@ export class LabWorkflowsBw extends LabWorkflows {
     return labBundle
   }
 
-
   public static async sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
     let srBundle: IBundle = { resourceType: 'Bundle', entry: [] }
     let labBundle = bundles.taskBundle
-    let patient = bundles.patient
+    const patient = bundles.patient
 
-    logger.info(`task bundle:\n${JSON.stringify(bundles.taskBundle)}\npatient:\n${JSON.stringify(bundles.patient)}`)
+    logger.info(
+      `task bundle:\n${JSON.stringify(bundles.taskBundle)}\npatient:\n${JSON.stringify(
+        bundles.patient,
+      )}`,
+    )
 
     try {
       // Replace Patient Resource with one From Lab System
-      let pindex = labBundle.entry!.findIndex((entry: any) => {
+      const pindex = labBundle.entry!.findIndex((entry: any) => {
         return entry.resource && entry.resource.resourceType == 'Patient'
       })
 
       labBundle.entry[pindex].resource = patient
 
-      let options = {
+      const options = {
         timeout: config.get('bwConfig:requestTimeout'),
         searchParams: {},
       }
@@ -370,7 +375,7 @@ export class LabWorkflowsBw extends LabWorkflows {
       }
 
       for (const sr of srBundle.entry!) {
-        let sendBundle = labBundle
+        const sendBundle = labBundle
 
         // Send one ORM for each ServiceRequest
         sendBundle.entry!.push(sr)
@@ -380,12 +385,12 @@ export class LabWorkflowsBw extends LabWorkflows {
         //   resource: patient
         // })
 
-        let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
+        const ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
           sendBundle,
           config.get('bwConfig:toIpmsOrmTemplate'),
         )
 
-        let sender = new Hl7MllpSender(
+        const sender = new Hl7MllpSender(
           config.get('bwConfig:mllp:targetIp'),
           config.get('bwConfig:mllp:targetOrmPort'),
         )
@@ -395,7 +400,7 @@ export class LabWorkflowsBw extends LabWorkflows {
         logger.info(`orm:\n${ormMessage}\n`)
 
         if (ormMessage && ormMessage != '') {
-          let result: any = await sender.send(ormMessage)
+          const result: any = await sender.send(ormMessage)
           if (result.includes('AA')) {
             labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
           }
@@ -410,20 +415,20 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   public static async handleAdtFromIpms(registrationBundle: R4.IBundle): Promise<R4.IBundle> {
     try {
-      let options = {
+      const options = {
         timeout: config.get('bwConfig:requestTimeout'),
         searchParams: {},
       }
 
-      let patient: IPatient, omang: String
-      let patEntry = registrationBundle.entry!.find(entry => {
+      let patient: IPatient, omang: string
+      const patEntry = registrationBundle.entry!.find(entry => {
         return entry.resource && entry.resource.resourceType == 'Patient'
       })
 
       if (patEntry && patEntry.resource) {
         patient = <IPatient>patEntry.resource
 
-        let omangEntry = patient.identifier?.find(
+        const omangEntry = patient.identifier?.find(
           i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
         )
 
@@ -463,7 +468,7 @@ export class LabWorkflowsBw extends LabWorkflows {
                 _id: e.resource.id,
               }
 
-              let taskBundle: IBundle = await got
+              const taskBundle: IBundle = await got
                 .get(`${config.get('fhirServer:baseURL')}/Task`, options)
                 .json()
 
@@ -495,26 +500,26 @@ export class LabWorkflowsBw extends LabWorkflows {
     // Match Results to Service Requests
     try {
       if (translatedBundle && translatedBundle.entry) {
-        let patient: IPatient = <IPatient>(
+        const patient: IPatient = <IPatient>(
           translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Patient')!
             .resource!
         )
 
-        let dr: IDiagnosticReport = <IDiagnosticReport>(
+        const dr: IDiagnosticReport = <IDiagnosticReport>(
           translatedBundle.entry.find(
             e => e.resource && e.resource.resourceType == 'DiagnosticReport',
           )!.resource!
         )
 
-        let obs: IObservation = <IObservation>(
+        const obs: IObservation = <IObservation>(
           translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Observation')!
             .resource!
         )
-        let drCode =
+        const drCode =
           dr.code && dr.code.coding && dr.code.coding.length > 0 ? dr.code.coding[0].code : ''
 
         let omang
-        let omangEntry = patient.identifier?.find(
+        const omangEntry = patient.identifier?.find(
           i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
         )
 
@@ -524,7 +529,7 @@ export class LabWorkflowsBw extends LabWorkflows {
           omang = ''
         }
 
-        let options = {
+        const options = {
           timeout: config.get('bwConfig:requestTimeout'),
           searchParams: {},
         }
@@ -535,12 +540,12 @@ export class LabWorkflowsBw extends LabWorkflows {
           _revinclude: 'ServiceRequest:patient',
         }
 
-        let patientBundle: IBundle = await got
+        const patientBundle: IBundle = await got
           .get(`${config.get('fhirServer:baseURL')}/Patient`, options)
           .json()
 
         if (patientBundle && patientBundle.entry && patientBundle.entry.length > 0) {
-          let candidates: IServiceRequest[] = patientBundle.entry
+          const candidates: IServiceRequest[] = patientBundle.entry
             .filter(
               e =>
                 e.resource &&
@@ -553,9 +558,9 @@ export class LabWorkflowsBw extends LabWorkflows {
             )
             .map(e => <IServiceRequest>e.resource)
 
-          let primaryCandidate: IServiceRequest | undefined = candidates.find(c => {
+          const primaryCandidate: IServiceRequest | undefined = candidates.find(c => {
             if (c && c.code && c.code.coding) {
-              let candidateCode = c.code.coding.find(
+              const candidateCode = c.code.coding.find(
                 co =>
                   co.system ==
                   'https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/',
@@ -573,7 +578,7 @@ export class LabWorkflowsBw extends LabWorkflows {
             if (obs.code && obs.code.coding)
               obs.code.coding = obs.code.coding.concat(primaryCandidate.code.coding)
 
-            let srRef: IReference = {}
+            const srRef: IReference = {}
             srRef.type = 'ServiceRequest'
             srRef.reference = 'ServiceRequest/' + primaryCandidate.id
 
@@ -582,7 +587,7 @@ export class LabWorkflowsBw extends LabWorkflows {
           }
         }
 
-        let sendBundle: R4.IBundle = {
+        const sendBundle: R4.IBundle = {
           resourceType: 'Bundle',
           type: BundleTypeKind._transaction,
           entry: [
@@ -602,15 +607,17 @@ export class LabWorkflowsBw extends LabWorkflows {
         }
 
         // Save to SHR
-        let resultBundle: R4.IBundle = await saveBundle(sendBundle)
+        const resultBundle: R4.IBundle = await saveBundle(sendBundle)
         return resultBundle
       }
-    } catch (error) {}
+    } catch (error) {
+      logger.error(error)
+    }
 
     return translatedBundle
   }
 
-  private static getTaskStatus(labBundle: R4.IBundle): R4.TaskStatusKind | undefined {
+  public static getTaskStatus(labBundle: R4.IBundle): R4.TaskStatusKind | undefined {
     let taskResult, task
 
     try {
@@ -629,7 +636,7 @@ export class LabWorkflowsBw extends LabWorkflows {
     }
   }
 
-  private static setTaskStatus(labBundle: R4.IBundle, status: R4.TaskStatusKind): R4.IBundle {
+  public static setTaskStatus(labBundle: R4.IBundle, status: R4.TaskStatusKind): R4.IBundle {
     let taskIndex, task
 
     try {
@@ -638,7 +645,7 @@ export class LabWorkflowsBw extends LabWorkflows {
       })
 
       if (labBundle.entry && labBundle.entry.length > 0 && taskIndex >= 0) {
-        ;(<R4.ITask>labBundle.entry[taskIndex].resource!).status = status
+        (<R4.ITask>labBundle.entry[taskIndex].resource!).status = status
       }
       return labBundle
     } catch (error) {
