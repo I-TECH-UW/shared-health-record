@@ -1,7 +1,7 @@
   
 # syntax=docker/dockerfile:1.2
 
-FROM node:16-slim AS build
+FROM node:18-slim AS build
 
 # TODO: Fix approach using Secrets
 # RUN --mount=type=secret,id=npm_token cat /run/secrets/npm_token
@@ -32,7 +32,7 @@ COPY ./tsconfig.json /app
 
 RUN yarn tsc --diagnostics
 
-FROM node:16-slim AS run
+FROM node:18-slim AS run
 
 RUN apt-get update && apt-get install -y wget
 

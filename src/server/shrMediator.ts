@@ -6,8 +6,8 @@ import logger from '../lib/winston'
 import medUtils from 'openhim-mediator-utils'
 
 const env = process.env.NODE_ENV || 'development'
-const medConfig = await import(`${__dirname}/../../config/config_${env}`)
-const appConfig = await import(`${__dirname}/../../config/mediator_${env}`)
+const medConfig = JSON.parse(fs.readFileSync(`${__dirname}/../../config/config_${env}`, 'utf-8'))
+const appConfig = JSON.parse(fs.readFileSync(`${__dirname}/../../config/mediator_${env}`, 'utf-8'))
 
 export class ShrMediator {
   private config: JSON
