@@ -1772,7 +1772,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/urijs@npm:^1.19.12":
+"@types/urijs@npm:^1.19.19":
   version: 1.19.19
   resolution: "@types/urijs@npm:1.19.19"
   checksum: 2c08d41782149a243b374b28be009ca461f541c440d8d47c9d75b1d3255ff7169b34bb721cf2dd6266c2c44be6b70fc6d67a1abad50c4dae369774042b1facd8
@@ -9731,7 +9731,7 @@ __metadata:
     "@types/sprintf-js": ^1.1.2
     "@types/swagger-jsdoc": ^6.0.1
     "@types/swagger-ui-express": ^4.1.3
-    "@types/urijs": ^1.19.12
+    "@types/urijs": ^1.19.19
     "@typescript-eslint/eslint-plugin": ^5.54.0
     "@typescript-eslint/parser": ^5.54.0
     acorn: ">=7.1.1"

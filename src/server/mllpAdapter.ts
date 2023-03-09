@@ -4,8 +4,9 @@ import config from '../lib/config'
 import logger from '../lib/winston'
 import Hl7WorkflowsBw from '../workflows/hl7WorkflowsBw'
 
-const hl7 = await require(`hl7`)
 import { Logger } from 'winston'
+
+import * as hl7 from 'hl7'
 
 export default class MllpAdapter {
   start(callback: { (): Logger; (): any }) {
