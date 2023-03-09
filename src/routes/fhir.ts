@@ -8,7 +8,7 @@ import logger from '../lib/winston'
 import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
 
 export const router = express.Router()
-const fhirWrapper = import('../lib/fhir')()
+const fhirWrapper = await import('../lib/fhir')
 
 router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
@@ -82,9 +82,9 @@ router.post('/', (req, res) => {
     if (resource.entry.length === 0) {
       return res.status(400).json(invalidBundleMessage())
     }
-    fhirWrapper.saveResource(
-      resource,
-      (code: number, err: Error, response: Response, body: any) => {
+    fhirWrapper
+      .default()
+      .saveResource(resource, (code: number, err: Error, response: Response, body: any) => {
         if (!code) {
           code = 500
         }
@@ -92,8 +92,7 @@ router.post('/', (req, res) => {
         if (err) return res.status(code).send(err)
 
         return res.status(code).json(body)
-      },
-    )
+      })
   } catch (error) {
     return res.status(500).json(error)
   }
@@ -111,36 +110,6 @@ router.put('/:resourceType/:id', (req, res) => {
 
 /** Helpers */
 
-function getResource({ req, noCaching }: { req: any; noCaching: boolean }, callback) {
-  const resource = req.params.resource
-  const id = req.params.id
-
-  let uri = URI(config.get('fhirServer:baseURL'))
-  logger.info('Received a request to get resource ' + resource + ' with id ' + id)
-
-  if (resource) {
-    uri = uri.segment(resource)
-  }
-  if (id) {
-    uri = uri.segment(id)
-  }
-  for (const param in req.query) {
-    uri.addQuery(param, req.query[param])
-  }
-  const url: string = uri.toString()
-  logger.info(`Getting ${url}`)
-
-  fhirWrapper.getResource(
-    {
-      url,
-      noCaching,
-    },
-    (resourceData: any, statusCode: number) => {
-      return callback(resourceData, statusCode)
-    },
-  )
-}
-
 function saveResource(req: any, res: any) {
   const resource = req.body
   const resourceType = req.params.resourceType
@@ -151,9 +120,11 @@ function saveResource(req: any, res: any) {
 
   logger.info('Received a request to add resource type ' + resourceType)
 
-  fhirWrapper.create(resource, (code: number, _err: any, _response: Response, body: any) => {
-    return res.status(code).send(body)
-  })
+  fhirWrapper
+    .default()
+    .create(resource, (code: number, _err: any, _response: Response, body: any) => {
+      return res.status(code).send(body)
+    })
 }
 
 export default router

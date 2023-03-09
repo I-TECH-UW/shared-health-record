@@ -8,7 +8,7 @@ import { generateIpsbundle, generateUpdateBundle } from '../workflows/ipsWorkflo
 
 export const router = express.Router()
 
-const sprintf = import('sprintf-js').sprintf
+import { sprintf } from 'sprintf-js'
 
 const system = config.get('app:mpiSystem')
 
