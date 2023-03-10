@@ -11,11 +11,11 @@ export class LabWorkflows {
     targetOrg?: R4.IOrganization,
     sourceOrg?: R4.IOrganization,
   ): R4.IBundle {
-    let ipsBundle: R4.IBundle = {
+    const ipsBundle: R4.IBundle = {
       resourceType: 'Bundle',
     }
 
-    let ipsCompositionType = {
+    const ipsCompositionType = {
       coding: [
         {
           system: 'http://loinc.org',
@@ -25,7 +25,7 @@ export class LabWorkflows {
       ],
     }
 
-    let ipsComposition: R4.IComposition = {
+    const ipsComposition: R4.IComposition = {
       resourceType: 'Composition',
       type: ipsCompositionType,
       author: [{ display: 'SHR System' }],

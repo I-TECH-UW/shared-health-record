@@ -7,7 +7,7 @@ import { ShrMediator } from './server/shrMediator'
 if (require.main === module) {
   if (config.get('app:port')) {
     try {
-      let shrMediator = new ShrMediator()
+      const shrMediator = new ShrMediator()
       shrMediator.start(() =>
         logger.info(`SHR Server is running and listening on port: ${config.get('app:port')}`),
       )
@@ -18,7 +18,7 @@ if (require.main === module) {
 
   if (config.get('app:mllpPort')) {
     try {
-      let mllpAdapter = new MllpAdapter()
+      const mllpAdapter = new MllpAdapter()
       mllpAdapter.start(() =>
         logger.info(`TCP Server is up and listening on port: ${config.get('app:mllpPort')}`),
       )

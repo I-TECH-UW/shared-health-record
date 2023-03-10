@@ -31,6 +31,9 @@ services:
     restart: unless-stopped
     volumes:
       - /data/hapi
+      - ./config/application.yml:/data/hapi/application.yaml
+    environment:
+      SPRING_CONFIG_LOCATION: 'file:///data/hapi/application.yaml'
 
   # Kafka Task Runners
   zookeeper:

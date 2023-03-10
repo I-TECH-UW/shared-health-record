@@ -8,17 +8,17 @@ const IG_URL = 'https://b-techbw.github.io/bw-lab-ig'
 
 let patient: R4.IPatient
 
-var fs = require('fs')
+import fs from 'fs'
 
 describe('lab Workflows for Botswana should', () => {
   describe('translatePimsCoding', () => {
     it('should translate a given lab test PIMS coding to ciel, loinc, and IPMS', async () => {
-      let serviceRequest = <R4.IServiceRequest>(
+      const serviceRequest = <R4.IServiceRequest>(
         await got.get(IG_URL + '/ServiceRequest-example-bw-pims-service-request-1.json').json()
       )
 
       serviceRequest.code!.coding![0].code! = '3'
-      let result = await LabWorkflowsBw.translatePimsCoding(serviceRequest)
+      const result = await LabWorkflowsBw.translatePimsCoding(serviceRequest)
 
       expect(result).toBeDefined
     })
@@ -26,10 +26,10 @@ describe('lab Workflows for Botswana should', () => {
 
   describe('getTaskStatus', () => {
     it('should get a Task status from a Bundle', async () => {
-      let bundle = <R4.IBundle>await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
+      const bundle = <R4.IBundle>await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
 
-      // @ts-ignore
-      let result: R4.TaskStatusKind = LabWorkflowsBw.getTaskStatus(bundle)
+      const result: R4.TaskStatusKind | undefined =
+        LabWorkflowsBw.getTaskStatus(bundle) ?? undefined
 
       expect(result).toEqual(R4.TaskStatusKind._requested)
     })
@@ -37,20 +37,18 @@ describe('lab Workflows for Botswana should', () => {
 
   describe('setTaskStatus', () => {
     it('should set a Task status in a Bundle', async () => {
-      let bundle = <R4.IBundle>await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
+      const bundle = <R4.IBundle>await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
 
-      let status = R4.TaskStatusKind._accepted
+      const status = R4.TaskStatusKind._accepted
 
-      // @ts-ignore
-      let result: R4.IBundle = LabWorkflowsBw.setTaskStatus(bundle, status)
+      const result: R4.IBundle = LabWorkflowsBw.setTaskStatus(bundle, status)
 
-      // @ts-ignore
       expect(LabWorkflowsBw.getTaskStatus(result)).toEqual(status)
     })
   })
 
   describe('use MLLP sender to', () => {
-    let hl7: string = ''
+    let hl7 = ''
     let server: MllpServer
 
     beforeAll((done: () => void) => {
@@ -73,7 +71,9 @@ describe('lab Workflows for Botswana should', () => {
     describe('sendAdtToIpms', () => {
       it('and translate and send `requested` Order Bundle', async () => {
         jest.setTimeout(100000)
-        let bundle = <R4.IBundle>await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
+        const bundle = <R4.IBundle>(
+          await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
+        )
 
         // let result: R4.IBundle = await LabWorkflowsBw.sendAdtToIpms(bundle)
 
@@ -81,16 +81,18 @@ describe('lab Workflows for Botswana should', () => {
       })
 
       it('should not send order without `requested` status', async () => {
-        let bundle = <R4.IBundle>await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
+        const bundle = <R4.IBundle>(
+          await got.get(IG_URL + '/Bundle-example-bw-lab-bundle.json').json()
+        )
 
-        let taskIndex = bundle.entry?.findIndex(
+        const taskIndex = bundle.entry?.findIndex(
           e => e.resource && e.resource.resourceType == 'Task',
         )
         if (bundle.entry && taskIndex != undefined) {
-          ;(<R4.ITask>bundle.entry[taskIndex].resource!).status = R4.TaskStatusKind._draft
+          (<R4.ITask>bundle.entry[taskIndex].resource!).status = R4.TaskStatusKind._draft
         }
 
-        let result: R4.IBundle = await LabWorkflowsBw.sendAdtToIpms(bundle)
+        const result: R4.IBundle = await LabWorkflowsBw.sendAdtToIpms(bundle)
       })
     })
   })

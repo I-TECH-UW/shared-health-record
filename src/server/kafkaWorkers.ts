@@ -18,7 +18,7 @@ const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
  */
 
 export async function run() {
-  let k: Consumer = consumer
+  const k: Consumer = consumer
 
   await k.connect()
 
@@ -32,7 +32,7 @@ export async function run() {
 
       try {
         let val = ''
-        let res = null
+        const res = null
 
         if (message.value) {
           val = message.value.toString()

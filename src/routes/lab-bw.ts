@@ -13,7 +13,7 @@ router.all('/', async (req: Request, res: Response) => {
   if (req.method == 'POST' || req.method == 'PUT') {
     try {
       logger.info('Received a Lab Order bundle to save.')
-      let orderBundle: R4.IBundle = req.body
+      const orderBundle: R4.IBundle = req.body
 
       // Validate Bundle
       if (invalidBundle(orderBundle)) {
@@ -21,10 +21,15 @@ router.all('/', async (req: Request, res: Response) => {
       }
 
       // Save Bundle
-      let resultBundle: R4.IBundle = await saveBundle(orderBundle)
+      const resultBundle: R4.IBundle = await saveBundle(orderBundle)
 
       // Trigger Background Tasks if bundle saved correctly
-      if(resultBundle && resultBundle.entry && orderBundle.entry && (resultBundle.entry.length == orderBundle.entry.length)) {
+      if (
+        resultBundle &&
+        resultBundle.entry &&
+        orderBundle.entry &&
+        resultBundle.entry.length == orderBundle.entry.length
+      ) {
         LabWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)
         return res.status(200).json(resultBundle)
       } else {

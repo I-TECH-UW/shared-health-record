@@ -3,11 +3,15 @@ import { config } from '../lib/config'
 import shrApp from '../lib/shr'
 import logger from '../lib/winston'
 
-const medUtils = require('openhim-mediator-utils')
+import medUtils from 'openhim-mediator-utils'
 
 const env = process.env.NODE_ENV || 'development'
-const medConfig = require(`${__dirname}/../../config/mediator_${env}`)
-const appConfig = require(`${__dirname}/../../config/config_${env}`)
+const appConfig = JSON.parse(
+  fs.readFileSync(`${__dirname}/../../config/config_${env}.json`, 'utf-8'),
+)
+const medConfig = JSON.parse(
+  fs.readFileSync(`${__dirname}/../../config/mediator_${env}.json`, 'utf-8'),
+)
 
 export class ShrMediator {
   private config: JSON
@@ -16,7 +20,7 @@ export class ShrMediator {
     this.config = medConfig
   }
 
-  public start(callback: Function) {
+  public start(callback: any) {
     logger.info('Running SHR as a mediator with' + `${__dirname}/${this.config}`)
     try {
       medUtils.registerMediator(
@@ -30,7 +34,7 @@ export class ShrMediator {
     }
   }
 
-  private static registrationCallback(callback: Function) {
+  private static registrationCallback(callback: any) {
     return (err: Error | null) => {
       if (err) {
         logger.error(
@@ -48,7 +52,7 @@ export class ShrMediator {
     }
   }
 
-  private static setupCallback(callback: Function) {
+  private static setupCallback(callback: any) {
     return (err: Error | null, initialConfig: JSON) => {
       if (err) {
         logger.info('Failed to fetch initial config')
@@ -63,7 +67,7 @@ export class ShrMediator {
     }
   }
 
-  private static startupCallback(callback: Function) {
+  private static startupCallback(callback: any) {
     return () => {
       try {
         config.set('mediator:api:urn', medConfig.urn)
@@ -103,7 +107,7 @@ export class ShrMediator {
     })
   }
 
-  private static reloadConfig(data: JSON, callback: Function) {
+  private static reloadConfig(data: JSON, callback: any) {
     const tmpFile = `${__dirname}/../../config/tmpConfig.json`
 
     fs.writeFile(tmpFile, JSON.stringify(data), (err: Error | null) => {

@@ -4,34 +4,35 @@ import config from '../lib/config'
 import logger from '../lib/winston'
 import Hl7WorkflowsBw from '../workflows/hl7WorkflowsBw'
 
-const hl7 = require('hl7')
+import { Logger } from 'winston'
+
+import * as hl7 from 'hl7'
 
 export default class MllpAdapter {
-  start(callback: Function) {
-    let mllpServer = new MllpServer('0.0.0.0', config.get('app:mllpPort'), logger)
+  start(callback: { (): Logger; (): any }) {
+    const mllpServer = new MllpServer('0.0.0.0', config.get('app:mllpPort'), logger)
 
     mllpServer.listen((err: Error) => callback())
 
     mllpServer.on('hl7', async (data: any) => {
-      let start: string = data.substring(0,3)
-      let checkChar: string = data[data.length-1]
-      if(checkChar == '\r') {
-        let response: IBundle = await this.handleMessage(data)
+      const start: string = data.substring(0, 3)
+      const checkChar: string = data[data.length - 1]
+      if (checkChar == '\r') {
+        const response: IBundle = await this.handleMessage(data)
 
         logger.info('HL7 Response:\n' + JSON.stringify(response))
       } else {
-        logger.warn('Malformed HL7 Message:\n'+data)
+        logger.warn('Malformed HL7 Message:\n' + data)
       }
-
     })
   }
 
-  private async handleMessage(data: any): Promise<IBundle> {
+  public async handleMessage(data: any): Promise<IBundle> {
     try {
       logger.info('received payload:', data)
       // Determine Message Type
-      let parsed = hl7.parseString(data)
-      let msgType: string = parsed[0][9][0][0]
+      const parsed = hl7.parseString(data)
+      const msgType: string = parsed[0][9][0][0]
 
       if (msgType == 'ADT') {
         logger.info('Handling ADT Message')
