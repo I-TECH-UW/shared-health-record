@@ -6,10 +6,10 @@ import logger from '../lib/winston'
 import medUtils from 'openhim-mediator-utils'
 
 const env = process.env.NODE_ENV || 'development'
-const medConfig = JSON.parse(
+const appConfig = JSON.parse(
   fs.readFileSync(`${__dirname}/../../config/config_${env}.json`, 'utf-8'),
 )
-const appConfig = JSON.parse(
+const medConfig = JSON.parse(
   fs.readFileSync(`${__dirname}/../../config/mediator_${env}.json`, 'utf-8'),
 )
 
