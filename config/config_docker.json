@@ -7,7 +7,7 @@
     "api": {
       "username": "root@openhim.org",
       "password": "openhim",
-      "apiURL": "https://tap-demo.openelisci.org/openhim-api",
+      "apiURL": "openhim-core",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     },
