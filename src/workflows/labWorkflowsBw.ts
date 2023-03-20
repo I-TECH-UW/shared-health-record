@@ -12,10 +12,7 @@ import {
   IServiceRequest,
   TaskStatusKind,
 } from '@ahryman40k/ts-fhir-types/lib/R4'
-import { AnyAaaaRecord } from 'dns'
 import got from 'got'
-import { send } from 'process'
-import { resourceLimits } from 'worker_threads'
 import { saveBundle } from '../hapi/lab'
 import config from '../lib/config'
 import Hl7MllpSender from '../lib/hl7MllpSender'
@@ -109,7 +106,13 @@ export class LabWorkflowsBw extends LabWorkflows {
   static async addBwCodings(bundle: R4.IBundle): Promise<R4.IBundle> {
     try {
       for (const e of bundle.entry!) {
-        if (e.resource && e.resource.resourceType == 'ServiceRequest' && e.resource.code && e.resource.code.coding && e.resource.code.coding.length > 0) {
+        if (
+          e.resource &&
+          e.resource.resourceType == 'ServiceRequest' &&
+          e.resource.code &&
+          e.resource.code.coding &&
+          e.resource.code.coding.length > 0
+        ) {
           e.resource = await this.translateCoding(e.resource)
         }
       }
@@ -146,50 +149,57 @@ export class LabWorkflowsBw extends LabWorkflows {
         cielCoding = this.getCoding(sr, config.get('bwConfig:cielSystemUrl'))
 
         if (pimsCoding && pimsCoding.code) {
-          // Translate from PIMS to CIEL and IPMS  
-          ipmsCoding = await this.getIpmsCode(`/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${pimsCoding.code}&toConceptSource=PIMSLAB`)
+          // Translate from PIMS to CIEL and IPMS
+          ipmsCoding = await this.getIpmsCode(
+            `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${pimsCoding.code}&toConceptSource=PIMSLAB`,
+          )
 
-          if(ipmsCoding && ipmsCoding.code){
-            cielCoding = await this.getMappedCode(`/orgs/I-TECH-UW/sources/IPMS/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCoding.code}`)
+          if (ipmsCoding && ipmsCoding.code) {
+            cielCoding = await this.getMappedCode(
+              `/orgs/I-TECH-UW/sources/IPMS/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCoding.code}`,
+            )
           }
 
-          if(cielCoding && cielCoding.code) {
+          if (cielCoding && cielCoding.code) {
             sr.code.coding.push({
               system: config.get('bwConfig:cielSystemUrl'),
               code: cielCoding.code,
-              display: cielCoding.display
+              display: cielCoding.display,
             })
           }
-
         } else if (cielCoding && cielCoding.code) {
           // Translate from CIEL to IPMS
-          ipmsCoding = await this.getIpmsCode(`/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${cielCoding.code}&toConceptSource=CIEL`)
+          ipmsCoding = await this.getIpmsCode(
+            `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${cielCoding.code}&toConceptSource=CIEL`,
+          )
         }
 
         // Add IPMS Coding
-        if(ipmsCoding && ipmsCoding.code) {
+        if (ipmsCoding && ipmsCoding.code) {
           sr.code.coding.push({
             system: config.get('bwConfig:ipmsSystemUrl'),
             code: ipmsCoding.mnemonic,
-            display: ipmsCoding.display
+            display: ipmsCoding.display,
           })
         }
 
         // Get LOINC Coding
         if (cielCoding && cielCoding.code) {
-          loincCoding = await this.getMappedCode(`/orgs/CIEL/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCoding.code}`)
-          if(loincCoding && loincCoding.code) {
+          loincCoding = await this.getMappedCode(
+            `/orgs/CIEL/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCoding.code}`,
+          )
+          if (loincCoding && loincCoding.code) {
             sr.code.coding.push({
               system: config.get('bwConfig:loincSystemUrl'),
               code: loincCoding.code,
-              display: loincCoding.display
+              display: loincCoding.display,
             })
           }
         }
 
         return sr
       } else {
-        logger.error("Could not find coding to translate in:\n" + JSON.stringify(sr))
+        logger.error('Could not find coding to translate in:\n' + JSON.stringify(sr))
         return sr
       }
     } catch (e) {
@@ -197,7 +207,6 @@ export class LabWorkflowsBw extends LabWorkflows {
       return sr
     }
   }
-
 
   /**
    * TODO: Implement!
@@ -338,7 +347,7 @@ export class LabWorkflowsBw extends LabWorkflows {
   }
 
   public static async sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
-    let srBundle: IBundle = { resourceType: 'Bundle', entry: [] }
+    const srBundle: IBundle = { resourceType: 'Bundle', entry: [] }
     let labBundle = bundles.taskBundle
     const patient = bundles.patient
 
@@ -346,7 +355,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     try {
       // Replace PIMS/OpenMRS Patient Resource with one From IPMS Lab System
-      let pindex = labBundle.entry!.findIndex((entry: any) => {
+      const pindex = labBundle.entry!.findIndex((entry: any) => {
         return entry.resource && entry.resource.resourceType == 'Patient'
       })
 
@@ -357,7 +366,7 @@ export class LabWorkflowsBw extends LabWorkflows {
         searchParams: {},
       }
 
-      let sendBundle = {...labBundle}
+      const sendBundle = { ...labBundle }
       sendBundle.entry = []
       srBundle.entry = []
 
@@ -366,25 +375,31 @@ export class LabWorkflowsBw extends LabWorkflows {
       for (const entry of labBundle.entry) {
         // Isolate and process ServiceRequests
         if (entry.resource && entry.resource.resourceType == 'ServiceRequest') {
-          // For PIMS - check if service request is profile-level and get child service requests:          
+          // For PIMS - check if service request is profile-level and get child service requests:
           options.searchParams = {
             'based-on': entry.resource.id,
           }
 
-          let fetchedBundle = <R4.IBundle>(await got
-            .get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options)
-            .json())
+          const fetchedBundle = <R4.IBundle>(
+            await got.get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options).json()
+          )
 
-          if(fetchedBundle && fetchedBundle.entry && srBundle.entry) {
+          if (fetchedBundle && fetchedBundle.entry && srBundle.entry) {
             // Add child ServiceRequests if any exist
             srBundle.entry = srBundle.entry.concat(fetchedBundle.entry)
-          } else if ((!fetchedBundle || !(fetchedBundle.entry && fetchedBundle.entry.length > 0)) && srBundle.entry) {
+          } else if (
+            (!fetchedBundle || !(fetchedBundle.entry && fetchedBundle.entry.length > 0)) &&
+            srBundle.entry
+          ) {
             // If no child ServiceRequests, add this one if it has a code entry
-            if(entry.resource.code && entry.resource.code.coding && entry.resource.code.coding.length > 0) {
+            if (
+              entry.resource.code &&
+              entry.resource.code.coding &&
+              entry.resource.code.coding.length > 0
+            ) {
               srBundle.entry.push(entry)
             }
           }
-            
         } else {
           // Copy over everything else
           sendBundle.entry.push(entry)
@@ -395,10 +410,10 @@ export class LabWorkflowsBw extends LabWorkflows {
       // TODO: FIGURE OUT MANAGEMENT OF PANELS/PROFILES
       for (const sr of srBundle.entry) {
         // Send one ORM for each ServiceRequest
-        let outBundle = { ...sendBundle }
+        const outBundle = { ...sendBundle }
         outBundle.entry.push(sr)
 
-        let ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
+        const ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
           outBundle,
           config.get('bwConfig:toIpmsOrmTemplate'),
         )
@@ -448,8 +463,10 @@ export class LabWorkflowsBw extends LabWorkflows {
         if (omangEntry) {
           omang = omangEntry.value!
         } else {
-          logger.error("Missing Omang - currently, only matching on Omang supported, but patient does not have an Omang number.")
-          return registrationBundle;
+          logger.error(
+            'Missing Omang - currently, only matching on Omang supported, but patient does not have an Omang number.',
+          )
+          return registrationBundle
         }
 
         // Find all patients with this Omang.
@@ -554,9 +571,9 @@ export class LabWorkflowsBw extends LabWorkflows {
           _revinclude: 'ServiceRequest:patient',
         }
 
-        const patientBundle: IBundle = await got
-          .get(`${config.get('fhirServer:baseURL')}/Patient`, options)
-          .json()
+        const patientBundle = <R4.IBundle>(
+          await got.get(`${config.get('fhirServer:baseURL')}/Patient`, options).json()
+        )
 
         if (patientBundle && patientBundle.entry && patientBundle.entry.length > 0) {
           const candidates: IServiceRequest[] = patientBundle.entry
@@ -624,7 +641,9 @@ export class LabWorkflowsBw extends LabWorkflows {
         const resultBundle: R4.IBundle = await saveBundle(sendBundle)
         return resultBundle
       }
-    } catch (error) { }
+    } catch (error) {
+      logger.error(`Could not process ORU!\n${error}`)
+    }
 
     return translatedBundle
   }
@@ -657,7 +676,7 @@ export class LabWorkflowsBw extends LabWorkflows {
       })
 
       if (labBundle.entry && labBundle.entry.length > 0 && taskIndex >= 0) {
-        ; (<R4.ITask>labBundle.entry[taskIndex].resource!).status = status
+        (<R4.ITask>labBundle.entry[taskIndex].resource!).status = status
       }
       return labBundle
     } catch (error) {
@@ -668,76 +687,67 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   private static getCoding(sr: R4.IServiceRequest, system: string): R4.ICoding {
     if (sr.code && sr.code.coding) {
-      return <R4.ICoding>(sr.code.coding.find(e => e.system && e.system == system))
+      return <R4.ICoding>sr.code.coding.find(e => e.system && e.system == system)
     } else {
       return {}
     }
-
   }
 
   private static async getIpmsCode(q: string) {
-
     try {
-      let ipmsMappings = await this.getOclMapping(q)
+      const ipmsMappings = await this.getOclMapping(q)
 
-      // Prioritize "Broader Than Mappings" 
+      // Prioritize "Broader Than Mappings"
       //TODO: Figure out if this is proper way to handle panels / broad to narrow
-      let mappingIndex = ipmsMappings.findIndex((x: any) => x.map_type == "BROADER-THAN")
+      let mappingIndex = ipmsMappings.findIndex((x: any) => x.map_type == 'BROADER-THAN')
 
       // Fall back to "SAME AS"
       if (mappingIndex < 0) {
-        mappingIndex = ipmsMappings.findIndex((x: any) => x.map_type == "SAME-AS")
+        mappingIndex = ipmsMappings.findIndex((x: any) => x.map_type == 'SAME-AS')
       }
 
       if (mappingIndex >= 0) {
-        let ipmsCode = ipmsMappings[mappingIndex].from_concept_code
-        let ipmsDisplay = ipmsMappings[mappingIndex].from_concept_name_resolved
-        let ipmsCodingInfo: any = await this.getOclMapping(`/orgs/I-TECH-UW/sources/IPMSLAB/concepts/${ipmsCode}`)
+        const ipmsCode = ipmsMappings[mappingIndex].from_concept_code
+        const ipmsDisplay = ipmsMappings[mappingIndex].from_concept_name_resolved
+        const ipmsCodingInfo: any = await this.getOclMapping(
+          `/orgs/I-TECH-UW/sources/IPMSLAB/concepts/${ipmsCode}`,
+        )
         let ipmsMnemonic
-        if(ipmsCodingInfo) {
-          ipmsMnemonic = ipmsCodingInfo.names.find((x: any) => x.name_type =="Short").name
+        if (ipmsCodingInfo) {
+          ipmsMnemonic = ipmsCodingInfo.names.find((x: any) => x.name_type == 'Short').name
         }
 
         return { code: ipmsCode, display: ipmsDisplay, mnemonic: ipmsMnemonic }
       } else {
         return null
       }
-    }
-    catch (e) {
+    } catch (e) {
       logger.error(e)
       return null
     }
-
   }
 
   private static async getMappedCode(q: string): Promise<any> {
     try {
-      let codeMapping = await this.getOclMapping(q);
+      const codeMapping = await this.getOclMapping(q)
 
       if (codeMapping && codeMapping.length > 0) {
-        return { code: codeMapping[0].to_concept_code, display: codeMapping[0].to_concept_name_resolved }
+        return {
+          code: codeMapping[0].to_concept_code,
+          display: codeMapping[0].to_concept_name_resolved,
+        }
       } else {
         return {}
       }
-    }
-    catch (e) {
+    } catch (e) {
       logger.error(e)
       return {}
     }
   }
 
   private static async getOclMapping(queryString: string): Promise<any[]> {
-    let options = { timeout: (config.get('bwConfig:requestTimeout') | 1000) }
+    const options = { timeout: config.get('bwConfig:requestTimeout') | 1000 }
 
-    return got
-      .get(
-        `${config.get('bwConfig:oclUrl',)}${queryString}`,
-        options,
-      )
-      .json()
+    return got.get(`${config.get('bwConfig:oclUrl')}${queryString}`, options).json()
   }
-
-
 }
-
-
