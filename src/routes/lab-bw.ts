@@ -10,10 +10,17 @@ import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
 export const router = express.Router()
 
 router.all('/', async (req: Request, res: Response) => {
+  let orderBundle: R4.IBundle
   if (req.method == 'POST' || req.method == 'PUT') {
     try {
       logger.info('Received a Lab Order bundle to save.')
-      const orderBundle: R4.IBundle = req.body
+
+      // Make sure JSON is parsed
+      if (!req.is('application/json')) {
+        orderBundle = JSON.parse(req.body)
+      } else {
+        orderBundle = req.body
+      }
 
       // Validate Bundle
       if (invalidBundle(orderBundle)) {

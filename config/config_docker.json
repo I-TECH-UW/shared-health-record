@@ -29,8 +29,8 @@
     ]
   },
   "bwConfig": {
-    "pimsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
-    "ipmsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/",
+    "pimsSystemUrl": "https://api.openconceptlab.org/orgs/I-TECH-UW/sources/PIMSLAB/",
+    "ipmsSystemUrl": "https://api.openconceptlab.org/orgs/I-TECH-UW/sources/IPMSLAB/",
     "cielSystemUrl": "https://openconceptlab.org/orgs/CIEL/sources/CIEL",
     "loincSystemUrl": "https://api.openconceptlab.org/orgs/Regenstrief/sources/LOINC/",
     "omangSystemUrl": "http://moh.bw.org/ext/identifier/omang",
@@ -41,7 +41,7 @@
     "toIpmsOrmTemplate": "ORM_O01_TO_IPMS.hbs",
     "fromIpmsOruTemplate": "ORU_R01_FROM_IPMS.hbs",
     "mllp": {
-      "targetIp": "shr",
+      "targetIp": "",
       "targetAdtPort": 3001,
       "targetOrmPort": 3002
     }

@@ -156,7 +156,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
           if (ipmsCoding && ipmsCoding.code) {
             cielCoding = await this.getMappedCode(
-              `/orgs/I-TECH-UW/sources/IPMS/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCoding.code}`,
+              `/orgs/I-TECH-UW/sources/IPMSLAB/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCoding.code}`,
             )
           }
 
@@ -568,11 +568,17 @@ export class LabWorkflowsBw extends LabWorkflows {
         // Find all active service requests with dr code with this Omang.
         options.searchParams = {
           identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
-          _revinclude: 'ServiceRequest:patient',
+          _revinclude: ['ServiceRequest:patient', 'Task:patient'],
         }
 
         const patientBundle = <R4.IBundle>(
-          await got.get(`${config.get('fhirServer:baseURL')}/Patient`, options).json()
+          await got
+            .get(
+              `${config.get('fhirServer:baseURL')}/Patient/identifier=${config.get(
+                'bwConfig:omangSystemUrl',
+              )}|${omang}&_revinclude=Task:patient&_revinclude=ServiceRequest:patient`,
+            )
+            .json()
         )
 
         if (patientBundle && patientBundle.entry && patientBundle.entry.length > 0) {
@@ -592,9 +598,7 @@ export class LabWorkflowsBw extends LabWorkflows {
           const primaryCandidate: IServiceRequest | undefined = candidates.find(c => {
             if (c && c.code && c.code.coding) {
               const candidateCode = c.code.coding.find(
-                co =>
-                  co.system ==
-                  'https://api.openconceptlab.org/orgs/B-TECHBW/sources/IPMS-LAB-TEST/',
+                co => co.system == config.get('bwConfig:ipmsSystemUrl'),
               )
               return candidateCode && candidateCode.code == drCode
             }
