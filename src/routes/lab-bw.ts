@@ -16,10 +16,14 @@ router.all('/', async (req: Request, res: Response) => {
       logger.info('Received a Lab Order bundle to save.')
 
       // Make sure JSON is parsed
-      if (!req.is('application/json')) {
+      if (req.is('text/plain')) {
         orderBundle = JSON.parse(req.body)
-      } else {
+      } else if (req.is('application/json') || req.is('application/fhir+json')) {
         orderBundle = req.body
+      } else {
+        const m = `Invalid content type! ${req.headers}`
+        logger.error(m)
+        return res.status(400).send(m)
       }
 
       // Validate Bundle

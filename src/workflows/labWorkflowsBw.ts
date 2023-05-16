@@ -5,6 +5,7 @@ import {
   BundleTypeKind,
   Bundle_RequestMethodKind,
   IBundle,
+  IBundle_Entry,
   IDiagnosticReport,
   IObservation,
   IPatient,
@@ -20,6 +21,7 @@ import { sendPayload } from '../lib/kafka'
 import logger from '../lib/winston'
 import Hl7WorkflowsBw from './hl7WorkflowsBw'
 import { LabWorkflows } from './labWorkflows'
+import facilityMappings from '../lib/locationMap'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const hl7 = require('hl7')
@@ -123,14 +125,101 @@ export class LabWorkflowsBw extends LabWorkflows {
     return bundle
   }
 
-  // Add location info to bundle
+  /**
+   * This method adds IPMS-specific location mappings to the order bundle based on the ordering
+   * facility
+   * @param bundle
+   * @returns bundle
+   */
+  //
+  //
+  // This method assumes that the Task resource has a reference to the recieving facility
+  // under the `owner` field. This is the facility that the lab order is being sent to.
   static async addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
+    let mappedLocation: R4.ILocation | undefined
+    let mappedOrganization: R4.IOrganization | undefined
+
     try {
+      logger.info('Adding Location Info to Bundle')
+
       if (bundle && bundle.entry) {
-        for (const e of bundle.entry) {
-          if (e.resource && e.resource.resourceType == 'ServiceRequest' && e.resource.basedOn) {
-            e.resource = await this.translateLocations(e.resource)
+        const task: R4.ITask = <R4.ITask>this.getBundleEntry(bundle.entry, 'Task')
+        const srs: R4.IServiceRequest[] = <R4.IServiceRequest[]>(
+          this.getBundleEntries(bundle.entry, 'ServiceRequest')
+        )
+
+        const orderingLocationRef: R4.IReference | undefined = task.location
+        const orderingOrganizationRef: R4.IReference | undefined = task.owner
+
+        const srOrganizationRefs: (R4.IReference | undefined)[] = srs
+          .map(sr => {
+            if (sr.requester) return sr.requester
+          })
+          .filter(ref => {
+            ref != undefined
+          })
+
+        const locationId = orderingLocationRef?.reference?.split('/')[1]
+        const organizationId = orderingOrganizationRef?.reference?.split('/')[1]
+        const srOrgIds = srOrganizationRefs.map(ref => {
+          return ref?.reference?.split('/')[1]
+        })
+
+        srOrgIds.push(organizationId)
+        const uniqueOrgIds = [...new Set(srOrgIds)]
+
+        if (uniqueOrgIds.length != 1 || !locationId) {
+          logger.error(
+            `Wrong number of ordering Organizations and Locations in this bundle:\n${JSON.stringify(
+              uniqueOrgIds,
+            )}\n${JSON.stringify(locationId)}`,
+          )
+        }
+
+        const orderingLocation = <R4.ILocation>(
+          this.getBundleEntry(bundle.entry, 'Location', locationId)
+        )
+        const orderingOrganization = <R4.IOrganization>(
+          this.getBundleEntry(bundle.entry, 'Organization', uniqueOrgIds[0])
+        )
+
+        if (orderingLocation && orderingOrganization) {
+          if (
+            !orderingLocation.managingOrganization ||
+            orderingLocation.managingOrganization.reference?.split('/')[1] !=
+              orderingOrganization.id
+          ) {
+            logger.error('Ordering Organization is not the managing Organziation of Location!')
           }
+
+          mappedLocation = await this.translateLocation(orderingLocation)
+          mappedOrganization = {
+            resourceType: 'Organization',
+            id: mappedLocation.id,
+            identifier: mappedLocation.identifier,
+            name: mappedLocation.name,
+          }
+          const mappedLocationRef: R4.IReference = {
+            reference: `Location/${mappedLocation.id}`,
+          }
+          const mappedOrganizationRef: R4.IReference = {
+            reference: `Organization/${mappedOrganization.id}`,
+          }
+          mappedLocation.managingOrganization = mappedOrganizationRef
+
+          // const taskI = bundle.entry.findIndex((e) => { return e.resource && e.resource.resourceType == 'Task' })
+
+          // <R4.ITask>(bundle.entry[taskI].resource).owner
+
+          task.location = mappedLocationRef
+          task.owner = mappedLocationRef
+
+          for (const sr of srs) {
+            sr.performer!.push(mappedOrganizationRef)
+          }
+
+          bundle.entry.push({ resource: mappedLocation })
+          bundle.entry.push({ resource: mappedOrganization })
         }
       }
     } catch (e) {
@@ -138,6 +227,30 @@ export class LabWorkflowsBw extends LabWorkflows {
     }
 
     return bundle
+  }
+
+  private static getBundleEntry(
+    entries: IBundle_Entry[],
+    type: string,
+    id?: string,
+  ): R4.IBundle_Entry | undefined {
+    return entries.find(entry => {
+      return (
+        entry.resource && entry.resource.resourceType == type && (!id || entry.resource.id == id)
+      )
+    })
+  }
+
+  private static getBundleEntries(
+    entries: IBundle_Entry[],
+    type: string,
+    id?: string,
+  ): R4.IBundle_Entry[] {
+    return entries.filter(entry => {
+      return (
+        entry.resource && entry.resource.resourceType == type && (!id || entry.resource.id == id)
+      )
+    })
   }
 
   static async translateCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
@@ -209,14 +322,47 @@ export class LabWorkflowsBw extends LabWorkflows {
   }
 
   /**
-   * TODO: Implement!
-   * @param sr
-   * @returns
+   * @param location
+   * @returns R4.ILocation
    */
-  static async translateLocations(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
-    // logger.info('Not Implemented yet!')
+  static async translateLocation(location: R4.ILocation): Promise<R4.ILocation> {
+    logger.info('Translating Location Data')
 
-    return sr
+    const returnLocation: R4.ILocation = {
+      resourceType: 'Location',
+    }
+    const mappings = await facilityMappings
+    const targetMapping = mappings.find(m => {
+      m.orderingFacility == location.name
+    })
+
+    if (targetMapping) {
+      returnLocation.identifier = [
+        {
+          system: config.get('bwConfig:ipmsCodeSystemUrl'),
+          value: targetMapping.receivingFacility,
+        },
+      ]
+      ;(returnLocation.name = targetMapping.receivingFacility), (returnLocation.extension = [])
+      returnLocation.extension.push({
+        url: config.get('bwConfig:ipmsProviderTypeSystemUrl'),
+        valueString: targetMapping.provider,
+      })
+      returnLocation.extension.push({
+        url: config.get('bwConfig:ipmsPatientTypeSystemUrl'),
+        valueString: targetMapping.patientType,
+      })
+      returnLocation.extension.push({
+        url: config.get('bwConfig:ipmsPatientStatusSystemUrl'),
+        valueString: targetMapping.patientStatus,
+      })
+      returnLocation.extension.push({
+        url: config.get('bwConfig:ipmsXLocationSystemUrl'),
+        valueString: targetMapping.xLocation,
+      })
+    }
+
+    return returnLocation
   }
 
   /**
@@ -622,6 +768,7 @@ export class LabWorkflowsBw extends LabWorkflows {
           }
         }
 
+        // TODO: Only send if valid details available
         const sendBundle: R4.IBundle = {
           resourceType: 'Bundle',
           type: BundleTypeKind._transaction,
