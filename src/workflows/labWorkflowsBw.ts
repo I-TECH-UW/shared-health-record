@@ -207,10 +207,6 @@ export class LabWorkflowsBw extends LabWorkflows {
           }
           mappedLocation.managingOrganization = mappedOrganizationRef
 
-          // const taskI = bundle.entry.findIndex((e) => { return e.resource && e.resource.resourceType == 'Task' })
-
-          // <R4.ITask>(bundle.entry[taskI].resource).owner
-
           task.location = mappedLocationRef
           task.owner = mappedLocationRef
 
@@ -233,24 +229,30 @@ export class LabWorkflowsBw extends LabWorkflows {
     entries: IBundle_Entry[],
     type: string,
     id?: string,
-  ): R4.IBundle_Entry | undefined {
-    return entries.find(entry => {
+  ): R4.IResource | undefined {
+    const entry = entries.find(entry => {
       return (
         entry.resource && entry.resource.resourceType == type && (!id || entry.resource.id == id)
       )
     })
+
+    return entry?.resource
   }
 
   private static getBundleEntries(
     entries: IBundle_Entry[],
     type: string,
     id?: string,
-  ): R4.IBundle_Entry[] {
-    return entries.filter(entry => {
-      return (
-        entry.resource && entry.resource.resourceType == type && (!id || entry.resource.id == id)
-      )
-    })
+  ): (R4.IResource | undefined)[] {
+    return entries
+      .filter(entry => {
+        return (
+          entry.resource && entry.resource.resourceType == type && (!id || entry.resource.id == id)
+        )
+      })
+      .map(entry => {
+        return entry.resource
+      })
   }
 
   static async translateCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
@@ -390,13 +392,13 @@ export class LabWorkflowsBw extends LabWorkflows {
   public static async mapLocations(labBundle: R4.IBundle): Promise<R4.IBundle> {
     logger.info('Mapping Locations!')
 
-    // labBundle = await LabWorkflowsBw.addBwLocations(labBundle)
-    // let response: R4.IBundle = await saveLabBundle(labBundle)
+    labBundle = await LabWorkflowsBw.addBwLocations(labBundle)
+    const response: R4.IBundle = await saveBundle(labBundle)
 
     sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
     sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
 
-    return labBundle
+    return response
   }
 
   /**
