@@ -22,6 +22,7 @@ import logger from '../lib/winston'
 import Hl7WorkflowsBw from './hl7WorkflowsBw'
 import { LabWorkflows } from './labWorkflows'
 import facilityMappings from '../lib/locationMap'
+import crypto from 'crypto'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const hl7 = require('hl7')
@@ -149,24 +150,21 @@ export class LabWorkflowsBw extends LabWorkflows {
         )
 
         const orderingLocationRef: R4.IReference | undefined = task.location
-        const orderingOrganizationRef: R4.IReference | undefined = task.owner
 
-        const srOrganizationRefs: (R4.IReference | undefined)[] = srs
-          .map(sr => {
-            if (sr.requester) return sr.requester
-          })
-          .filter(ref => {
-            ref != undefined
-          })
+        const srOrganizationRefs: (R4.IReference | undefined)[] = srs.map(sr => {
+          if (sr.requester) {
+            return sr.requester
+          } else {
+            return undefined
+          }
+        })
 
         const locationId = orderingLocationRef?.reference?.split('/')[1]
-        const organizationId = orderingOrganizationRef?.reference?.split('/')[1]
         const srOrgIds = srOrganizationRefs.map(ref => {
           return ref?.reference?.split('/')[1]
         })
 
-        srOrgIds.push(organizationId)
-        const uniqueOrgIds = [...new Set(srOrgIds)]
+        const uniqueOrgIds = Array.from(new Set(srOrgIds))
 
         if (uniqueOrgIds.length != 1 || !locationId) {
           logger.error(
@@ -195,27 +193,47 @@ export class LabWorkflowsBw extends LabWorkflows {
           mappedLocation = await this.translateLocation(orderingLocation)
           mappedOrganization = {
             resourceType: 'Organization',
-            id: mappedLocation.id,
+            id: crypto
+              .createHash('md5')
+              .update('Organization/' + mappedLocation.name)
+              .digest('hex'),
             identifier: mappedLocation.identifier,
             name: mappedLocation.name,
           }
+
           const mappedLocationRef: R4.IReference = {
             reference: `Location/${mappedLocation.id}`,
           }
           const mappedOrganizationRef: R4.IReference = {
             reference: `Organization/${mappedOrganization.id}`,
           }
+
           mappedLocation.managingOrganization = mappedOrganizationRef
 
-          task.location = mappedLocationRef
-          task.owner = mappedLocationRef
+          if (mappedLocation && mappedLocation.id) {
+            task.location = mappedLocationRef
 
-          for (const sr of srs) {
-            sr.performer!.push(mappedOrganizationRef)
+            bundle.entry.push({
+              resource: mappedLocation,
+              request: {
+                method: R4.Bundle_RequestMethodKind._put,
+                url: mappedLocationRef.reference,
+              },
+            })
           }
-
-          bundle.entry.push({ resource: mappedLocation })
-          bundle.entry.push({ resource: mappedOrganization })
+          if (mappedOrganization && mappedOrganization.id) {
+            task.owner = mappedOrganizationRef
+            bundle.entry.push({
+              resource: mappedOrganization,
+              request: {
+                method: R4.Bundle_RequestMethodKind._put,
+                url: mappedOrganizationRef.reference,
+              },
+            })
+            for (const sr of srs) {
+              sr.performer!.push(mappedOrganizationRef)
+            }
+          }
         }
       }
     } catch (e) {
@@ -334,11 +352,18 @@ export class LabWorkflowsBw extends LabWorkflows {
       resourceType: 'Location',
     }
     const mappings = await facilityMappings
-    const targetMapping = mappings.find(m => {
-      m.orderingFacility == location.name
-    })
+    let targetMapping
+    for (const mapping of mappings) {
+      if (mapping.orderingFacility == location.name) {
+        targetMapping = mapping
+      }
+    }
 
     if (targetMapping) {
+      returnLocation.id = crypto
+        .createHash('md5')
+        .update('Organization/' + returnLocation.name)
+        .digest('hex')
       returnLocation.identifier = [
         {
           system: config.get('bwConfig:ipmsCodeSystemUrl'),

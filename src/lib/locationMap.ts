@@ -25,7 +25,7 @@ async function getFacilityMappings() {
   const worksheet = content.getWorksheet('HIE')
 
   const rowStartIndex = 2
-  const rowEndIndex = worksheet.rowCount - 8
+  const rowEndIndex = 11
 
   const rows = worksheet.getRows(rowStartIndex, rowEndIndex) ?? []
 

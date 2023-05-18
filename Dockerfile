@@ -20,6 +20,12 @@ COPY ./.npmrc /app
 
 COPY ./yarn.lock /app
 
+COPY ./.eslintrc /app
+
+COPY ./.prettierrc /app
+
+COPY ./.yarnrc.yml /app
+
 COPY ./.yarn/releases /app/.yarn/releases
 
 COPY ./.yarnrc.yml /app
@@ -29,6 +35,8 @@ RUN yarn install --network-timeout 1000000
 COPY ./src /app/src
 
 COPY ./tsconfig.json /app
+
+RUN yarn format 
 
 RUN yarn tsc --diagnostics
 
