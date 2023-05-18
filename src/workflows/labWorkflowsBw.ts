@@ -376,7 +376,7 @@ export class LabWorkflowsBw extends LabWorkflows {
       returnLocation.name = targetMapping.receivingFacility
       returnLocation.extension = []
       returnLocation.extension.push({
-        url: config.get('bwConfig:ipmsProviderTypeSystemUrl'),
+        url: config.get('bwConfig:ipmsProviderSystemUrl'),
         valueString: targetMapping.provider,
       })
       returnLocation.extension.push({
@@ -427,7 +427,7 @@ export class LabWorkflowsBw extends LabWorkflows {
     sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
     sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
 
-    logger.info(`Response: ${JSON.stringify(response)}`)
+    logger.debug(`Response: ${JSON.stringify(response)}`)
     return response
   }
 
@@ -484,7 +484,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     const crResult = await got.post(`${crUrl}`, options).json()
 
-    logger.info(`CR Patient Update Result: ${JSON.stringify(crResult)}`)
+    logger.debug(`CR Patient Update Result: ${JSON.stringify(crResult)}`)
 
     return bundle
   }

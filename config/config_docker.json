@@ -36,6 +36,7 @@
     "omangSystemUrl": "http://moh.bw.org/ext/identifier/omang",
     "oclUrl": "https://api.openconceptlab.org",
     "facilityCodeSystemUrl": "http://moh.bw.org/ext/identifier/facility-code",
+    "ipmsProviderSystemUrl": "http://moh.bw.org/ext/ipms-provider",
     "ipmsPatientTypeSystemUrl": "http://moh.bw.org/ext/ipms-patient-type",
     "ipmsPatientStatusSystemUrl": "http://moh.bw.org/ext/ipms-patient-status",
     "ipmsXLocationSystemUrl": "http://moh.bw.org/ext/ipms-xlocation",

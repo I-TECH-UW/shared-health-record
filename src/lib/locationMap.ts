@@ -34,11 +34,11 @@ async function getFacilityMappings() {
       index: parseInt(getCellValue(row, 1)),
       orderingFacility: getCellValue(row, 2),
       receivingFacility: getCellValue(row, 3),
-      provider: getCellValue(row, 4),
-      patientType: getCellValue(row, 5),
-      patientStatus: getCellValue(row, 6),
-      futurePatientStatus: getCellValue(row, 7),
-      xLocation: getCellValue(row, 8),
+      provider: getCellValue(row, 5),
+      patientType: getCellValue(row, 6),
+      patientStatus: getCellValue(row, 7),
+      futurePatientStatus: getCellValue(row, 8),
+      xLocation: getCellValue(row, 9),
     }
   })
 
