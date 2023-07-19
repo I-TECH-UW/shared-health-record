@@ -3822,15 +3822,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docker-compose@npm:^0.23.13":
-  version: 0.23.17
-  resolution: "docker-compose@npm:0.23.17"
-  dependencies:
-    yaml: ^1.10.2
-  checksum: c308bf067cabe178d245b3e499119937b1d2a5effdc9fac6227e04be4308a0250ca7bb1471789b3d0492ea2ce83f74e40b7517a9a5cb540a21355a64e4ad5d3c
-  languageName: node
-  linkType: hard
-
 "doctrine@npm:3.0.0, doctrine@npm:^3.0.0":
   version: 3.0.0
   resolution: "doctrine@npm:3.0.0"
@@ -10215,7 +10206,6 @@ __metadata:
     cookie-parser: ^1.4.5
     cross-env: ^7.0.3
     damerau-levenshtein: ^1.0.5
-    docker-compose: ^0.23.13
     double-metaphone: ^1.0.5
     eslint: ^8.35.0
     eslint-config-airbnb-base: ^14.0.0
@@ -12031,13 +12021,6 @@ __metadata:
   version: 2.0.0-1
   resolution: "yaml@npm:2.0.0-1"
   checksum: ccfbd1424dbf205a8828593faa91dfd40bd21e3fb575e257280d3526ade9508f3ea0acbe7605abc81bac6b4d6729ddb5b3de6bd818232f48480fd1eda8d7fd4c
-  languageName: node
-  linkType: hard
-
-"yaml@npm:^1.10.2":
-  version: 1.10.2
-  resolution: "yaml@npm:1.10.2"
-  checksum: ce4ada136e8a78a0b08dc10b4b900936912d15de59905b2bf415b4d33c63df1d555d23acb2a41b23cf9fb5da41c256441afca3d6509de7247daa062fd2c5ea5f
   languageName: node
   linkType: hard
 

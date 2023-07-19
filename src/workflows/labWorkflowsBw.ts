@@ -355,6 +355,8 @@ export class LabWorkflowsBw extends LabWorkflows {
     }
     const mappings = await facilityMappings
     let targetMapping
+    logger.info('Facility mappings: ' + mappings.length)
+
     for (const mapping of mappings) {
       if (mapping.orderingFacility == location.name) {
         targetMapping = mapping
@@ -362,6 +364,9 @@ export class LabWorkflowsBw extends LabWorkflows {
     }
 
     if (targetMapping) {
+      logger.info(
+        "Mapped location '" + location.name + "' to '" + targetMapping.orderingFacility + "'",
+      )
       returnLocation.id = crypto
         .createHash('md5')
         .update('Organization/' + returnLocation.name)
@@ -391,8 +396,11 @@ export class LabWorkflowsBw extends LabWorkflows {
         url: config.get('bwConfig:ipmsXLocationSystemUrl'),
         valueString: targetMapping.xLocation,
       })
+    } else {
+      logger.error('Could not find a location mapping for:\n' + JSON.stringify(location.name))
     }
 
+    logger.info(`Translated Location:\n${JSON.stringify(returnLocation)}`)
     return returnLocation
   }
 

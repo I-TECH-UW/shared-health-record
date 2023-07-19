@@ -6,14 +6,14 @@
   "mediator": {
     "api": {
       "username": "root@openhim.org",
-      "password": "openhim",
+      "password": "HLh6eX4f?#tc4R@F",
       "apiURL": "https://openhim-core:8080",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     },
     "client": {
       "username": "shr-client",
-      "password": "shr-client"
+      "password": "k?f?NPJ9NRG3p3A9"
     }
   },
   "fhirServer": {
