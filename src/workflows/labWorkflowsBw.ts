@@ -522,10 +522,9 @@ export class LabWorkflowsBw extends LabWorkflows {
 
       const adtResult: string = <string>await sender.send(adtMessage)
 
-      if (adtResult.includes('AA')) {
+      if (adtResult.includes && adtResult.includes('AA')) {
         labBundle = this.setTaskStatus(labBundle, R4.TaskStatusKind._accepted)
       }
-      logger.info(`res:\n${adtResult}`)
     } else {
       logger.info('Order not ready for IPMS.')
     }
