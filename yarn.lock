@@ -582,13 +582,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@i-tech-uw/mllp-server@npm:>=3.2.0":
-  version: 3.2.0
-  resolution: "@i-tech-uw/mllp-server@npm:3.2.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40i-tech-uw%2Fmllp-server%2F3.2.0%2F4d76180b26c7df119478ab79f6ca8330a6130733"
+"@i-tech-uw/mllp-server@npm:>=3.3.1":
+  version: 3.3.1
+  resolution: "@i-tech-uw/mllp-server@npm:3.3.1"
   dependencies:
     hl7: 1.x.x
     tiny-typed-emitter: ^2.1.0
-  checksum: 3c1ea61d0665fd228611f833e09c11f4f17a3511b466f53514e83b0d238b9a7395492188d0a393eae12a43a3232bd988403152ef9ea90a975f4b2bc7ec8a8022
+  checksum: 2fb72521afba4907ae125b6123052e9e0fdda927a372d62993746fae4e93d34a586a0a75c34b3a4cd2b91d1f4cf6e0abff1782b9411f23d3e0b291432a202bde
   languageName: node
   linkType: hard
 
@@ -10180,7 +10180,7 @@ __metadata:
   resolution: "shared-health-registry@workspace:."
   dependencies:
     "@ahryman40k/ts-fhir-types": ^4.0.34
-    "@i-tech-uw/mllp-server": ">=3.2.0"
+    "@i-tech-uw/mllp-server": ">=3.3.1"
     "@types/async": ^3.2.3
     "@types/cookie-parser": ^1.4.2
     "@types/express": ^4.17.13
