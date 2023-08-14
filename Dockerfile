@@ -1,22 +1,12 @@
-  
 # syntax=docker/dockerfile:1.2
 
 FROM node:18-slim AS build
 
-# TODO: Fix approach using Secrets
-# RUN --mount=type=secret,id=npm_token cat /run/secrets/npm_token
-
 ARG NODE_ENV=production
-
-ARG NODE_AUTH_TOKEN
-
-ENV NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN}
 
 WORKDIR /app
 
 COPY ./package.json /app
-
-COPY ./.npmrc /app
 
 COPY ./yarn.lock /app
 
