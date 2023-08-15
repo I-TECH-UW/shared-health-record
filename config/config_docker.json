@@ -6,18 +6,18 @@
   "mediator": {
     "api": {
       "username": "root@openhim.org",
-      "password": "openhim",
+      "password": "HLh6eX4f?#tc4R@F",
       "apiURL": "https://openhim-core:8080",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     },
     "client": {
-      "username": "shr",
-      "password": "shr"
+      "username": "shr-client",
+      "password": "k?f?NPJ9NRG3p3A9"
     }
   },
   "fhirServer": {
-    "baseURL": "http://hub.openelis-global.org:5001/fhir",
+    "baseURL": "http://shr-fhir:8080/fhir",
     "username": "shr",
     "password": "shr"
   },
@@ -29,16 +29,24 @@
     ]
   },
   "bwConfig": {
-    "pimsSystemUrl": "https://api.openconceptlab.org/orgs/B-TECHBW/sources/PIMS-LAB-TEST-DICT/",
+    "pimsSystemUrl": "https://api.openconceptlab.org/orgs/I-TECH-UW/sources/PIMSLAB/",
+    "ipmsSystemUrl": "https://api.openconceptlab.org/orgs/I-TECH-UW/sources/IPMSLAB/",
+    "cielSystemUrl": "https://openconceptlab.org/orgs/CIEL/sources/CIEL",
+    "loincSystemUrl": "https://api.openconceptlab.org/orgs/Regenstrief/sources/LOINC/",
     "omangSystemUrl": "http://moh.bw.org/ext/identifier/omang",
     "oclUrl": "https://api.openconceptlab.org",
+    "facilityCodeSystemUrl": "http://moh.bw.org/ext/identifier/facility-code",
+    "ipmsProviderSystemUrl": "http://moh.bw.org/ext/ipms-provider",
+    "ipmsPatientTypeSystemUrl": "http://moh.bw.org/ext/ipms-patient-type",
+    "ipmsPatientStatusSystemUrl": "http://moh.bw.org/ext/ipms-patient-status",
+    "ipmsXLocationSystemUrl": "http://moh.bw.org/ext/ipms-xlocation",
     "requestTimeout": 60000,
     "toIpmsAdtTemplate": "ADT_A04_TO_IPMS.hbs",
     "fromIpmsAdtTemplate": "ADT_A04_FROM_IPMS.hbs",
     "toIpmsOrmTemplate": "ORM_O01_TO_IPMS.hbs",
     "fromIpmsOruTemplate": "ORU_R01_FROM_IPMS.hbs",
     "mllp": {
-      "targetIp": "shr",
+      "targetIp": "10.175.5.69",
       "targetAdtPort": 3001,
       "targetOrmPort": 3002
     }

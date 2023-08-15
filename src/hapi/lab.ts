@@ -78,7 +78,7 @@ export async function saveBundle(bundle: R4.IBundle): Promise<R4.IBundle> {
     bundle = translateToTransactionBundle(bundle)
   }
   try {
-    logger.info(JSON.stringify(bundle))
+    // logger.info(JSON.stringify(bundle))
 
     const ret = await got.post(uri.toString(), { json: bundle }).json()
 

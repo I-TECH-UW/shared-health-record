@@ -7,6 +7,7 @@ import config from '../lib/config'
 import logger from '../lib/winston'
 import { sendPayload } from '../lib/kafka'
 import { topicList } from './labWorkflowsBw'
+import sleep from 'sleep-promise'
 
 export default class Hl7WorkflowsBw {
   public static errorBundle: IBundle = {
@@ -24,9 +25,9 @@ export default class Hl7WorkflowsBw {
   // GET Lab Orders via HL7v2 over HTTP - ORU Message
   static async handleOruMessage(hl7Msg: string): Promise<R4.IBundle> {
     try {
-      const translatedBundle: R4.IBundle = await this.getHl7Translation(
+      const translatedBundle: R4.IBundle = await Hl7WorkflowsBw.translateBundle(
         hl7Msg,
-        config.get('bwConfig:fromIpmsOruTemplate'),
+        'bwConfig:fromIpmsOruTemplate',
       )
 
       if (translatedBundle != this.errorBundle && translatedBundle.entry) {
@@ -43,13 +44,13 @@ export default class Hl7WorkflowsBw {
 
   static async handleAdtMessage(hl7Msg: string): Promise<R4.IBundle> {
     try {
-      const translatedBundle: R4.IBundle = await this.getHl7Translation(
+      const translatedBundle: R4.IBundle = await Hl7WorkflowsBw.translateBundle(
         hl7Msg,
-        config.get('bwConfig:fromIpmsAdtTemplate'),
+        'bwConfig:fromIpmsAdtTemplate',
       )
 
       if (translatedBundle != this.errorBundle) {
-        // Save to SHR
+        // Save to SHR??
         // let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
 
         sendPayload({ bundle: translatedBundle }, topicList.SAVE_IPMS_PATIENT)
@@ -62,6 +63,20 @@ export default class Hl7WorkflowsBw {
       logger.error(`Could not translate and save ADT message!\n${JSON.stringify(error)}`)
       return this.errorBundle
     }
+  }
+
+  private static async translateBundle(hl7Msg: string, template: string) {
+    let tries = 0
+    let translatedBundle: R4.IBundle = this.errorBundle
+
+    while (tries < 5 && translatedBundle == this.errorBundle) {
+      tries = tries + 1
+      translatedBundle = await this.getHl7Translation(hl7Msg, config.get(template))
+      if (translatedBundle == this.errorBundle) {
+        await sleep(1000)
+      }
+    }
+    return translatedBundle
   }
 
   static async getHl7Translation(hl7Message: string, template: string): Promise<R4.IBundle> {
@@ -87,6 +102,7 @@ export default class Hl7WorkflowsBw {
           error,
         )}`,
       )
+
       return this.errorBundle
     }
   }

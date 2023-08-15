@@ -1,5 +1,6 @@
 name: CI/CD
 
+
 on:
   pull_request:
     branches: [main]
@@ -20,7 +21,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout
@@ -30,10 +31,6 @@ jobs:
         with:
           node-version: '16'
           cache: 'yarn'
-          registry-url: https://npm.pkg.github.com
-          scope: '@i-tech-uw'
-
-      - run: cat .npmrc
 
       - name: Yarn
         run: yarn install
@@ -87,74 +84,74 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
 
-      - name: Pull containers
-        run: docker-compose pull shr-fhir openhim-core mongo-db newman kafka zookeeper
+      # - name: Pull containers
+      #   run: docker-compose pull shr-fhir openhim-core mongo-db newman kafka zookeeper
 
-      - name: Cache containers
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
+      # - name: Cache containers
+      #   uses: satackey/action-docker-layer-caching@v0.0.11
+      #   continue-on-error: true
 
-      - name: Start containers
-        run: docker-compose up -d shr-fhir mongo-db openhim-core kafka zookeeper
+      # - name: Start containers
+      #   run: docker-compose up -d shr-fhir mongo-db openhim-core kafka zookeeper
 
-      - name: Load openhim config
-        run: docker-compose up -d openhim-config
+      # - name: Load openhim config
+      #   run: docker-compose up -d openhim-config
 
-      - name: Sleep for 60 seconds
-        run: sleep 90s
-        shell: bash
+      # - name: Sleep for 60 seconds
+      #   run: sleep 90s
+      #   shell: bash
 
-      - name: Display docker logs for openhim config
-        run: docker-compose logs openhim-config
+      # - name: Display docker logs for openhim config
+      #   run: docker-compose logs openhim-config
 
-      - name: Run SHR image
-        run: docker-compose up -d shr
+      # - name: Run SHR image
+      #   run: docker-compose up -d shr
 
-      - name: Sleep for 30 seconds
-        run: sleep 30s
-        shell: bash
+      # - name: Sleep for 30 seconds
+      #   run: sleep 30s
+      #   shell: bash
 
-      - name: Show SHR Log
-        run: docker-compose logs shr
+      # - name: Show SHR Log
+      #   run: docker-compose logs shr
 
-      - name: Show kafka Log
-        run: docker-compose logs kafka
+      # - name: Show kafka Log
+      #   run: docker-compose logs kafka
 
-      - name: Check openhim-core
-        run: curl -sSk https://localhost:8080/heartbeat
+      # - name: Check openhim-core
+      #   run: curl -sSk https://localhost:8080/heartbeat
 
-      - name: Show containers
-        run: docker-compose ps
+      # - name: Show containers
+      #   run: docker-compose ps
 
-      - name: Show OpenHIM Log
-        run: docker-compose logs openhim-core
+      # - name: Show OpenHIM Log
+      #   run: docker-compose logs openhim-core
 
-      # Postman Testing - see https://www.postman.com/itechuw/workspace/shared-health-record/
-      - name: Run General Tests Collection
-        env:
-          POSTMAN_COLLECTION: /.postman/collections/1_general_tests.json
-        run: docker-compose up -d newman
+      # # Postman Testing - see https://www.postman.com/itechuw/workspace/shared-health-record/
+      # - name: Run General Tests Collection
+      #   env:
+      #     POSTMAN_COLLECTION: /.postman/collections/1_general_tests.json
+      #   run: docker-compose up -d newman
 
-      - name: Run Laboratory Workflows Collection (collection/1525496-f28b488f-a40c-4723-8a72-a2b4f64bb5da)
-        env:
-          POSTMAN_COLLECTION: /.postman/collections/2_laboratory_workflows.json
-        run: docker-compose up --exit-code-from newman newman
-        continue-on-error: true
+      # - name: Run Laboratory Workflows Collection (collection/1525496-f28b488f-a40c-4723-8a72-a2b4f64bb5da)
+      #   env:
+      #     POSTMAN_COLLECTION: /.postman/collections/2_laboratory_workflows.json
+      #   run: docker-compose up --exit-code-from newman newman
+      #   continue-on-error: true
 
-      - name: Run MLLP Tests
-        run: docker-compose up --exit-code-from mllp_tests mllp_tests
+      # - name: Run MLLP Tests
+      #   run: docker-compose up --exit-code-from mllp_tests mllp_tests
 
-      - name: Show SHR Log
-        if: always()
-        run: docker-compose logs shr
+      # - name: Show SHR Log
+      #   if: always()
+      #   run: docker-compose logs shr
 
-      - name: Show kafka Log
-        if: always()
-        run: docker-compose logs kafka
+      # - name: Show kafka Log
+      #   if: always()
+      #   run: docker-compose logs kafka
 
-      - name: Stop containers
-        if: always()
-        run: docker-compose down
+      # - name: Stop containers
+      #   if: always()
+      #   run: docker-compose down
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2

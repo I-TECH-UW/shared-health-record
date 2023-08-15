@@ -1,24 +1,20 @@
-  
 # syntax=docker/dockerfile:1.2
 
 FROM node:18-slim AS build
 
-# TODO: Fix approach using Secrets
-# RUN --mount=type=secret,id=npm_token cat /run/secrets/npm_token
-
 ARG NODE_ENV=production
-
-ARG NODE_AUTH_TOKEN
-
-ENV NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN}
 
 WORKDIR /app
 
 COPY ./package.json /app
 
-COPY ./.npmrc /app
-
 COPY ./yarn.lock /app
+
+COPY ./.eslintrc /app
+
+COPY ./.prettierrc /app
+
+COPY ./.yarnrc.yml /app
 
 COPY ./.yarn/releases /app/.yarn/releases
 
@@ -29,6 +25,8 @@ RUN yarn install --network-timeout 1000000
 COPY ./src /app/src
 
 COPY ./tsconfig.json /app
+
+RUN yarn format 
 
 RUN yarn tsc --diagnostics
 

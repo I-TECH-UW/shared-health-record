@@ -18,7 +18,7 @@ describe('lab Workflows for Botswana should', () => {
       )
 
       serviceRequest.code!.coding![0].code! = '3'
-      const result = await LabWorkflowsBw.translatePimsCoding(serviceRequest)
+      const result = await LabWorkflowsBw.translateCoding(serviceRequest)
 
       expect(result).toBeDefined
     })

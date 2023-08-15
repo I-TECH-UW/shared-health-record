@@ -28,7 +28,7 @@ services:
     ports:
       - 4000:3000
       - 3001:3001
-      - 3002:3002
+      - 3002:3001
       - '9230:9230'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
@@ -46,4 +46,4 @@ services:
 networks:
   hie:
     external: true
-    name: ci-hie-demo_hie
+    name: hie-botswana_hie

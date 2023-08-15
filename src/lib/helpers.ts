@@ -24,3 +24,14 @@ export function invalidBundleMessage(): any {
     },
   }
 }
+
+// export function getFromFhirServer(resourcePath, )
+// <R4.IBundle>await got
+//       .get(
+//         `${config.get('fhirServer:baseURL')}/Patient?_id=${patientId}&_include=*&_revinclude=*`,
+//         {
+//           username: config.get('fhirServer:username'),
+//           password: config.get('fhirServer:password'),
+//         },
+//       )
+//       .json()
