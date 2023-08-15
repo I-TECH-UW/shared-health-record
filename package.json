@@ -1,6 +1,6 @@
 {
   "name": "shared-health-registry",
-  "version": "0.10.0-alpha",
+  "version": "v0.10.0",
   "description": "Open Implementation of an OpenHIE Shared Health Record",
   "main": "app.js",
   "scripts": {

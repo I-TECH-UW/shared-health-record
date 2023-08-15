@@ -34,8 +34,6 @@ jobs:
 
       - name: Yarn
         run: yarn install
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: yarn tsc
@@ -82,7 +80,6 @@ jobs:
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
 
       # - name: Pull containers
       #   run: docker-compose pull shr-fhir openhim-core mongo-db newman kafka zookeeper
@@ -170,4 +167,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: NODE_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN }}
