@@ -1,4 +1,4 @@
-import { Consumer } from 'kafkajs'
+import { Consumer, EachMessagePayload } from 'kafkajs'
 import { consumer } from '../lib/kafka'
 import logger from '../lib/winston'
 import { LabWorkflowsBw, topicList } from '../workflows/labWorkflowsBw'
@@ -27,8 +27,8 @@ export async function run() {
   }
 
   await k.run({
-    eachMessage: async function ({ topic, partition, message }) {
-      logger.info(`Recieved message from topic ${topic}`)
+    eachMessage: async function ({ topic, partition, message }: EachMessagePayload) {
+      logger.info(`Recieved message from topic ${topic} on partition ${partition}`)
 
       try {
         let val = ''
@@ -38,21 +38,13 @@ export async function run() {
           val = message.value.toString()
         }
 
-        // logger.info("\n\n#########\nReceived: ", {
-        //   partition,
-        //   offset: message.offset,
-        //   value: val
-        // });
-
         LabWorkflowsBw.executeTopicWorkflow(topic, val)
       } catch (error) {
         logger.error(`Could not complete task from topic ${topic}!`)
 
         logger.error(error)
       }
-
-      //logger.info(`\n\n##########\nResult: ${JSON.stringify(res)}\n###############`)
-    },
+    }
   })
 
   errorTypes.map(type => {
