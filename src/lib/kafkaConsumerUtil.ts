@@ -1,9 +1,9 @@
-import { Consumer, ConsumerConfig } from "kafkajs";
+import { Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaConfig, Transaction } from "kafkajs";
 
 export class KafkaConsumerUtil {
   private consumer: Consumer | null = null;
 
-  constructor(private config: ConsumerConfig, private topic: string, private groupId: string) {}
+  constructor(private config: KafkaConfig, private topic: string, private groupId: string) {}
 
   // Initialize Kafka consumer
   public async init(): Promise<void> {
@@ -47,7 +47,8 @@ export class KafkaConsumerUtil {
             value: message.value?.toString(),
           });
 
-          // Your own message processing logic here
+
+          
           
           resolveOffset(message.offset);
           await heartbeat();
