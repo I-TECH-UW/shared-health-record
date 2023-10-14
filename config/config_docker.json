@@ -6,14 +6,14 @@
   "mediator": {
     "api": {
       "username": "root@openhim.org",
-      "password": "HLh6eX4f?#tc4R@F",
+      "password": "openhim",
       "apiURL": "https://openhim-core:8080",
       "trustSelfSigned": true,
       "urn": "urn:mediator:shared-health-record"
     },
     "client": {
       "username": "shr-client",
-      "password": "k?f?NPJ9NRG3p3A9"
+      "password": "shr-client"
     }
   },
   "fhirServer": {
@@ -40,6 +40,7 @@
     "ipmsPatientTypeSystemUrl": "http://moh.bw.org/ext/ipms-patient-type",
     "ipmsPatientStatusSystemUrl": "http://moh.bw.org/ext/ipms-patient-status",
     "ipmsXLocationSystemUrl": "http://moh.bw.org/ext/ipms-xlocation",
+    "ipmsOrderTypeSystemUrl": "http://moh.bw.org/ext/ipms-order-type",
     "requestTimeout": 60000,
     "toIpmsAdtTemplate": "ADT_A04_TO_IPMS.hbs",
     "fromIpmsAdtTemplate": "ADT_A04_FROM_IPMS.hbs",

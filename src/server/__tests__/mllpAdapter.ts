@@ -1,5 +1,5 @@
 import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
-import { promises as fs } from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
 import Hl7Workflows from '../../workflows/hl7WorkflowsBw'
 import MllpAdapter from '../mllpAdapter'
