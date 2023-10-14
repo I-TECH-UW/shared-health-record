@@ -32,6 +32,7 @@ const hl7 = require('hl7')
 const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
 
 const producerConfig: KafkaConfig = {
+  clientId: 'shr-producer',
   brokers: brokers,
   logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
 };

@@ -1,11 +1,12 @@
 import { Kafka, Consumer, EachBatchPayload, Transaction, Message, KafkaConfig, EachMessagePayload } from 'kafkajs';
+import logger from './winston';
 
 export type EachMessageCallback = (topic: string, partition: number, message: Message) => Promise<void>;
 
 export class KafkaConsumerUtil {
   private consumer: Consumer | null = null;
 
-  constructor(private config: KafkaConfig, private topic: string, private groupId: string) {}
+  constructor(private config: KafkaConfig, private topics: string[], private groupId: string) {}
 
   public async init(): Promise<void> {
     try {
@@ -20,8 +21,9 @@ export class KafkaConsumerUtil {
     const kafka = new Kafka(this.config);
     const consumer = kafka.consumer({ groupId: this.groupId });
     await consumer.connect();
-    await consumer.subscribe({ topic: this.topic, fromBeginning: true });
-
+    for (const topic of this.topics) {
+      await consumer.subscribe({ topic, fromBeginning: false });
+    }
     return consumer;
   }
 
@@ -32,20 +34,24 @@ export class KafkaConsumerUtil {
 
     await this.consumer.run({
       eachBatchAutoResolve: false,
-      eachBatch: async ({ batch, resolveOffset, heartbeat, isRunning, isStale, transaction }: any) => {
+      eachBatch: async ({ batch, resolveOffset, heartbeat, isRunning, isStale }: EachBatchPayload) => {
         const { topic, partition } = batch;
-        const transactionalConsumer: Transaction = transaction;
 
         for (const message of batch.messages) {
           if (!isRunning() || isStale()) return;
+
+          logger.info({
+            topic,
+            partition,
+            offset: message.offset,
+            value: message.value?.toString(),
+          });
 
           await eachMessageCallback(topic, partition, message)
 
           resolveOffset(message.offset);
           await heartbeat();
         }
-
-        await transactionalConsumer.commit();
       },
     });
   }

@@ -8,9 +8,10 @@ const errorTypes = ['unhandledRejection', 'uncaughtException']
 const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
 const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
 
-let consumers: KafkaConsumerUtil[] = []
+let consumer: KafkaConsumerUtil | null = null;
 
 const consumerConfig: KafkaConfig = {
+  clientId: 'shr-consumer',
   brokers: brokers,
   logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
 };
@@ -30,14 +31,14 @@ const consumerConfig: KafkaConfig = {
  */
 
 export async function run() {
-  consumers = await Promise.all(Object.values(topicList).map(initAndConsume))
+  consumer = await initAndConsume(Object.values(topicList))
 
   errorTypes.map(type => {
     process.on(type, async e => {
       try {
         logger.error(`process.on ${type}`)
         logger.error(e)
-        await shutdownConsumers()
+        await shutdownConsumer()
         process.exit(0)
       } catch (_) {
         process.exit(1)
@@ -48,7 +49,7 @@ export async function run() {
   signalTraps.map(type => {
     process.once(type, async () => {
       try {
-        await shutdownConsumers()
+        await shutdownConsumer()
       } finally {
         process.kill(process.pid, type)
       }
@@ -56,14 +57,13 @@ export async function run() {
   })
 }
 
-async function shutdownConsumers() {
-  for (const consumer of consumers) {
+async function shutdownConsumer() {
+  if (consumer)
     await consumer.shutdown()
-  }
 }
 
-const initAndConsume = async (topic: string) => {
-  const consumer = new KafkaConsumerUtil(consumerConfig, topic, 'shr-worker-group');
+const initAndConsume = async (topics: string[]) => {
+  const consumer = new KafkaConsumerUtil(consumerConfig, topics, "shr-consumer-group");
   await consumer.init();
   consumer.consumeTransactionally(processMessage);  // No await here
   return consumer;

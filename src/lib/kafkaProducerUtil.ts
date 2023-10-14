@@ -38,7 +38,7 @@ export class KafkaProducerUtil {
   private async createProducer(): Promise<Producer> {
     logger.info('Creating Kafka producer...');
     const kafka = new Kafka(this.config);
-    const producer = kafka.producer({transactionalId: 'shr-producer-transaction'});
+    const producer = kafka.producer({transactionalId: 'shr-producer-transaction', idempotent: true, maxInFlightRequests: 1});
     await producer.connect();
     return producer;
   }
@@ -51,6 +51,7 @@ export class KafkaProducerUtil {
    */
   public async sendMessageTransactionally(records: ProducerRecord[]): Promise<void> {
     if (!this.producer) {
+      logger.error('Producer is not initialized.')
       throw new Error('Producer is not initialized.');
     }
 
@@ -62,10 +63,10 @@ export class KafkaProducerUtil {
         await transaction.send(record);
       }
       await transaction.commit();
-      this.onDeliveryReport({ status: 'committed' }); // Replace with your own logic
+      this.onDeliveryReport({ status: 'committed' }); 
     } catch (err) {
       await transaction.abort();
-      this.onDeliveryReport({ status: 'aborted' }); // Replace with your own logic
+      this.onDeliveryReport({ status: 'aborted' }); 
       throw err;
     }
   }
