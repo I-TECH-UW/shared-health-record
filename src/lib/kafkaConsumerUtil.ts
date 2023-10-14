@@ -1,11 +1,12 @@
-import { Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaConfig, Transaction } from "kafkajs";
+import { Kafka, Consumer, EachBatchPayload, Transaction, Message, KafkaConfig, EachMessagePayload } from 'kafkajs';
+
+export type EachMessageCallback = (topic: string, partition: number, message: Message) => Promise<void>;
 
 export class KafkaConsumerUtil {
   private consumer: Consumer | null = null;
 
   constructor(private config: KafkaConfig, private topic: string, private groupId: string) {}
 
-  // Initialize Kafka consumer
   public async init(): Promise<void> {
     try {
       this.consumer = await this.createConsumer();
@@ -15,7 +16,6 @@ export class KafkaConsumerUtil {
     }
   }
 
-  // Create Kafka consumer
   private async createConsumer(): Promise<Consumer> {
     const kafka = new Kafka(this.config);
     const consumer = kafka.consumer({ groupId: this.groupId });
@@ -25,31 +25,22 @@ export class KafkaConsumerUtil {
     return consumer;
   }
 
-  // Consume messages transactionally
-  public async consumeTransactionally(): Promise<void> {
+  public async consumeTransactionally(eachMessageCallback: EachMessageCallback): Promise<void> {
     if (!this.consumer) {
       throw new Error('Consumer is not initialized.');
     }
 
     await this.consumer.run({
       eachBatchAutoResolve: false,
-      eachBatch: async ({ batch, resolveOffset, heartbeat, isRunning, isStale, transaction }: EachBatchPayload) => {
+      eachBatch: async ({ batch, resolveOffset, heartbeat, isRunning, isStale, transaction }: any) => {
         const { topic, partition } = batch;
         const transactionalConsumer: Transaction = transaction;
 
         for (const message of batch.messages) {
           if (!isRunning() || isStale()) return;
 
-          console.log({
-            topic,
-            partition,
-            offset: message.offset,
-            value: message.value?.toString(),
-          });
+          await eachMessageCallback(topic, partition, message)
 
-
-          
-          
           resolveOffset(message.offset);
           await heartbeat();
         }
@@ -59,7 +50,6 @@ export class KafkaConsumerUtil {
     });
   }
 
-  // Graceful shutdown
   public async shutdown(): Promise<void> {
     if (this.consumer) {
       await this.consumer.disconnect();

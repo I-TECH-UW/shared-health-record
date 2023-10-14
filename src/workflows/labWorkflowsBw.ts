@@ -904,7 +904,7 @@ export class LabWorkflowsBw extends LabWorkflows {
    * @param topic - The Kafka topic to send the payload to.
    * @returns A Promise that resolves when the payload has been sent.
    */
-  private static async sendPayload(payload: any, topic: string) {
+  public static async sendPayload(payload: any, topic: string) {
 
     const kafka = new KafkaProducerUtil(producerConfig, (report) => {
       logger.info('Delivery report:', report);
