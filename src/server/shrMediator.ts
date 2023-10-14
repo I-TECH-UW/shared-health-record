@@ -4,7 +4,12 @@ import shrApp from '../lib/shr'
 import logger from '../lib/winston'
 
 import medUtils from 'openhim-mediator-utils'
+import { error } from 'console'
+import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
 
+
+const errorTypes = ['unhandledRejection', 'uncaughtException']
+const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
 const env = process.env.NODE_ENV || 'development'
 const appConfig = JSON.parse(
   fs.readFileSync(`${__dirname}/../../config/config_${env}.json`, 'utf-8'),
@@ -20,9 +25,10 @@ export class ShrMediator {
     this.config = medConfig
   }
 
-  public start(callback: any) {
+  public async start(callback: any) {
     logger.info('Running SHR as a mediator with' + `${__dirname}/${this.config}`)
     try {
+      await LabWorkflowsBw.initKafkaProducer()
       medUtils.registerMediator(
         config.get('mediator:api'),
         this.config,
@@ -30,8 +36,33 @@ export class ShrMediator {
       )
     } catch (e: any) {
       logger.error(`Could not start SHR as a Mediator!\n${JSON.stringify(e)}`)
+      await LabWorkflowsBw.shutdownKafkaProducer()
       process.exit(1)
     }
+
+    errorTypes.map(type => {
+      process.on(type, async e => {
+        try {
+          logger.error(`process.on ${type}`)
+          logger.error(e)
+          await LabWorkflowsBw.shutdownKafkaProducer()
+          process.exit(0)
+        } catch (_) {
+          process.exit(1)
+        }
+      })
+    })
+
+    signalTraps.map(type => {
+      process.once(type, async () => {
+        try {
+          await LabWorkflowsBw.shutdownKafkaProducer()
+        } finally {
+          process.kill(process.pid, type)
+        }
+      })
+    })
+
   }
 
   private static registrationCallback(callback: any) {

@@ -3,6 +3,7 @@ import logger from './lib/winston'
 import { run } from './server/kafkaWorkers'
 import MllpAdapter from './server/mllpAdapter'
 import { ShrMediator } from './server/shrMediator'
+import { LabWorkflowsBw } from './workflows/labWorkflowsBw'
 
 if (require.main === module) {
   if (config.get('app:port')) {

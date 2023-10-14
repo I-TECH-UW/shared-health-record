@@ -37,9 +37,6 @@ const producerConfig: KafkaConfig = {
   logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
 };
 
-const kafkaUtil = new KafkaProducerUtil(producerConfig, (report) => {
-  console.log('Delivery report:', report);
-});
 
 export const topicList = {
   MAP_CONCEPTS: 'map-concepts',
@@ -52,6 +49,29 @@ export const topicList = {
 }
 
 export class LabWorkflowsBw extends LabWorkflows {
+  private static kafka = new KafkaProducerUtil(producerConfig, (report) => {
+    logger.info('Delivery report:', report);
+  });
+
+  // Static instance of the Kafka producer.
+  private static kafkaProducerInitialized = false;
+
+  // Initialize Kafka producer when the class is first used.
+  public static async initKafkaProducer() {
+    if (!this.kafkaProducerInitialized) {
+      await this.kafka.init();
+      this.kafkaProducerInitialized = true;
+    }
+  }
+
+  // Shutdown Kafka producer when the application terminates.
+  public static async shutdownKafkaProducer() {
+    if (this.kafkaProducerInitialized) {
+      await this.kafka.shutdown();
+      this.kafkaProducerInitialized = false;
+    }
+  }
+
   /**
    *
    * To handle a lab order from the PIMS system (https://www.postman.com/itechuw/workspace/botswana-hie/collection/1525496-db80feab-8a77-42c8-aa7e-fd4beb0ae6a8)
@@ -905,12 +925,7 @@ export class LabWorkflowsBw extends LabWorkflows {
    * @returns A Promise that resolves when the payload has been sent.
    */
   public static async sendPayload(payload: any, topic: string) {
-
-    const kafka = new KafkaProducerUtil(producerConfig, (report) => {
-      logger.info('Delivery report:', report);
-    });
-
-    await kafka.init();
+    await this.initKafkaProducer();
 
     const records: ProducerRecord[] = [
       {
@@ -922,12 +937,10 @@ export class LabWorkflowsBw extends LabWorkflows {
     ];
 
     try {
-      await kafkaUtil.sendMessageTransactionally(records);
+      await this.kafka.sendMessageTransactionally(records);
     } catch (err) {
       console.error('Failed to send message:', err);
     }
-
-    await kafkaUtil.shutdown();
   }
 
   private static async getIpmsCode(q: string) {
@@ -988,3 +1001,4 @@ export class LabWorkflowsBw extends LabWorkflows {
     return got.get(`${config.get('bwConfig:oclUrl')}${queryString}`, options).json()
   }
 }
+
