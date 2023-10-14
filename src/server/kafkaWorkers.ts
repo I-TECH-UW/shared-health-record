@@ -11,7 +11,6 @@ const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
 let consumers: KafkaConsumerUtil[] = []
 
 const consumerConfig: KafkaConfig = {
-  clientId: 'shr-worker-consumer',
   brokers: brokers,
   logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
 };
@@ -31,15 +30,7 @@ const consumerConfig: KafkaConfig = {
  */
 
 export async function run() {
-
   consumers = await Promise.all(Object.values(topicList).map(initAndConsume))
-
-  for (const val of Object.values(topicList)) {
-    const consumer = new KafkaConsumerUtil(consumerConfig, val, 'shr-worker-group')
-    consumers.push(consumer)
-    await consumer.init()
-    await consumer.consumeTransactionally(processMessage)
-  }
 
   errorTypes.map(type => {
     process.on(type, async e => {
