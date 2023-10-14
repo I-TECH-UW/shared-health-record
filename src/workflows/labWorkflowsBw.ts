@@ -17,15 +17,26 @@ import got from 'got'
 import { saveBundle } from '../hapi/lab'
 import config from '../lib/config'
 import Hl7MllpSender from '../lib/hl7MllpSender'
-import { sendPayload } from '../lib/kafka'
+import { KafkaProducerUtil } from '../lib/kafkaProducerUtil'
 import logger from '../lib/winston'
 import Hl7WorkflowsBw from './hl7WorkflowsBw'
 import { LabWorkflows } from './labWorkflows'
 import facilityMappings from '../lib/locationMap'
 import crypto from 'crypto'
+import { KafkaConfig, ProducerRecord } from 'kafkajs'
+import { logLevel } from 'kafkajs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const hl7 = require('hl7')
+
+const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
+
+const producerConfig: KafkaConfig = {
+  clientId: 'shr-producer',
+  brokers: brokers,
+  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
+};
+
 
 export const topicList = {
   MAP_CONCEPTS: 'map-concepts',
@@ -38,6 +49,29 @@ export const topicList = {
 }
 
 export class LabWorkflowsBw extends LabWorkflows {
+  private static kafka = new KafkaProducerUtil(producerConfig, (report) => {
+    logger.info('Delivery report:', report);
+  });
+
+  // Static instance of the Kafka producer.
+  private static kafkaProducerInitialized = false;
+
+  // Initialize Kafka producer when the class is first used.
+  public static async initKafkaProducer() {
+    if (!this.kafkaProducerInitialized) {
+      await this.kafka.init();
+      this.kafkaProducerInitialized = true;
+    }
+  }
+
+  // Shutdown Kafka producer when the application terminates.
+  public static async shutdownKafkaProducer() {
+    if (this.kafkaProducerInitialized) {
+      await this.kafka.shutdown();
+      this.kafkaProducerInitialized = false;
+    }
+  }
+
   /**
    *
    * To handle a lab order from the PIMS system (https://www.postman.com/itechuw/workspace/botswana-hie/collection/1525496-db80feab-8a77-42c8-aa7e-fd4beb0ae6a8)
@@ -65,7 +99,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   static async handleBwLabOrder(orderBundle: R4.IBundle, resultBundle: R4.IBundle) {
     try {
-      sendPayload({ bundle: orderBundle, response: resultBundle }, topicList.MAP_CONCEPTS)
+      await this.sendPayload({ bundle: orderBundle, response: resultBundle }, topicList.MAP_CONCEPTS)
     } catch (e) {
       logger.error(e)
     }
@@ -185,7 +219,7 @@ export class LabWorkflowsBw extends LabWorkflows {
           if (
             !orderingLocation.managingOrganization ||
             orderingLocation.managingOrganization.reference?.split('/')[1] !=
-              orderingOrganization.id
+            orderingOrganization.id
           ) {
             logger.error('Ordering Organization is not the managing Organziation of Location!')
           }
@@ -416,7 +450,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     const response: R4.IBundle = await saveBundle(labBundle)
 
-    sendPayload({ bundle: labBundle }, topicList.MAP_LOCATIONS)
+    await this.sendPayload({ bundle: labBundle }, topicList.MAP_LOCATIONS)
 
     return response
   }
@@ -432,8 +466,8 @@ export class LabWorkflowsBw extends LabWorkflows {
     labBundle = await LabWorkflowsBw.addBwLocations(labBundle)
     const response: R4.IBundle = await saveBundle(labBundle)
 
-    sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
-    sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
+    await this.sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
+    await this.sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
 
     logger.debug(`Response: ${JSON.stringify(response)}`)
     return response
@@ -688,7 +722,7 @@ export class LabWorkflowsBw extends LabWorkflows {
                 .get(`${config.get('fhirServer:baseURL')}/Task`, options)
                 .json()
 
-              sendPayload({ taskBundle: taskBundle, patient: patient }, topicList.SEND_ORM_TO_IPMS)
+              await this.sendPayload({ taskBundle: taskBundle, patient: patient }, topicList.SEND_ORM_TO_IPMS)
             }
           }
         }
@@ -883,6 +917,33 @@ export class LabWorkflowsBw extends LabWorkflows {
     }
   }
 
+  
+  /**
+   * Sends a payload to a Kafka topic.
+   * @param payload - The payload to send.
+   * @param topic - The Kafka topic to send the payload to.
+   * @returns A Promise that resolves when the payload has been sent.
+   */
+  public static async sendPayload(payload: any, topic: string) {
+    await this.initKafkaProducer();
+
+    const records: ProducerRecord[] = [
+      {
+        topic: topic,
+        messages: [
+          { key: 'body', value: JSON.stringify(payload) }
+        ],
+      },
+    ];
+
+    try {
+      logger.info(`Sending payload to topic ${topic}: ${JSON.stringify(payload)}`);
+      await this.kafka.sendMessageTransactionally(records);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
+  }
+
   private static async getIpmsCode(q: string) {
     try {
       const ipmsMappings = await this.getOclMapping(q)
@@ -941,3 +1002,4 @@ export class LabWorkflowsBw extends LabWorkflows {
     return got.get(`${config.get('bwConfig:oclUrl')}${queryString}`, options).json()
   }
 }
+

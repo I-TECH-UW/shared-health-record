@@ -5,8 +5,7 @@ import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
 import config from '../lib/config'
 import logger from '../lib/winston'
-import { sendPayload } from '../lib/kafka'
-import { topicList } from './labWorkflowsBw'
+import { LabWorkflowsBw, topicList } from './labWorkflowsBw'
 import sleep from 'sleep-promise'
 
 export default class Hl7WorkflowsBw {
@@ -31,7 +30,7 @@ export default class Hl7WorkflowsBw {
       )
 
       if (translatedBundle != this.errorBundle && translatedBundle.entry) {
-        sendPayload({ bundle: translatedBundle }, topicList.HANDLE_ORU_FROM_IPMS)
+        LabWorkflowsBw.sendPayload({ bundle: translatedBundle }, topicList.HANDLE_ORU_FROM_IPMS)
         return translatedBundle
       } else {
         return this.errorBundle
@@ -53,7 +52,7 @@ export default class Hl7WorkflowsBw {
         // Save to SHR??
         // let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
 
-        sendPayload({ bundle: translatedBundle }, topicList.SAVE_IPMS_PATIENT)
+        LabWorkflowsBw.sendPayload({ bundle: translatedBundle }, topicList.SAVE_IPMS_PATIENT)
 
         return translatedBundle
       } else {

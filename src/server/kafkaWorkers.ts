@@ -1,9 +1,22 @@
-import { Consumer } from 'kafkajs'
-import { consumer } from '../lib/kafka'
+import { KafkaConfig, logLevel, Message } from 'kafkajs'
 import logger from '../lib/winston'
 import { LabWorkflowsBw, topicList } from '../workflows/labWorkflowsBw'
+import { config } from '../lib/config'
+import { KafkaConsumerUtil } from '../lib/kafkaConsumerUtil'
+
 const errorTypes = ['unhandledRejection', 'uncaughtException']
 const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
+const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
+
+let consumer: KafkaConsumerUtil | null = null;
+
+const consumerConfig: KafkaConfig = {
+  clientId: 'shr-consumer',
+  brokers: brokers,
+  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
+};
+
+
 
 /**
  * Example Botswana Workflow: (synchronous for now)
@@ -18,49 +31,14 @@ const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
  */
 
 export async function run() {
-  const k: Consumer = consumer
-
-  await k.connect()
-
-  for (const val of Object.values(topicList)) {
-    await k.subscribe({ topic: val, fromBeginning: false })
-  }
-
-  await k.run({
-    eachMessage: async function ({ topic, partition, message }) {
-      logger.info(`Recieved message from topic ${topic}`)
-
-      try {
-        let val = ''
-        const res = null
-
-        if (message.value) {
-          val = message.value.toString()
-        }
-
-        // logger.info("\n\n#########\nReceived: ", {
-        //   partition,
-        //   offset: message.offset,
-        //   value: val
-        // });
-
-        LabWorkflowsBw.executeTopicWorkflow(topic, val)
-      } catch (error) {
-        logger.error(`Could not complete task from topic ${topic}!`)
-
-        logger.error(error)
-      }
-
-      //logger.info(`\n\n##########\nResult: ${JSON.stringify(res)}\n###############`)
-    },
-  })
+  consumer = await initAndConsume(Object.values(topicList))
 
   errorTypes.map(type => {
     process.on(type, async e => {
       try {
-        console.log(`process.on ${type}`)
-        console.error(e)
-        await k.disconnect()
+        logger.error(`process.on ${type}`)
+        logger.error(e)
+        await shutdownConsumer()
         process.exit(0)
       } catch (_) {
         process.exit(1)
@@ -71,10 +49,41 @@ export async function run() {
   signalTraps.map(type => {
     process.once(type, async () => {
       try {
-        await k.disconnect()
+        await shutdownConsumer()
       } finally {
         process.kill(process.pid, type)
       }
     })
   })
+}
+
+async function shutdownConsumer() {
+  if (consumer)
+    await consumer.shutdown()
+}
+
+const initAndConsume = async (topics: string[]) => {
+  const consumer = new KafkaConsumerUtil(consumerConfig, topics, "shr-consumer-group");
+  await consumer.init();
+  consumer.consumeTransactionally(processMessage);  // No await here
+  return consumer;
+};
+
+async function processMessage(topic: string, partition: number, message: Message): Promise<void> {
+  logger.info(`Recieved message from topic ${topic} on partition ${partition}`)
+
+  try {
+    let val = ''
+    const res = null
+
+    if (message.value) {
+      val = message.value.toString()
+    }
+
+    LabWorkflowsBw.executeTopicWorkflow(topic, val)
+  } catch (error) {
+    logger.error(`Could not complete task from topic ${topic}!`)
+
+    logger.error(error)
+  }
 }
