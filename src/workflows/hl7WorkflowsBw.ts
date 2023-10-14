@@ -5,22 +5,8 @@ import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
 import config from '../lib/config'
 import logger from '../lib/winston'
-import { KafkaProducerUtil } from '../lib/kafkaProducerUtil'
 import { LabWorkflowsBw, topicList } from './labWorkflowsBw'
 import sleep from 'sleep-promise'
-import { KafkaConfig, logLevel } from 'kafkajs'
-
-const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
-
-const producerConfig: KafkaConfig = {
-  clientId: 'shr-task-runner',
-  brokers: brokers,
-  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
-};
-
-const kafkaUtil = new KafkaProducerUtil(producerConfig, (report) => {
-  console.log('Delivery report:', report);
-});
 
 export default class Hl7WorkflowsBw {
   public static errorBundle: IBundle = {

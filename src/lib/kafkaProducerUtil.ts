@@ -1,5 +1,6 @@
 import { Kafka, KafkaConfig, Producer, ProducerConfig, ProducerRecord, Transaction } from 'kafkajs';
 import config from './config'
+import logger from './winston';
 
 type DeliveryReportCallback = (report: any) => void;
 
@@ -35,8 +36,9 @@ export class KafkaProducerUtil {
    * @returns {Promise<Producer>} Promise that resolves with Kafka producer instance.
    */
   private async createProducer(): Promise<Producer> {
+    logger.info('Creating Kafka producer...');
     const kafka = new Kafka(this.config);
-    const producer = kafka.producer();
+    const producer = kafka.producer({transactionalId: 'shr-producer-transaction'});
     await producer.connect();
     return producer;
   }
@@ -54,6 +56,8 @@ export class KafkaProducerUtil {
 
     const transaction: Transaction = await this.producer.transaction();
     try {
+      logger.info('Sending the following records transactionally:');
+      logger.info(JSON.stringify(records, null, 2));
       for (const record of records) {
         await transaction.send(record);
       }
@@ -71,6 +75,7 @@ export class KafkaProducerUtil {
    * @returns {Promise<void>} Promise that resolves when producer is disconnected.
    */
   public async shutdown(): Promise<void> {
+    logger.info('Shutting down Kafka producer...');
     if (this.producer) {
       await this.producer.disconnect();
     }

@@ -32,7 +32,6 @@ const hl7 = require('hl7')
 const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
 
 const producerConfig: KafkaConfig = {
-  clientId: 'shr-task-runner',
   brokers: brokers,
   logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
 };
@@ -937,6 +936,7 @@ export class LabWorkflowsBw extends LabWorkflows {
     ];
 
     try {
+      logger.info(`Sending payload to topic ${topic}: ${JSON.stringify(payload)}`);
       await this.kafka.sendMessageTransactionally(records);
     } catch (err) {
       console.error('Failed to send message:', err);
