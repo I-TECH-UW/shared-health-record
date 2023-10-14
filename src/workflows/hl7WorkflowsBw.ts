@@ -5,7 +5,7 @@ import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
 import config from '../lib/config'
 import logger from '../lib/winston'
-import { sendPayload } from '../lib/kafka'
+import { sendPayload } from '../lib/kafkaProducerUtil'
 import { topicList } from './labWorkflowsBw'
 import sleep from 'sleep-promise'
 

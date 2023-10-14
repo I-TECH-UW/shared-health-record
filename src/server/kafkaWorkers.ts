@@ -1,9 +1,22 @@
-import { Consumer, EachMessagePayload } from 'kafkajs'
-import { consumer } from '../lib/kafka'
+import { Consumer, EachMessagePayload, KafkaConfig, logLevel } from 'kafkajs'
 import logger from '../lib/winston'
 import { LabWorkflowsBw, topicList } from '../workflows/labWorkflowsBw'
+import { config } from '../lib/config'
+import { KafkaConsumerUtil } from '../lib/kafkaConsumerUtil'
+
 const errorTypes = ['unhandledRejection', 'uncaughtException']
 const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
+const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
+
+let consumers: KafkaConsumerUtil[] = []
+
+const consumerConfig: KafkaConfig = {
+  clientId: 'shr-worker-consumer',
+  brokers: brokers,
+  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
+};
+
+
 
 /**
  * Example Botswana Workflow: (synchronous for now)
@@ -18,12 +31,14 @@ const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
  */
 
 export async function run() {
-  const k: Consumer = consumer
 
-  await k.connect()
 
   for (const val of Object.values(topicList)) {
-    await k.subscribe({ topic: val, fromBeginning: false })
+    const consumer = new KafkaConsumerUtil(consumerConfig, val, 'shr-worker-group')
+    consumers.push(consumer)
+    await consumer.init()
+    await consumer.consumeTransactionally()
+    await consumer.shutdown()
   }
 
   await k.run({

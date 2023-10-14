@@ -17,15 +17,29 @@ import got from 'got'
 import { saveBundle } from '../hapi/lab'
 import config from '../lib/config'
 import Hl7MllpSender from '../lib/hl7MllpSender'
-import { sendPayload } from '../lib/kafka'
+import { KafkaProducerUtil } from '../lib/kafkaProducerUtil'
 import logger from '../lib/winston'
 import Hl7WorkflowsBw from './hl7WorkflowsBw'
 import { LabWorkflows } from './labWorkflows'
 import facilityMappings from '../lib/locationMap'
 import crypto from 'crypto'
+import { KafkaConfig, ProducerRecord } from 'kafkajs'
+import { logLevel } from 'kafkajs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const hl7 = require('hl7')
+
+const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
+
+const producerConfig: KafkaConfig = {
+  clientId: 'shr-task-runner',
+  brokers: brokers,
+  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
+};
+
+const kafkaUtil = new KafkaProducerUtil(producerConfig, (report) => {
+  console.log('Delivery report:', report);
+});
 
 export const topicList = {
   MAP_CONCEPTS: 'map-concepts',
@@ -65,7 +79,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   static async handleBwLabOrder(orderBundle: R4.IBundle, resultBundle: R4.IBundle) {
     try {
-      sendPayload({ bundle: orderBundle, response: resultBundle }, topicList.MAP_CONCEPTS)
+      await this.sendPayload({ bundle: orderBundle, response: resultBundle }, topicList.MAP_CONCEPTS)
     } catch (e) {
       logger.error(e)
     }
@@ -185,7 +199,7 @@ export class LabWorkflowsBw extends LabWorkflows {
           if (
             !orderingLocation.managingOrganization ||
             orderingLocation.managingOrganization.reference?.split('/')[1] !=
-              orderingOrganization.id
+            orderingOrganization.id
           ) {
             logger.error('Ordering Organization is not the managing Organziation of Location!')
           }
@@ -416,7 +430,7 @@ export class LabWorkflowsBw extends LabWorkflows {
 
     const response: R4.IBundle = await saveBundle(labBundle)
 
-    sendPayload({ bundle: labBundle }, topicList.MAP_LOCATIONS)
+    await this.sendPayload({ bundle: labBundle }, topicList.MAP_LOCATIONS)
 
     return response
   }
@@ -432,8 +446,8 @@ export class LabWorkflowsBw extends LabWorkflows {
     labBundle = await LabWorkflowsBw.addBwLocations(labBundle)
     const response: R4.IBundle = await saveBundle(labBundle)
 
-    sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
-    sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
+    await this.sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
+    await this.sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
 
     logger.debug(`Response: ${JSON.stringify(response)}`)
     return response
@@ -688,7 +702,7 @@ export class LabWorkflowsBw extends LabWorkflows {
                 .get(`${config.get('fhirServer:baseURL')}/Task`, options)
                 .json()
 
-              sendPayload({ taskBundle: taskBundle, patient: patient }, topicList.SEND_ORM_TO_IPMS)
+              await this.sendPayload({ taskBundle: taskBundle, patient: patient }, topicList.SEND_ORM_TO_IPMS)
             }
           }
         }
@@ -881,6 +895,39 @@ export class LabWorkflowsBw extends LabWorkflows {
     } else {
       return {}
     }
+  }
+
+  
+  /**
+   * Sends a payload to a Kafka topic.
+   * @param payload - The payload to send.
+   * @param topic - The Kafka topic to send the payload to.
+   * @returns A Promise that resolves when the payload has been sent.
+   */
+  private static async sendPayload(payload: any, topic: string) {
+
+    const kafka = new KafkaProducerUtil(producerConfig, (report) => {
+      logger.info('Delivery report:', report);
+    });
+
+    await kafka.init();
+
+    const records: ProducerRecord[] = [
+      {
+        topic: topic,
+        messages: [
+          { key: 'body', value: JSON.stringify(payload) }
+        ],
+      },
+    ];
+
+    try {
+      await kafkaUtil.sendMessageTransactionally(records);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
+
+    await kafkaUtil.shutdown();
   }
 
   private static async getIpmsCode(q: string) {
