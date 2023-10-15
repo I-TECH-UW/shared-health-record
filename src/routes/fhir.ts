@@ -8,7 +8,6 @@ import logger from '../lib/winston'
 import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
 
 export const router = express.Router()
-import fhirWrapper = require('../lib/fhir')
 
 router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
@@ -69,7 +68,7 @@ router.get('/:resource/:id?/:operation?', async (req, res) => {
 })
 
 // Post a bundle of resources
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     logger.info('Received a request to add a bundle of resources')
     const resource = req.body
@@ -82,18 +81,14 @@ router.post('/', (req, res) => {
     if (resource.entry.length === 0) {
       return res.status(400).json(invalidBundleMessage())
     }
-    fhirWrapper().saveResource(
-      resource,
-      (code: number, err: Error, response: Response, body: any) => {
-        if (!code) {
-          code = 500
-        }
 
-        if (err) return res.status(code).send(err)
+    const uri = URI(config.get("fhirServer:baseURL"));
 
-        return res.status(code).json(body)
-      },
-    )
+
+    let ret = await got.post(uri.toString(), { json: resource })
+
+    res.status(ret.statusCode).json(ret.body)
+
   } catch (error) {
     return res.status(500).json(error)
   }
@@ -111,7 +106,7 @@ router.put('/:resourceType/:id', (req, res) => {
 
 /** Helpers */
 
-function saveResource(req: any, res: any) {
+async function saveResource(req: any, res: any) {
   const resource = req.body
   const resourceType = req.params.resourceType
   const id = req.params.id
@@ -121,9 +116,9 @@ function saveResource(req: any, res: any) {
 
   logger.info('Received a request to add resource type ' + resourceType)
 
-  fhirWrapper().create(resource, (code: number, _err: any, _response: Response, body: any) => {
-    return res.status(code).send(body)
-  })
+  let ret = await got.post(config.get('fhirServer:baseURL') + '/' + resourceType, { json: resource })
+
+  res.status(ret.statusCode).json(ret.body)
 }
 
 export default router

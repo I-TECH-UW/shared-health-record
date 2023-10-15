@@ -9,8 +9,6 @@ const util = import('util')
 
 import logger from '../lib/winston'
 
-const fhirWrapper = import('../lib/fhir')
-
 let uri = URI(config.get('fhirServer:baseURL'))
 
 // TODO: change source utils to use got() & await pattern
