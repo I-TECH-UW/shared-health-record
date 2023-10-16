@@ -6,7 +6,7 @@ import config from '../lib/config'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
-import { getResourceTypeEnum } from '../lib/validate'
+import { getResourceTypeEnum, isValidResourceType } from '../lib/validate'
 
 export const router = express.Router()
 
@@ -18,14 +18,22 @@ router.get('/:resource/:id?/:operation?', async (req, res) => {
   let result = {}
   try {
     let uri = URI(config.get('fhirServer:baseURL'))
-    uri = uri.segment(req.params.resource)
+
+    if(isValidResourceType(req.params.resource)) {
+      uri = uri.segment(getResourceTypeEnum(req.params.resource).toString())
+    } else {
+      return res.status(400).json({ message: `Invalid resource type ${req.params.resource}` })
+    }
 
     if (req.params.id) {
-      uri = uri.segment(req.params.id)
+      uri = uri.segment(encodeURIComponent(req.params.id))
     }
 
     for (const param in req.query) {
-      uri.addQuery(param, req.query[param])
+      let value = req.query[param]
+      if(value) {
+        uri.addQuery(param, encodeURIComponent(value.toString()))
+      }
     }
 
     logger.info(`Getting ${uri.toString()}`)
