@@ -32,7 +32,7 @@ router.get('/:resource/:id?/:operation?', async (req, res) => {
     }
 
     for (const param in req.query) {
-      let value = req.query[param]
+      const value = req.query[param]
       if(value && /^[a-zA-Z0-9\-_]+$/.test(value.toString())) {
         uri.addQuery(param, encodeURIComponent(value.toString()))
       } else {
