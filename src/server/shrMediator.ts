@@ -4,7 +4,6 @@ import shrApp from '../lib/shr'
 import logger from '../lib/winston'
 
 import medUtils from 'openhim-mediator-utils'
-import { error } from 'console'
 import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
 
 

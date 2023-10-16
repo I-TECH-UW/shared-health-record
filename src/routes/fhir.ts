@@ -6,6 +6,7 @@ import config from '../lib/config'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
+import { getResourceTypeEnum } from '../lib/validate'
 
 export const router = express.Router()
 
@@ -85,7 +86,7 @@ router.post('/', async (req, res) => {
     const uri = URI(config.get("fhirServer:baseURL"));
 
 
-    let ret = await got.post(uri.toString(), { json: resource })
+    const ret = await got.post(uri.toString(), { json: resource })
 
     res.status(ret.statusCode).json(ret.body)
 
@@ -114,11 +115,14 @@ async function saveResource(req: any, res: any) {
     resource.id = id
   }
 
-  logger.info('Received a request to add resource type ' + resourceType)
+  logger.info('Received a request to add resource type ' + resourceType + ' with id ' + id)
 
-  let ret = await got.post(config.get('fhirServer:baseURL') + '/' + resourceType, { json: resource })
+  const ret = await got.post(config.get('fhirServer:baseURL') + '/' + getResourceTypeEnum(resourceType).toString, { json: resource })
 
   res.status(ret.statusCode).json(ret.body)
 }
+
+
+
 
 export default router
