@@ -25,14 +25,18 @@ router.get('/:resource/:id?/:operation?', async (req, res) => {
       return res.status(400).json({ message: `Invalid resource type ${req.params.resource}` })
     }
 
-    if (req.params.id) {
+    if (req.params.id && /^[a-zA-Z0-9\-_]+$/.test(req.params.id)) {
       uri = uri.segment(encodeURIComponent(req.params.id))
+    } else {
+      return res.status(400).json({ message: `Invalid resource id ${req.params.id}` })
     }
 
     for (const param in req.query) {
       let value = req.query[param]
-      if(value) {
+      if(value && /^[a-zA-Z0-9\-_]+$/.test(value.toString())) {
         uri.addQuery(param, encodeURIComponent(value.toString()))
+      } else {
+        return res.status(400).json({ message: `Invalid query parameter ${param}=${value}` })
       }
     }
 
