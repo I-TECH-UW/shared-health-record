@@ -6,9 +6,9 @@ import config from '../lib/config'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
+import { getResourceTypeEnum, isValidResourceType } from '../lib/validate'
 
 export const router = express.Router()
-import fhirWrapper = require('../lib/fhir')
 
 router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
@@ -18,14 +18,26 @@ router.get('/:resource/:id?/:operation?', async (req, res) => {
   let result = {}
   try {
     let uri = URI(config.get('fhirServer:baseURL'))
-    uri = uri.segment(req.params.resource)
 
-    if (req.params.id) {
-      uri = uri.segment(req.params.id)
+    if(isValidResourceType(req.params.resource)) {
+      uri = uri.segment(getResourceTypeEnum(req.params.resource).toString())
+    } else {
+      return res.status(400).json({ message: `Invalid resource type ${req.params.resource}` })
+    }
+
+    if (req.params.id && /^[a-zA-Z0-9\-_]+$/.test(req.params.id)) {
+      uri = uri.segment(encodeURIComponent(req.params.id))
+    } else {
+      return res.status(400).json({ message: `Invalid resource id ${req.params.id}` })
     }
 
     for (const param in req.query) {
-      uri.addQuery(param, req.query[param])
+      const value = req.query[param]
+      if(value && /^[a-zA-Z0-9\-_]+$/.test(value.toString())) {
+        uri.addQuery(param, encodeURIComponent(value.toString()))
+      } else {
+        return res.status(400).json({ message: `Invalid query parameter ${param}=${value}` })
+      }
     }
 
     logger.info(`Getting ${uri.toString()}`)
@@ -69,7 +81,7 @@ router.get('/:resource/:id?/:operation?', async (req, res) => {
 })
 
 // Post a bundle of resources
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     logger.info('Received a request to add a bundle of resources')
     const resource = req.body
@@ -82,18 +94,14 @@ router.post('/', (req, res) => {
     if (resource.entry.length === 0) {
       return res.status(400).json(invalidBundleMessage())
     }
-    fhirWrapper().saveResource(
-      resource,
-      (code: number, err: Error, response: Response, body: any) => {
-        if (!code) {
-          code = 500
-        }
 
-        if (err) return res.status(code).send(err)
+    const uri = URI(config.get("fhirServer:baseURL"));
 
-        return res.status(code).json(body)
-      },
-    )
+
+    const ret = await got.post(uri.toString(), { json: resource })
+
+    res.status(ret.statusCode).json(ret.body)
+
   } catch (error) {
     return res.status(500).json(error)
   }
@@ -111,7 +119,7 @@ router.put('/:resourceType/:id', (req, res) => {
 
 /** Helpers */
 
-function saveResource(req: any, res: any) {
+async function saveResource(req: any, res: any) {
   const resource = req.body
   const resourceType = req.params.resourceType
   const id = req.params.id
@@ -119,11 +127,14 @@ function saveResource(req: any, res: any) {
     resource.id = id
   }
 
-  logger.info('Received a request to add resource type ' + resourceType)
+  logger.info('Received a request to add resource type ' + resourceType + ' with id ' + id)
 
-  fhirWrapper().create(resource, (code: number, _err: any, _response: Response, body: any) => {
-    return res.status(code).send(body)
-  })
+  const ret = await got.post(config.get('fhirServer:baseURL') + '/' + getResourceTypeEnum(resourceType).toString, { json: resource })
+
+  res.status(ret.statusCode).json(ret.body)
 }
+
+
+
 
 export default router

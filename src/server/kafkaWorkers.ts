@@ -1,4 +1,4 @@
-import { KafkaConfig, logLevel, Message } from 'kafkajs'
+import { KafkaConfig, Message, logLevel } from 'kafkajs'
 import logger from '../lib/winston'
 import { LabWorkflowsBw, topicList } from '../workflows/labWorkflowsBw'
 import { config } from '../lib/config'

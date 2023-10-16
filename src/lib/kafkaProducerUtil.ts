@@ -1,5 +1,4 @@
-import { Kafka, KafkaConfig, Producer, ProducerConfig, ProducerRecord, Transaction } from 'kafkajs';
-import config from './config'
+import { Kafka, KafkaConfig, Producer, ProducerRecord, Transaction } from 'kafkajs';
 import logger from './winston';
 
 type DeliveryReportCallback = (report: any) => void;

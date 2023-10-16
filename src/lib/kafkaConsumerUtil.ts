@@ -1,4 +1,4 @@
-import { Kafka, Consumer, EachBatchPayload, Transaction, Message, KafkaConfig, EachMessagePayload } from 'kafkajs';
+import { Consumer, EachBatchPayload, Kafka, KafkaConfig, Message } from 'kafkajs';
 import logger from './winston';
 
 export type EachMessageCallback = (topic: string, partition: number, message: Message) => Promise<void>;
