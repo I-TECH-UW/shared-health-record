@@ -4,7 +4,7 @@ import shrApp from '../lib/shr'
 import logger from '../lib/winston'
 
 import medUtils from 'openhim-mediator-utils'
-import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
+import { LabWorkflowsBw } from '../workflows/workflowHandler'
 
 
 const errorTypes = ['unhandledRejection', 'uncaughtException']

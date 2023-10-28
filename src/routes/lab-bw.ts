@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express'
 import { saveBundle } from '../hapi/lab'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
-import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
+import { LabWorkflowsBw } from '../workflows/workflowHandler'
 
 export const router = express.Router()
 

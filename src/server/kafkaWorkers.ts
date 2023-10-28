@@ -1,6 +1,6 @@
 import { KafkaConfig, Message, logLevel } from 'kafkajs'
 import logger from '../lib/winston'
-import { LabWorkflowsBw, topicList } from '../workflows/labWorkflowsBw'
+import { LabWorkflowsBw, topicList } from '../workflows/workflowHandler'
 import { config } from '../lib/config'
 import { KafkaConsumerUtil } from '../lib/kafkaConsumerUtil'
 

@@ -5,7 +5,7 @@ import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
 import config from '../lib/config'
 import logger from '../lib/winston'
-import { LabWorkflowsBw, topicList } from './labWorkflowsBw'
+import { LabWorkflowsBw, topicList } from './workflowHandler'
 import sleep from 'sleep-promise'
 
 export default class Hl7WorkflowsBw {
