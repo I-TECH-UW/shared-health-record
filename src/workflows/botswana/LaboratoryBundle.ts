@@ -10,6 +10,7 @@ import {
     R4_Bundle_TypeKind,
 } from '@ahryman40k/ts-fhir-types/lib/R4';
 import logger from "../../lib/winston";
+import { saveBundle } from "../../hapi/lab";
 
 // Define the type for a Transaction bundle with Task, Encounter, and Practitioner resources
 interface ILaboratoryBundle extends R4_IBundle {
@@ -42,7 +43,7 @@ class LaboratoryBundle {
         // Add Botswana-specific terminology mappings
         this.bundle = await this.addAllCodings(this.bundle);
 
-        const response: R4.IBundle = await saveBundle(labBundle)
+        const response: R4.IBundle = await saveBundle(this.bundle)
 
         await this.sendPayload({ bundle: labBundle }, topicList.MAP_LOCATIONS)
 

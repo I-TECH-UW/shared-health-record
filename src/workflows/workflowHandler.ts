@@ -48,7 +48,7 @@ export const topicList = {
   HANDLE_ORU_FROM_IPMS: 'handle-oru-from-ipms',
 }
 
-export class LabWorkflowsBw extends LabWorkflows {
+export class LabWorkflowsBw {
   private static kafka = new KafkaProducerUtil(producerConfig, (report) => {
     logger.info('Delivery report:', report);
   });
