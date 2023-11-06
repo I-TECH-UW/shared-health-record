@@ -1,18 +1,20 @@
 import { R4 } from "@ahryman40k/ts-fhir-types";
 import logger from "../../lib/winston";
 import { saveBundle } from "../../hapi/lab";
+import { WorkflowHandler, topicList } from "./workflowHandler";
+import { config } from "../../lib/config";
 
 // Define the type for a Transaction bundle with Task, Encounter, and Practitioner resources
 interface ILaboratoryBundle extends R4.IBundle {
     type: R4.BundleTypeKind._transaction; // Make sure to only allow 'transaction' as the bundle type
-    entry: Array<ILaboratoryBundleEntry>; // Define the entry array using custom type
+    // entry: ILaboratoryBundleEntry[]; // Define the entry array using custom type
 }
 
-// Define the type for each entry in the Transaction bundle
-interface ILaboratoryBundleEntry extends R4.IBundle_Entry {
-    resource: R4.ITask | R4.IEncounter | R4.IPractitioner; // Task, Encounter, or Practitioner
-    request: R4.IBundle_Request; // For the transaction request details
-}
+// // Define the type for each entry in the Transaction bundle
+// interface ILaboratoryBundleEntry extends R4.IBundle_Entry {
+//     resource: R4.ITask | R4.IEncounter | R4.IPractitioner; // Task, Encounter, or Practitioner
+//     request: R4.IBundle_Request; // For the transaction request details
+// }
 
 
 class LaboratoryBundle {
@@ -35,9 +37,7 @@ class LaboratoryBundle {
 
         const response: R4.IBundle = await saveBundle(this.bundle)
 
-        await this.sendPayload({ bundle: labBundle }, topicList.MAP_LOCATIONS)
-
-        return response
+        await WorkflowHandler.sendPayload({ bundle: this.bundle }, topicList.MAP_LOCATIONS)
 
         return this;
     }
@@ -45,23 +45,22 @@ class LaboratoryBundle {
     async mapLocations(): Promise<this> {
         logger.info('Mapping Locations!')
 
-        labBundle = await LabWorkflowsBw.addBwLocations(labBundle)
+        this.bundle = await WorkflowHandler.addBwLocations(this.bundle)
         const response: R4.IBundle = await saveBundle(labBundle)
 
         await this.sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
         await this.sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
 
         logger.debug(`Response: ${JSON.stringify(response)}`)
-        return response
 
         return this;
     }
 
     async savePimsPatient(): Promise<this> {
         const crUrl = `${config.get('clientRegistryUrl')}/Patient`
-        let pat: IPatient
+        let pat: R4.IPatient
 
-        const patResult = bundle.entry!.find(entry => {
+        const patResult = this.bundle.entry!.find(entry => {
             return entry.resource && entry.resource.resourceType == 'Patient'
         })
 
