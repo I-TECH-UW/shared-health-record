@@ -1,27 +1,17 @@
 import { R4 } from "@ahryman40k/ts-fhir-types";
-
-import {
-    R4_IBundle,
-    R4_Bundle_Entry,
-    R4_ITask,
-    R4_IEncounter,
-    R4_IPractitioner,
-    R4_Bundle_Request,
-    R4_Bundle_TypeKind,
-} from '@ahryman40k/ts-fhir-types/lib/R4';
 import logger from "../../lib/winston";
 import { saveBundle } from "../../hapi/lab";
 
 // Define the type for a Transaction bundle with Task, Encounter, and Practitioner resources
-interface ILaboratoryBundle extends R4_IBundle {
-    type: R4_Bundle_TypeKind._transaction; // Make sure to only allow 'transaction' as the bundle type
+interface ILaboratoryBundle extends R4.IBundle {
+    type: R4.BundleTypeKind._transaction; // Make sure to only allow 'transaction' as the bundle type
     entry: Array<ILaboratoryBundleEntry>; // Define the entry array using custom type
 }
 
 // Define the type for each entry in the Transaction bundle
-interface ILaboratoryBundleEntry extends R4_Bundle_Entry {
-    resource: R4_ITask | R4_IEncounter | R4_IPractitioner; // Task, Encounter, or Practitioner
-    request: R4_Bundle_Request; // For the transaction request details
+interface ILaboratoryBundleEntry extends R4.IBundle_Entry {
+    resource: R4.ITask | R4.IEncounter | R4.IPractitioner; // Task, Encounter, or Practitioner
+    request: R4.IBundle_Request; // For the transaction request details
 }
 
 

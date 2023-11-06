@@ -14,14 +14,14 @@ import {
   TaskStatusKind,
 } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got'
-import { saveBundle } from '../hapi/lab'
-import config from '../lib/config'
-import Hl7MllpSender from '../lib/hl7MllpSender'
-import { KafkaProducerUtil } from '../lib/kafkaProducerUtil'
-import logger from '../lib/winston'
-import Hl7WorkflowsBw from './hl7WorkflowsBw'
-import { LabWorkflows } from './labWorkflows'
-import facilityMappings from '../lib/locationMap'
+import { saveBundle } from '../../hapi/lab'
+import config from '../../lib/config'
+import Hl7MllpSender from '../../lib/hl7MllpSender'
+import { KafkaProducerUtil } from '../../lib/kafkaProducerUtil'
+import logger from '../../lib/winston'
+import Hl7WorkflowsBw from '../hl7WorkflowsBw'
+import { LabWorkflows } from '../labWorkflows'
+import facilityMappings from '../../lib/locationMap'
 import crypto from 'crypto'
 import { KafkaConfig, ProducerRecord } from 'kafkajs'
 import { logLevel } from 'kafkajs';
@@ -48,7 +48,7 @@ export const topicList = {
   HANDLE_ORU_FROM_IPMS: 'handle-oru-from-ipms',
 }
 
-export class LabWorkflowsBw {
+export class WorkflowHandler {
   private static kafka = new KafkaProducerUtil(producerConfig, (report) => {
     logger.info('Delivery report:', report);
   });
@@ -110,25 +110,25 @@ export class LabWorkflowsBw {
     try {
       switch (topic) {
         case topicList.MAP_CONCEPTS:
-          res = await LabWorkflowsBw.mapConcepts(JSON.parse(val).bundle)
+          res = await WorkflowHandler.mapConcepts(JSON.parse(val).bundle)
           break
         case topicList.MAP_LOCATIONS:
-          res = await LabWorkflowsBw.mapLocations(JSON.parse(val).bundle)
+          res = await WorkflowHandler.mapLocations(JSON.parse(val).bundle)
           break
         case topicList.SAVE_PIMS_PATIENT:
-          res = await LabWorkflowsBw.updateCrPatient(JSON.parse(val).bundle)
+          res = await WorkflowHandler.updateCrPatient(JSON.parse(val).bundle)
           break
         case topicList.SEND_ADT_TO_IPMS:
-          res = await LabWorkflowsBw.sendAdtToIpms(JSON.parse(val).bundle)
+          res = await WorkflowHandler.sendAdtToIpms(JSON.parse(val).bundle)
           break
         case topicList.SAVE_IPMS_PATIENT:
-          res = await LabWorkflowsBw.saveIpmsPatient(JSON.parse(val).bundle)
+          res = await WorkflowHandler.saveIpmsPatient(JSON.parse(val).bundle)
           break
         case topicList.SEND_ORM_TO_IPMS:
-          res = await LabWorkflowsBw.sendOrmToIpms(JSON.parse(val))
+          res = await WorkflowHandler.sendOrmToIpms(JSON.parse(val))
           break
         case topicList.HANDLE_ORU_FROM_IPMS:
-          res = await LabWorkflowsBw.handleOruFromIpms(JSON.parse(val).bundle)
+          res = await WorkflowHandler.handleOruFromIpms(JSON.parse(val).bundle)
           break
         default:
           break
@@ -462,7 +462,7 @@ export class LabWorkflowsBw {
   public static async mapConcepts(labBundle: R4.IBundle): Promise<R4.IBundle> {
     logger.info('Mapping Concepts!')
 
-    labBundle = await LabWorkflowsBw.addBwCodings(labBundle)
+    labBundle = await WorkflowHandler.addBwCodings(labBundle)
 
     const response: R4.IBundle = await saveBundle(labBundle)
 
@@ -479,7 +479,7 @@ export class LabWorkflowsBw {
   public static async mapLocations(labBundle: R4.IBundle): Promise<R4.IBundle> {
     logger.info('Mapping Locations!')
 
-    labBundle = await LabWorkflowsBw.addBwLocations(labBundle)
+    labBundle = await WorkflowHandler.addBwLocations(labBundle)
     const response: R4.IBundle = await saveBundle(labBundle)
 
     await this.sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)

@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express'
 import { saveBundle } from '../hapi/lab'
 import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
-import { LabWorkflowsBw } from '../workflows/workflowHandler'
+import { WorkflowHandler } from '../workflows/botswana/workflowHandler'
 
 export const router = express.Router()
 
@@ -41,7 +41,7 @@ router.all('/', async (req: Request, res: Response) => {
         orderBundle.entry &&
         resultBundle.entry.length == orderBundle.entry.length
       ) {
-        LabWorkflowsBw.handleBwLabOrder(orderBundle, resultBundle)
+        WorkflowHandler.handleBwLabOrder(orderBundle, resultBundle)
         return res.status(200).json(resultBundle)
       } else {
         return res.status(400).send(resultBundle)

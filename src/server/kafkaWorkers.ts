@@ -1,6 +1,6 @@
 import { KafkaConfig, Message, logLevel } from 'kafkajs'
 import logger from '../lib/winston'
-import { LabWorkflowsBw, topicList } from '../workflows/workflowHandler'
+import { WorkflowHandler, topicList } from '../workflows/botswana/workflowHandler'
 import { config } from '../lib/config'
 import { KafkaConsumerUtil } from '../lib/kafkaConsumerUtil'
 
@@ -80,7 +80,7 @@ async function processMessage(topic: string, partition: number, message: Message
       val = message.value.toString()
     }
 
-    LabWorkflowsBw.executeTopicWorkflow(topic, val)
+    WorkflowHandler.executeTopicWorkflow(topic, val)
   } catch (error) {
     logger.error(`Could not complete task from topic ${topic}!`)
 
