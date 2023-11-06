@@ -11,11 +11,18 @@ import logger from '../lib/winston'
 
 let uri = URI(config.get('fhirServer:baseURL'))
 
-// TODO: change source utils to use got() & await pattern
-// Promisify fns
+class HapiError extends Error {
+  constructor(message: string) {
+    super(message); 
+    this.name = 'HapiError';
 
-// const mpiClient = fhirClient(req, res).client({ serverUrl: mpiUrl, username: config.get('fhirServer:username'), password: config.get('fhirServer:password')});
-// const shrClient = fhirClient(req, res).client({ serverUrl: shrUrl, username: config.get('fhirServer:username'), password: config.get('fhirServer:password')});
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, HapiError);
+    }
+
+  }
+}
 
 export async function getResource(type: string, id: string, params?: any, noCaching?: boolean) {
   // return got.get(`${SHR_URL}/${type}/${id}`).json()
@@ -76,23 +83,13 @@ export async function saveBundle(bundle: R4.IBundle): Promise<R4.IBundle> {
     bundle = translateToTransactionBundle(bundle)
   }
   try {
-    // logger.info(JSON.stringify(bundle))
-
     const ret = await got.post(uri.toString(), { json: bundle }).json()
 
     return <R4.IBundle>ret
   } catch (error: any) {
-    return {
-      resourceType: 'Bundle',
-      type: BundleTypeKind._transactionResponse,
-      entry: [
-        {
-          response: {
-            status: `${<Error>error.message}`,
-          },
-        },
-      ],
-    }
+    logger.error(`Could not save bundle: ${error.response.body}`)
+    
+    throw new HapiError("Could not save bundle to hapi server!")
   }
 }
 

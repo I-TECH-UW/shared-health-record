@@ -16,12 +16,12 @@ export async function mapLocations(labBundle: R4.IBundle): Promise<R4.IBundle> {
 }
 
   
-   * This method adds IPMS - specific location mappings to the order bundle based on the ordering
-  * facility
-  * @param bundle
-    * @returns bundle
-      * /
-//
+//    * This method adds IPMS - specific location mappings to the order bundle based on the ordering
+//   * facility
+//   * @param bundle
+//     * @returns bundle
+//       * /
+// //
 //
 // This method assumes that the Task resource has a reference to the recieving facility
 // under the `owner` field. This is the facility that the lab order is being sent to.

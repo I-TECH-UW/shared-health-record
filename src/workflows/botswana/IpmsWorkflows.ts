@@ -1,10 +1,14 @@
+import { R4 } from "@ahryman40k/ts-fhir-types"
 import config from "../../lib/config"
 import logger from "../../lib/winston"
+import { getTaskStatus } from "./helpers"
+import Hl7MllpSender from "../../lib/hl7MllpSender"
+import Hl7WorkflowsBw from "../hl7WorkflowsBw"
 
 export async function sendAdtToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> {
   const status = getTaskStatus(labBundle)
 
-  if (status && status === TaskStatusKind._requested) {
+  if (status && status === R4.TaskStatusKind._requested) {
     logger.info('Sending ADT message to IPMS!')
 
     const sender = new Hl7MllpSender(

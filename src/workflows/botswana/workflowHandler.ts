@@ -12,6 +12,7 @@ import { handleAdtFromIpms, handleOruFromIpms, sendAdtToIpms, sendOrmToIpms } fr
 import { mapConcepts } from './terminologyWorkflows'
 import { mapLocations } from './locationWorkflows'
 import { saveIpmsPatient, updateCrPatient } from './patientIdentityWorkflows'
+import { saveBundle } from '../../hapi/lab'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const hl7 = require('hl7')
@@ -24,15 +25,26 @@ const producerConfig: KafkaConfig = {
   logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
 };
 
+class KafkaCallbackError extends Error {
+  constructor(message: string) {
+    super(message); 
+    this.name = 'KafkaCallbackError';
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, KafkaCallbackError);
+    }
+
+  }
+}
 
 export const topicList = {
-  MAP_CONCEPTS: 'map-concepts',
-  MAP_LOCATIONS: 'map-locations',
   SEND_ADT_TO_IPMS: 'send-adt-to-ipms',
   SEND_ORM_TO_IPMS: 'send-orm-to-ipms',
   SAVE_PIMS_PATIENT: 'save-pims-patient',
   SAVE_IPMS_PATIENT: 'save-ipms-patient',
   HANDLE_ORU_FROM_IPMS: 'handle-oru-from-ipms',
+  HANDLE_ADT_FROM_IPMS: 'handle-adt-from-ipms'
 }
 
  /**
@@ -105,34 +117,48 @@ export class WorkflowHandler {
     let res
     let enrichedBundle
     let origBundle
+
+    // Each of these topics holds a workflow that is atomic. If any required part fails, then
+    // the entire workflow fails and the message is retried by the Kafka consumer logic.
+    // 
+    // The SHR will ensure integrity for the following workflows:
+    //  - If an order bundle reaches the HIE from PIMS or OpenMRS, then an ADT message will eventually be sent to IPMS.
+    //  - If an ADT message comes in from IPMS and reaches the HIE, then an ORM message will eventually be sent to IPMS
+    //  - If a results message comes in from IPMS, then the result will eventually be saved to the SHR and the task status updated.
+    origBundle = JSON.parse(val).bundle
+
     try {
       switch (topic) {
-        case topicList.MAP_CONCEPTS:
-          enrichedBundle = await mapConcepts(JSON.parse(val).bundle)
-          await this.sendPayload({ bundle: enrichedBundle }, topicList.MAP_LOCATIONS)
-          break
-        case topicList.MAP_LOCATIONS:
-          enrichedBundle = await mapLocations(JSON.parse(val).bundle)
-          await this.sendPayload({ bundle: enrichedBundle }, topicList.SAVE_PIMS_PATIENT)
-          await this.sendPayload({ bundle: enrichedBundle }, topicList.SEND_ADT_TO_IPMS)
-          break
-        case topicList.SAVE_PIMS_PATIENT:
-          res = await updateCrPatient(JSON.parse(val).bundle)
-          break
+          // Retry this kafka message if the ADT message fails to send to IPMS. In other words,
+          // manage offsets manually, and only update them if the ADT message is successfully sent. 
         case topicList.SEND_ADT_TO_IPMS:
-          res = await sendAdtToIpms(JSON.parse(val).bundle)
-          break
-        case topicList.SAVE_IPMS_PATIENT:
-          origBundle = JSON.parse(val).bundle
-          saveIpmsPatient(origBundle)
-          handleAdtFromIpms(origBundle)
+          enrichedBundle = await mapConcepts(origBundle)
+          enrichedBundle = await mapLocations(enrichedBundle)
+
+          this.sendPayload({ bundle: enrichedBundle }, topicList.SAVE_PIMS_PATIENT)
+          
+          const response: R4.IBundle = await saveBundle(enrichedBundle)
+
+          await sendAdtToIpms(enrichedBundle)
 
           break
+        case topicList.HANDLE_ADT_FROM_IPMS:
+          handleAdtFromIpms(origBundle)
+          break
+
         case topicList.SEND_ORM_TO_IPMS:
           res = await sendOrmToIpms(JSON.parse(val))
           break
         case topicList.HANDLE_ORU_FROM_IPMS:
           res = await handleOruFromIpms(JSON.parse(val).bundle)
+          break
+
+        case topicList.SAVE_PIMS_PATIENT:
+          res = await updateCrPatient(JSON.parse(val).bundle)
+          break
+        case topicList.SAVE_IPMS_PATIENT:
+          origBundle = JSON.parse(val).bundle
+          saveIpmsPatient(origBundle)  
           break
         default:
           break
@@ -141,7 +167,9 @@ export class WorkflowHandler {
 
       return res
     } catch (e) {
-      logger.error(e)
+
+      logger.error("Could not execute Kafka consumer callback workflow!\nerror: " + e)
+      throw new KafkaCallbackError("Could not execute Kafka consumer callback workflow!\nerror: " + e)
     }
   }
 

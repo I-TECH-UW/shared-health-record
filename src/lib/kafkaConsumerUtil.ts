@@ -46,15 +46,29 @@ export class KafkaConsumerUtil {
             offset: message.offset,
             value: message.value?.toString(),
           });
+
+          const maxRetries = 6;
+          let retryCount = 0;
+          let retryDelay = 1000; 
   
-          try {
-            await eachMessageCallback(topic, partition, message);
-            resolveOffset(message.offset);
-            await heartbeat();
-          } catch (error) {
-            logger.error(`Error processing message ${message.offset}: ${error}`);
-            // Do not resolve offset in case of error, so message will be retried
-            // Optionally: Handle retries or backoff strategy here
+          while (retryCount < maxRetries) {
+            try {
+              await eachMessageCallback(topic, partition, message);
+              resolveOffset(message.offset);
+              await heartbeat();
+              break; // Break the loop if processing succeeds
+            } catch (error) {
+              logger.error(`Error processing message ${message.offset}: ${error}`);
+              retryCount++;
+              if (retryCount >= maxRetries) {
+                logger.error(`Max retries reached for message ${message.offset}, sending to dead letter queue or similar.`);
+                // TODO: handle with DLQ
+                break;
+              }
+              await new Promise(resolve => setTimeout(resolve, retryDelay));
+              retryDelay *= 2; // Double the delay for the next retry
+              await heartbeat(); // Important to call heartbeat to keep the session alive
+            }
           }
         }
       },
