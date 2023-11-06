@@ -1,3 +1,6 @@
+import { R4 } from "@ahryman40k/ts-fhir-types"
+import logger from "../../lib/winston"
+
 /**
  *
  * @param labBundle
@@ -6,20 +9,11 @@
 export async function mapConcepts(labBundle: R4.IBundle): Promise<R4.IBundle> {
   logger.info('Mapping Concepts!')
 
-  labBundle = await WorkflowHandler.addBwCodings(labBundle)
-
-  const response: R4.IBundle = await saveBundle(labBundle)
-
-  await this.sendPayload({ bundle: labBundle }, topicList.MAP_LOCATIONS)
-
-  return response
+  return await addAllCodings(labBundle)
 }
 
 
-// Add coding mappings info to bundle
-
-
-
+// Add terminology mappings info to Bundle
 async function addAllCodings(labBundle: ILaboratoryBundle): Promise<ILaboratoryBundle> {
   try {
     for (const e of labBundle.entry!) {

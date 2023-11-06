@@ -1,5 +1,7 @@
 import { R4 } from "@ahryman40k/ts-fhir-types"
 import logger from "../../lib/winston"
+import got, { HTTPError, OptionsOfTextResponseBody, RequestError } from "got"
+
 
 
 
@@ -44,7 +46,7 @@ export function setTaskStatus(labBundle: R4.IBundle, status: R4.TaskStatusKind):
 
 
 export function getBundleEntry(
-  entries: IBundle_Entry[],
+  entries: R4.IBundle_Entry[],
   type: string,
   id?: string,
 ): R4.IResource | undefined {
@@ -58,7 +60,7 @@ export function getBundleEntry(
 }
 
 export function getBundleEntries(
-  entries: IBundle_Entry[],
+  entries: R4.IBundle_Entry[],
   type: string,
   id?: string,
 ): (R4.IResource | undefined)[] {
@@ -71,4 +73,39 @@ export function getBundleEntries(
     .map(entry => {
       return entry.resource
     })
+}
+
+
+
+// Wrapper function that includes retry logic
+export async function postWithRetry(crUrl: string, options: OptionsOfTextResponseBody, retryLimit: number = 5, timeout: number = 1000) {
+
+  for (let attempt = 1; attempt <= retryLimit; attempt++) {
+    try {
+      const response = await got.post(crUrl, options).json();
+      return response; // If request is successful, return the response
+    } catch (error) {
+      logger.error(`Attempt ${attempt} failed`);
+      
+      // Sleep for a given amount of time
+      await new Promise(resolve => setTimeout(resolve, timeout));
+
+      if (error instanceof HTTPError) {
+        // Handle HTTP errors (4xx and 5xx response codes)
+        console.error(`HTTP Error: ${error.response.statusCode}`);
+      } else if (error instanceof RequestError) {
+        // Handle network errors or other request issues
+        console.error(`Request Error: ${error.message}`);
+      } else {
+        // Handle any other errors that might occur
+        console.error(`Unknown Error: ${error}`);
+      }
+    
+      // If we are on the last attempt, re-throw the error
+      if (attempt === retryLimit) {
+        console.error('All retries failed');
+        throw error;
+      }
+    }
+  }
 }

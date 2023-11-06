@@ -1,3 +1,7 @@
+import { R4 } from "@ahryman40k/ts-fhir-types"
+import config from "../../lib/config"
+import { postWithRetry } from "./helpers"
+import logger from "../../lib/winston"
 
 /**
  * updateCrPatient
@@ -6,7 +10,7 @@
  */
 export async function updateCrPatient(bundle: R4.IBundle): Promise<R4.IBundle> {
   const crUrl = `${config.get('clientRegistryUrl')}/Patient`
-  let pat: IPatient
+  let pat: R4.IPatient
 
   const patResult = bundle.entry!.find(entry => {
     return entry.resource && entry.resource.resourceType == 'Patient'
@@ -24,7 +28,7 @@ export async function updateCrPatient(bundle: R4.IBundle): Promise<R4.IBundle> {
     options.json = pat
   }
 
-  const crResult = await got.post(`${crUrl}`, options).json()
+  const crResult = await postWithRetry(crUrl, options, config.get('bwConfig:retryCount'), config.get('bwConfig:retryDelay'))
 
   logger.debug(`CR Patient Update Result: ${JSON.stringify(crResult)}`)
 
@@ -38,7 +42,7 @@ export async function updateCrPatient(bundle: R4.IBundle): Promise<R4.IBundle> {
  * @returns
  */
 export async function savePimsPatient(labBundle: R4.IBundle): Promise<R4.IBundle> {
-  const resultBundle = this.updateCrPatient(labBundle)
+  const resultBundle = updateCrPatient(labBundle)
 
   return resultBundle
 }
@@ -50,10 +54,7 @@ export async function savePimsPatient(labBundle: R4.IBundle): Promise<R4.IBundle
  */
 export async function saveIpmsPatient(registrationBundle: R4.IBundle): Promise<R4.IBundle> {
   // Save to CR
-  const resultBundle = this.updateCrPatient(registrationBundle)
-
-  // Handle order entry
-  this.handleAdtFromIpms(registrationBundle)
+  const resultBundle = updateCrPatient(registrationBundle)
 
   return resultBundle
 }

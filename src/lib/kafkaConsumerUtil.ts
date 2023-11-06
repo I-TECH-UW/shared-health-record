@@ -36,21 +36,26 @@ export class KafkaConsumerUtil {
       eachBatchAutoResolve: false,
       eachBatch: async ({ batch, resolveOffset, heartbeat, isRunning, isStale }: EachBatchPayload) => {
         const { topic, partition } = batch;
-
+  
         for (const message of batch.messages) {
           if (!isRunning() || isStale()) return;
-
+  
           logger.info({
             topic,
             partition,
             offset: message.offset,
             value: message.value?.toString(),
           });
-
-          await eachMessageCallback(topic, partition, message)
-
-          resolveOffset(message.offset);
-          await heartbeat();
+  
+          try {
+            await eachMessageCallback(topic, partition, message);
+            resolveOffset(message.offset);
+            await heartbeat();
+          } catch (error) {
+            logger.error(`Error processing message ${message.offset}: ${error}`);
+            // Do not resolve offset in case of error, so message will be retried
+            // Optionally: Handle retries or backoff strategy here
+          }
         }
       },
     });

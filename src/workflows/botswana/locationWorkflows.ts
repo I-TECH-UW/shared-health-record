@@ -1,3 +1,4 @@
+import logger from "../../lib/winston"
 
 /**
  *
@@ -7,11 +8,8 @@
 export async function mapLocations(labBundle: R4.IBundle): Promise<R4.IBundle> {
   logger.info('Mapping Locations!')
 
-  labBundle = await WorkflowHandler.addBwLocations(labBundle)
-  const response: R4.IBundle = await saveBundle(labBundle)
+  return await addBwLocations(labBundle)
 
-  await this.sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
-  await this.sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
 
   logger.debug(`Response: ${JSON.stringify(response)}`)
   return response
