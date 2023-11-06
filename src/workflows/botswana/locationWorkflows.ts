@@ -1,0 +1,205 @@
+
+/**
+ *
+ * @param labBundle
+ * @returns
+ */
+export async function mapLocations(labBundle: R4.IBundle): Promise<R4.IBundle> {
+  logger.info('Mapping Locations!')
+
+  labBundle = await WorkflowHandler.addBwLocations(labBundle)
+  const response: R4.IBundle = await saveBundle(labBundle)
+
+  await this.sendPayload({ bundle: labBundle }, topicList.SAVE_PIMS_PATIENT)
+  await this.sendPayload({ bundle: labBundle }, topicList.SEND_ADT_TO_IPMS)
+
+  logger.debug(`Response: ${JSON.stringify(response)}`)
+  return response
+}
+
+  
+   * This method adds IPMS - specific location mappings to the order bundle based on the ordering
+  * facility
+  * @param bundle
+    * @returns bundle
+      * /
+//
+//
+// This method assumes that the Task resource has a reference to the recieving facility
+// under the `owner` field. This is the facility that the lab order is being sent to.
+export async function addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
+  let mappedLocation: R4.ILocation | undefined
+  let mappedOrganization: R4.IOrganization | undefined
+
+  try {
+    logger.info('Adding Location Info to Bundle')
+
+    if (bundle && bundle.entry) {
+      const task: R4.ITask = <R4.ITask>this.getBundleEntry(bundle.entry, 'Task')
+      const srs: R4.IServiceRequest[] = <R4.IServiceRequest[]>(
+        this.getBundleEntries(bundle.entry, 'ServiceRequest')
+      )
+
+      const orderingLocationRef: R4.IReference | undefined = task.location
+
+      const srOrganizationRefs: (R4.IReference | undefined)[] = srs.map(sr => {
+        if (sr.requester) {
+          return sr.requester
+        } else {
+          return undefined
+        }
+      })
+
+      const locationId = orderingLocationRef?.reference?.split('/')[1]
+      const srOrgIds = srOrganizationRefs.map(ref => {
+        return ref?.reference?.split('/')[1]
+      })
+
+      const uniqueOrgIds = Array.from(new Set(srOrgIds))
+
+      if (uniqueOrgIds.length != 1 || !locationId) {
+        logger.error(
+          `Wrong number of ordering Organizations and Locations in this bundle:\n${JSON.stringify(
+            uniqueOrgIds,
+          )}\n${JSON.stringify(locationId)}`,
+        )
+      }
+
+      const orderingLocation = <R4.ILocation>(
+        this.getBundleEntry(bundle.entry, 'Location', locationId)
+      )
+      const orderingOrganization = <R4.IOrganization>(
+        this.getBundleEntry(bundle.entry, 'Organization', uniqueOrgIds[0])
+      )
+
+      if (orderingLocation && orderingOrganization) {
+        if (
+          !orderingLocation.managingOrganization ||
+          orderingLocation.managingOrganization.reference?.split('/')[1] !=
+          orderingOrganization.id
+        ) {
+          logger.error('Ordering Organization is not the managing Organziation of Location!')
+        }
+
+        mappedLocation = await this.translateLocation(orderingLocation)
+        mappedOrganization = {
+          resourceType: 'Organization',
+          id: crypto
+            .createHash('md5')
+            .update('Organization/' + mappedLocation.name)
+            .digest('hex'),
+          identifier: mappedLocation.identifier,
+          name: mappedLocation.name,
+        }
+
+        const mappedLocationRef: R4.IReference = {
+          reference: `Location/${mappedLocation.id}`,
+        }
+        const mappedOrganizationRef: R4.IReference = {
+          reference: `Organization/${mappedOrganization.id}`,
+        }
+
+        mappedLocation.managingOrganization = mappedOrganizationRef
+
+        if (mappedLocation && mappedLocation.id) {
+          task.location = mappedLocationRef
+
+          bundle.entry.push({
+            resource: mappedLocation,
+            request: {
+              method: R4.Bundle_RequestMethodKind._put,
+              url: mappedLocationRef.reference,
+            },
+          })
+        }
+        if (mappedOrganization && mappedOrganization.id) {
+          task.owner = mappedOrganizationRef
+          bundle.entry.push({
+            resource: mappedOrganization,
+            request: {
+              method: R4.Bundle_RequestMethodKind._put,
+              url: mappedOrganizationRef.reference,
+            },
+          })
+          for (const sr of srs) {
+            sr.performer
+              ? sr.performer.push(mappedOrganizationRef)
+              : (sr.performer = [mappedOrganizationRef])
+          }
+        }
+      }
+    }
+  } catch (e) {
+    logger.error(e)
+  }
+
+  return bundle
+}
+
+
+
+
+/**
+ * @param location
+ * @returns R4.ILocation
+ */
+export async function translateLocation(location: R4.ILocation): Promise<R4.ILocation> {
+  logger.info('Translating Location Data')
+
+  const returnLocation: R4.ILocation = {
+    resourceType: 'Location',
+  }
+  const mappings = await facilityMappings
+  let targetMapping
+  logger.info('Facility mappings: ' + mappings.length)
+
+  for (const mapping of mappings) {
+    if (mapping.orderingFacility == location.name) {
+      targetMapping = mapping
+    }
+  }
+
+  if (targetMapping) {
+    logger.info(
+      "Mapped location '" + location.name + "' to '" + targetMapping.orderingFacility + "'",
+    )
+    returnLocation.id = crypto
+      .createHash('md5')
+      .update('Organization/' + returnLocation.name)
+      .digest('hex')
+    returnLocation.identifier = [
+      {
+        system: config.get('bwConfig:ipmsCodeSystemUrl'),
+        value: targetMapping.receivingFacility,
+      },
+    ]
+
+    returnLocation.name = targetMapping.receivingFacility
+    returnLocation.extension = []
+    returnLocation.extension.push({
+      url: config.get('bwConfig:ipmsProviderSystemUrl'),
+      valueString: targetMapping.provider,
+    })
+    returnLocation.extension.push({
+      url: config.get('bwConfig:ipmsPatientTypeSystemUrl'),
+      valueString: targetMapping.patientType,
+    })
+    returnLocation.extension.push({
+      url: config.get('bwConfig:ipmsPatientStatusSystemUrl'),
+      valueString: targetMapping.patientStatus,
+    })
+    returnLocation.extension.push({
+      url: config.get('bwConfig:ipmsXLocationSystemUrl'),
+      valueString: targetMapping.xLocation,
+    })
+  } else {
+    logger.error('Could not find a location mapping for:\n' + JSON.stringify(location.name))
+  }
+
+  logger.info(`Translated Location:\n${JSON.stringify(returnLocation)}`)
+  return returnLocation
+}
+
+
+
+/**
