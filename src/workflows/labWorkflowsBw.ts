@@ -24,7 +24,7 @@ import { LabWorkflows } from './labWorkflows'
 import facilityMappings from '../lib/locationMap'
 import crypto from 'crypto'
 import { KafkaConfig, ProducerRecord } from 'kafkajs'
-import { logLevel } from 'kafkajs';
+import { logLevel } from 'kafkajs'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const hl7 = require('hl7')
@@ -34,9 +34,8 @@ const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
 const producerConfig: KafkaConfig = {
   clientId: 'shr-producer',
   brokers: brokers,
-  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
-};
-
+  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR,
+}
 
 export const topicList = {
   MAP_CONCEPTS: 'map-concepts',
@@ -49,26 +48,26 @@ export const topicList = {
 }
 
 export class LabWorkflowsBw extends LabWorkflows {
-  private static kafka = new KafkaProducerUtil(producerConfig, (report) => {
-    logger.info('Delivery report:', report);
-  });
+  private static kafka = new KafkaProducerUtil(producerConfig, report => {
+    logger.info('Delivery report:', report)
+  })
 
   // Static instance of the Kafka producer.
-  private static kafkaProducerInitialized = false;
+  private static kafkaProducerInitialized = false
 
   // Initialize Kafka producer when the class is first used.
   public static async initKafkaProducer() {
     if (!this.kafkaProducerInitialized) {
-      await this.kafka.init();
-      this.kafkaProducerInitialized = true;
+      await this.kafka.init()
+      this.kafkaProducerInitialized = true
     }
   }
 
   // Shutdown Kafka producer when the application terminates.
   public static async shutdownKafkaProducer() {
     if (this.kafkaProducerInitialized) {
-      await this.kafka.shutdown();
-      this.kafkaProducerInitialized = false;
+      await this.kafka.shutdown()
+      this.kafkaProducerInitialized = false
     }
   }
 
@@ -99,7 +98,10 @@ export class LabWorkflowsBw extends LabWorkflows {
 
   static async handleBwLabOrder(orderBundle: R4.IBundle, resultBundle: R4.IBundle) {
     try {
-      await this.sendPayload({ bundle: orderBundle, response: resultBundle }, topicList.MAP_CONCEPTS)
+      await this.sendPayload(
+        { bundle: orderBundle, response: resultBundle },
+        topicList.MAP_CONCEPTS,
+      )
     } catch (e) {
       logger.error(e)
     }
@@ -211,18 +213,34 @@ export class LabWorkflowsBw extends LabWorkflows {
           )
         }
 
-        const orderingLocation = <R4.ILocation>(
+        let orderingLocation = <R4.ILocation>(
           this.getBundleEntry(bundle.entry, 'Location', locationId)
         )
-        const orderingOrganization = <R4.IOrganization>(
+        let orderingOrganization = <R4.IOrganization>(
           this.getBundleEntry(bundle.entry, 'Organization', uniqueOrgIds[0])
         )
 
-        if (orderingLocation && orderingOrganization) {
-          if (
+        if (!orderingLocation) {
+          logger.error('Could not find ordering Location! Using Omrs Location instead.')
+          orderingLocation = <R4.ILocation>this.getBundleEntry(bundle.entry, 'Location')
+        }
+
+        if (orderingLocation) {
+          if (!orderingOrganization) {
+            logger.error('No ordering Organization found - copying location info!')
+            orderingOrganization = {
+              resourceType: 'Organization',
+              id: crypto
+                .createHash('md5')
+                .update('Organization/' + orderingLocation.name)
+                .digest('hex'),
+              identifier: orderingLocation.identifier,
+              name: orderingLocation.name,
+            }
+          } else if (
             !orderingLocation.managingOrganization ||
             orderingLocation.managingOrganization.reference?.split('/')[1] !=
-            orderingOrganization.id
+              orderingOrganization.id
           ) {
             logger.error('Ordering Organization is not the managing Organziation of Location!')
           }
@@ -738,7 +756,10 @@ export class LabWorkflowsBw extends LabWorkflows {
                 .get(`${config.get('fhirServer:baseURL')}/Task`, options)
                 .json()
 
-              await this.sendPayload({ taskBundle: taskBundle, patient: patient }, topicList.SEND_ORM_TO_IPMS)
+              await this.sendPayload(
+                { taskBundle: taskBundle, patient: patient },
+                topicList.SEND_ORM_TO_IPMS,
+              )
             }
           }
         }
@@ -933,7 +954,6 @@ export class LabWorkflowsBw extends LabWorkflows {
     }
   }
 
-  
   /**
    * Sends a payload to a Kafka topic.
    * @param payload - The payload to send.
@@ -941,22 +961,20 @@ export class LabWorkflowsBw extends LabWorkflows {
    * @returns A Promise that resolves when the payload has been sent.
    */
   public static async sendPayload(payload: any, topic: string) {
-    await this.initKafkaProducer();
+    await this.initKafkaProducer()
 
     const records: ProducerRecord[] = [
       {
         topic: topic,
-        messages: [
-          { key: 'body', value: JSON.stringify(payload) }
-        ],
+        messages: [{ key: 'body', value: JSON.stringify(payload) }],
       },
-    ];
+    ]
 
     try {
-      logger.info(`Sending payload to topic ${topic}: ${JSON.stringify(payload)}`);
-      await this.kafka.sendMessageTransactionally(records);
+      logger.info(`Sending payload to topic ${topic}: ${JSON.stringify(payload)}`)
+      await this.kafka.sendMessageTransactionally(records)
     } catch (err) {
-      console.error('Failed to send message:', err);
+      console.error('Failed to send message:', err)
     }
   }
 
@@ -1044,4 +1062,3 @@ export class LabWorkflowsBw extends LabWorkflows {
       .json()
   }
 }
-

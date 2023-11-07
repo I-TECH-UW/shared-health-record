@@ -25,22 +25,24 @@ async function getFacilityMappings() {
 
   const rowStartIndex = 2
   const rowEndIndex = 90
+  if (worksheet) {
+    const rows = worksheet.getRows(rowStartIndex, rowEndIndex) ?? []
 
-  const rows = worksheet.getRows(rowStartIndex, rowEndIndex) ?? []
-
-  const mappings = rows.map((row: Excel.Row): FacilityMapping => {
-    return {
-      index: parseInt(getCellValue(row, 1)),
-      orderingFacility: getCellValue(row, 4),
-      receivingFacility: getCellValue(row, 2),
-      provider: getCellValue(row, 6),
-      patientType: getCellValue(row, 8),
-      patientStatus: getCellValue(row, 7),
-      xLocation: getCellValue(row, 3),
-    }
-  })
-
-  return mappings
+    const mappings = rows.map((row: Excel.Row): FacilityMapping => {
+      return {
+        index: parseInt(getCellValue(row, 1)),
+        orderingFacility: getCellValue(row, 4),
+        receivingFacility: getCellValue(row, 2),
+        provider: getCellValue(row, 6),
+        patientType: getCellValue(row, 8),
+        patientStatus: getCellValue(row, 7),
+        xLocation: getCellValue(row, 3),
+      }
+    })
+    return mappings
+  } else {
+    throw new Error('Unable to read facility mappings')
+  }
 }
 
 const facilityMappings = getFacilityMappings()
