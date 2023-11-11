@@ -27,33 +27,6 @@ class LaboratoryBundle {
     }
 
 
-<<<<<<< Updated upstream
-
-=======
-    protected async addAllCodings(labBundle: ILaboratoryBundle): Promise<ILaboratoryBundle> {
-        try {
-            for (const e of labBundle.entry!) {
-                if (
-                    e.resource &&
-                    e.resource.resourceType == 'ServiceRequest' &&
-                    e.resource.code &&
-                    e.resource.code.coding &&
-                    e.resource.code.coding.length > 0
-                ) {
-                    logger.info`Translating ServiceRequest Codings`
-
-                    e.resource = await this.translateCoding(<ILaboratorye.resource)
-                }
-                else {
-                    logger.info`No Codings to Translate`
-                }
-            }
-        } catch (e) {
-            logger.error(e)
-        }
-        return labBundle
-    }
->>>>>>> Stashed changes
 }
 
 
