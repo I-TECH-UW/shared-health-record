@@ -2,7 +2,7 @@ import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
 import { MllpServer } from '@i-tech-uw/mllp-server'
 import config from '../lib/config'
 import logger from '../lib/winston'
-import Hl7WorkflowsBw from '../workflows/hl7WorkflowsBw'
+import Hl7WorkflowsBw from '../workflows/botswana/hl7Workflows'
 
 import { Logger } from 'winston'
 

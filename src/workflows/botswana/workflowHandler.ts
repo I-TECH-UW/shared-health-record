@@ -204,7 +204,7 @@ export class WorkflowHandler {
   // Entrypoint wrapper function for Lab Order Workflows
   static async handleLabOrder(orderBundle: R4.IBundle, resultBundle: R4.IBundle) {
     try {
-      await this.sendPayload({ bundle: orderBundle, response: resultBundle }, topicList.MAP_CONCEPTS)
+      await this.sendPayload({ bundle: orderBundle, response: resultBundle }, topicList.SEND_ADT_TO_IPMS)
     } catch (e) {
       logger.error(e)
     }
