@@ -1,10 +1,17 @@
 import { R4 } from "@ahryman40k/ts-fhir-types"
 import config from "../../lib/config"
 import logger from "../../lib/winston"
-import { getTaskStatus } from "./helpers"
+import { getTaskStatus, setTaskStatus } from "./helpers"
 import Hl7MllpSender from "../../lib/hl7MllpSender"
-import Hl7WorkflowsBw from "../hl7WorkflowsBw"
+import Hl7WorkflowsBw from "../botswana/hl7Workflows"
+import got from "got"
 
+
+/**
+ * Sends an ADT message to IPMS.
+ * @param labBundle The lab bundle to send.
+ * @returns The updated lab bundle.
+ */
 export async function sendAdtToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> {
   const status = getTaskStatus(labBundle)
 
@@ -35,11 +42,9 @@ export async function sendAdtToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> 
 }
 
 export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
-  const srBundle: IBundle = { resourceType: 'Bundle', entry: [] }
+  const srBundle: R4.IBundle = { resourceType: 'Bundle', entry: [] }
   let labBundle = bundles.taskBundle
   const patient = bundles.patient
-
-  // logger.info(`task bundle:\n${JSON.stringify(bundles.taskBundle)}\npatient:\n${JSON.stringify(bundles.patient)}`)
 
   try {
     // Replace PIMS/OpenMRS Patient Resource with one From IPMS Lab System
@@ -129,6 +134,11 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
   return labBundle
 }
 
+/**
+ * Handles ADT (Admission, Discharge, Transfer) messages received from IPMS (Integrated Patient Management System).
+ * @param registrationBundle - The registration bundle containing the patient information.
+ * @returns A Promise that resolves to the registration bundle.
+ */
 export async function handleAdtFromIpms(registrationBundle: R4.IBundle): Promise<R4.IBundle> {
   try {
     const options = {
@@ -136,13 +146,14 @@ export async function handleAdtFromIpms(registrationBundle: R4.IBundle): Promise
       searchParams: {},
     }
 
-    let patient: IPatient, omang: string
+    // Get patient from registration Bundle
+    let patient: R4.IPatient, omang: string
     const patEntry = registrationBundle.entry!.find(entry => {
       return entry.resource && entry.resource.resourceType == 'Patient'
     })
 
     if (patEntry && patEntry.resource) {
-      patient = <IPatient>patEntry.resource
+      patient = <R4.IPatient>patEntry.resource
 
       const omangEntry = patient.identifier?.find(
         i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
@@ -163,7 +174,7 @@ export async function handleAdtFromIpms(registrationBundle: R4.IBundle): Promise
         _revinclude: 'Task:patient',
       }
 
-      let patientTasks: IBundle
+      let patientTasks: R4.IBundle
       try {
         patientTasks = await got
           .get(`${config.get('fhirServer:baseURL')}/Patient`, options)

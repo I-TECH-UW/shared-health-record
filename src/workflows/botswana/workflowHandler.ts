@@ -136,10 +136,11 @@ export class WorkflowHandler {
           enrichedBundle = await mapLocations(enrichedBundle)
 
           this.sendPayload({ bundle: enrichedBundle }, topicList.SAVE_PIMS_PATIENT)
-          
-          const response: R4.IBundle = await saveBundle(enrichedBundle)
-
+                    
           await sendAdtToIpms(enrichedBundle)
+
+          // Succeed only if this bundle saves successfully
+          const response: R4.IBundle = await saveBundle(enrichedBundle)
 
           break
         case topicList.HANDLE_ADT_FROM_IPMS:
