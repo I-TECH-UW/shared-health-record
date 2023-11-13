@@ -1,5 +1,9 @@
-import logger from "../../lib/winston"
-
+import { R4 } from '@ahryman40k/ts-fhir-types'
+import facilityMappings from '../../lib/locationMap'
+import logger from '../../lib/winston'
+import { getBundleEntries, getBundleEntry } from './helpers'
+import * as crypto from 'crypto'
+import config from '../../lib/config'
 /**
  *
  * @param labBundle
@@ -9,13 +13,8 @@ export async function mapLocations(labBundle: R4.IBundle): Promise<R4.IBundle> {
   logger.info('Mapping Locations!')
 
   return await addBwLocations(labBundle)
-
-
-  logger.debug(`Response: ${JSON.stringify(response)}`)
-  return response
 }
 
-  
 //    * This method adds IPMS - specific location mappings to the order bundle based on the ordering
 //   * facility
 //   * @param bundle
@@ -33,9 +32,9 @@ export async function addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
     logger.info('Adding Location Info to Bundle')
 
     if (bundle && bundle.entry) {
-      const task: R4.ITask = <R4.ITask>this.getBundleEntry(bundle.entry, 'Task')
+      const task: R4.ITask = <R4.ITask>getBundleEntry(bundle.entry, 'Task')
       const srs: R4.IServiceRequest[] = <R4.IServiceRequest[]>(
-        this.getBundleEntries(bundle.entry, 'ServiceRequest')
+        getBundleEntries(bundle.entry, 'ServiceRequest')
       )
 
       const orderingLocationRef: R4.IReference | undefined = task.location
@@ -63,23 +62,20 @@ export async function addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
         )
       }
 
-      const orderingLocation = <R4.ILocation>(
-        this.getBundleEntry(bundle.entry, 'Location', locationId)
-      )
+      const orderingLocation = <R4.ILocation>getBundleEntry(bundle.entry, 'Location', locationId)
       const orderingOrganization = <R4.IOrganization>(
-        this.getBundleEntry(bundle.entry, 'Organization', uniqueOrgIds[0])
+        getBundleEntry(bundle.entry, 'Organization', uniqueOrgIds[0])
       )
 
       if (orderingLocation && orderingOrganization) {
         if (
           !orderingLocation.managingOrganization ||
-          orderingLocation.managingOrganization.reference?.split('/')[1] !=
-          orderingOrganization.id
+          orderingLocation.managingOrganization.reference?.split('/')[1] != orderingOrganization.id
         ) {
           logger.error('Ordering Organization is not the managing Organziation of Location!')
         }
 
-        mappedLocation = await this.translateLocation(orderingLocation)
+        mappedLocation = await translateLocation(orderingLocation)
         mappedOrganization = {
           resourceType: 'Organization',
           id: crypto
@@ -133,9 +129,6 @@ export async function addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
 
   return bundle
 }
-
-
-
 
 /**
  * @param location
@@ -197,7 +190,3 @@ export async function translateLocation(location: R4.ILocation): Promise<R4.ILoc
   logger.info(`Translated Location:\n${JSON.stringify(returnLocation)}`)
   return returnLocation
 }
-
-
-
-/**

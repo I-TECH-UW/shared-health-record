@@ -41,13 +41,15 @@ router.all('/', async (req: Request, res: Response) => {
         orderBundle.entry &&
         resultBundle.entry.length == orderBundle.entry.length
       ) {
-        WorkflowHandler.handleLabOrder(orderBundle, resultBundle)
+        WorkflowHandler.handleLabOrder(orderBundle)
         return res.status(200).json(resultBundle)
       } else {
         return res.status(400).send(resultBundle)
       }
     } catch (e) {
-      return res.status(500).send(e)
+      logger.error(`Error saving bundle: ${e}`)
+
+      return res.status(500).send("Couldn't save bundle!")
     }
   }
 })

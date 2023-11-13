@@ -1,11 +1,30 @@
-import { R4 } from "@ahryman40k/ts-fhir-types"
-import config from "../../lib/config"
-import logger from "../../lib/winston"
-import { getTaskStatus, setTaskStatus } from "./helpers"
-import Hl7MllpSender from "../../lib/hl7MllpSender"
-import Hl7WorkflowsBw from "../botswana/hl7Workflows"
-import got from "got"
+import { R4 } from '@ahryman40k/ts-fhir-types'
+import config from '../../lib/config'
+import logger from '../../lib/winston'
+import { getTaskStatus, setTaskStatus } from './helpers'
+import Hl7MllpSender from '../../lib/hl7MllpSender'
+import Hl7WorkflowsBw from '../botswana/hl7Workflows'
+import got from 'got'
+import {
+  BundleTypeKind,
+  Bundle_RequestMethodKind,
+  IBundle,
+  IDiagnosticReport,
+  IObservation,
+  IPatient,
+  IReference,
+  IServiceRequest,
+  TaskStatusKind,
+} from '@ahryman40k/ts-fhir-types/lib/R4'
+import { saveBundle } from '../../hapi/lab'
 
+// New Error Type for IPMS Workflow Errors
+export class IpmsWorkflowError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'IpmsWorkflowError'
+  }
+}
 
 /**
  * Sends an ADT message to IPMS.
@@ -73,9 +92,8 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
           'based-on': entry.resource.id,
         }
 
-        const fetchedBundle = <R4.IBundle>(
-          await got.get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options).json()
-        )
+        const fetchedBundle = <R4.IBundle>// TODO: Retry logic
+        await got.get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options).json()
 
         if (fetchedBundle && fetchedBundle.entry && srBundle.entry) {
           // Add child ServiceRequests if any exist
@@ -129,7 +147,8 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
       }
     }
   } catch (e) {
-    logger.error(e)
+    logger.error(`Could not send ORM message to IPMS!\n${e}`)
+    throw new IpmsWorkflowError(`Could not send ORM message to IPMS!\n${e}`)
   }
   return labBundle
 }
@@ -139,8 +158,17 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
  * @param registrationBundle - The registration bundle containing the patient information.
  * @returns A Promise that resolves to the registration bundle.
  */
-export async function handleAdtFromIpms(registrationBundle: R4.IBundle): Promise<R4.IBundle> {
+export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
   try {
+    const registrationBundle: R4.IBundle = await Hl7WorkflowsBw.translateBundle(
+      adtMessage,
+      'bwConfig:fromIpmsAdtTemplate',
+    )
+
+    if (registrationBundle === Hl7WorkflowsBw.errorBundle) {
+      throw new Error('Could not translate ADT message!')
+    }
+
     const options = {
       timeout: config.get('bwConfig:requestTimeout'),
       searchParams: {},
@@ -176,9 +204,7 @@ export async function handleAdtFromIpms(registrationBundle: R4.IBundle): Promise
 
       let patientTasks: R4.IBundle
       try {
-        patientTasks = await got
-          .get(`${config.get('fhirServer:baseURL')}/Patient`, options)
-          .json()
+        patientTasks = await got.get(`${config.get('fhirServer:baseURL')}/Patient`, options).json()
       } catch (e) {
         patientTasks = { resourceType: 'Bundle' }
         logger.error(e)
@@ -201,25 +227,16 @@ export async function handleAdtFromIpms(registrationBundle: R4.IBundle): Promise
             const taskBundle: IBundle = await got
               .get(`${config.get('fhirServer:baseURL')}/Task`, options)
               .json()
-
-            await sendPayload({ taskBundle: taskBundle, patient: patient }, topicList.SEND_ORM_TO_IPMS)
+            return { patient: patient, taskBundle: taskBundle }
           }
         }
       }
     }
   } catch (e) {
-    logger.error(e)
+    logger.error('Could not process ADT!\n' + e)
+    throw new IpmsWorkflowError('Could not process ADT!\n' + e)
+    return { patient: undefined, taskBundle: undefined }
   }
-
-  // let obrMessage = await Hl7WorkflowsBw.getFhirTranslation(labBundle, 'OBR.hbs')
-
-  // let obrResult = await sender.send(obrMessage)
-
-  // logger.info(`obr:\n${obrMessage}\nres:\n${obrResult}`)
-
-  // let response: R4.IBundle = await saveLabBundle(labBundle)
-
-  return registrationBundle
 }
 
 export async function handleOruFromIpms(translatedBundle: R4.IBundle): Promise<R4.IBundle> {

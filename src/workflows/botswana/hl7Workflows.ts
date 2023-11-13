@@ -41,30 +41,16 @@ export default class Hl7WorkflowsBw {
     }
   }
 
-  static async handleAdtMessage(hl7Msg: string): Promise<R4.IBundle> {
+  static async handleAdtMessage(hl7Msg: string): Promise<void> {
     try {
-      const translatedBundle: R4.IBundle = await Hl7WorkflowsBw.translateBundle(
-        hl7Msg,
-        'bwConfig:fromIpmsAdtTemplate',
-      )
-
-      if (translatedBundle != this.errorBundle) {
-        // Save to SHR??
-        // let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
-
-        WorkflowHandler.sendPayload({ bundle: translatedBundle }, topicList.SAVE_IPMS_PATIENT)
-
-        return translatedBundle
-      } else {
-        return this.errorBundle
-      }
+      WorkflowHandler.sendPayload({ message: hl7Msg }, topicList.HANDLE_ADT_FROM_IPMS)
     } catch (error: any) {
+      // TODO: Major Error - send to DMQ or handle otherwise
       logger.error(`Could not translate and save ADT message!\n${JSON.stringify(error)}`)
-      return this.errorBundle
     }
   }
 
-  private static async translateBundle(hl7Msg: string, template: string) {
+  static async translateBundle(hl7Msg: string, template: string) {
     let tries = 0
     let translatedBundle: R4.IBundle = this.errorBundle
 

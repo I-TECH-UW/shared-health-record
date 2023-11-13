@@ -27,7 +27,7 @@ export default class MllpAdapter {
     })
   }
 
-  public async handleMessage(data: any): Promise<IBundle> {
+  public async handleMessage(data: any): Promise<any> {
     try {
       logger.info('received payload:', data)
       // Determine Message Type

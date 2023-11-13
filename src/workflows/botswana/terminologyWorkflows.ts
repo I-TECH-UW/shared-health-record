@@ -1,20 +1,21 @@
-import { R4 } from "@ahryman40k/ts-fhir-types"
-import logger from "../../lib/winston"
-
+import { R4 } from '@ahryman40k/ts-fhir-types'
+import { IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
+import got from 'got'
+import logger from '../../lib/winston'
+import config from '../../lib/config'
 /**
  *
  * @param labBundle
  * @returns
  */
-export async function mapConcepts(labBundle: R4.IBundle): Promise<R4.IBundle> {
+export async function mapConcepts(labBundle: IBundle): Promise<IBundle> {
   logger.info('Mapping Concepts!')
 
   return await addAllCodings(labBundle)
 }
 
-
 // Add terminology mappings info to Bundle
-async function addAllCodings(labBundle: ILaboratoryBundle): Promise<ILaboratoryBundle> {
+async function addAllCodings(labBundle: IBundle): Promise<IBundle> {
   try {
     for (const e of labBundle.entry!) {
       if (
@@ -25,9 +26,8 @@ async function addAllCodings(labBundle: ILaboratoryBundle): Promise<ILaboratoryB
         e.resource.code.coding.length > 0
       ) {
         logger.info`Translating ServiceRequest Codings`
-        e.resource = await this.translateCoding(e.resource)
-      }
-      else {
+        e.resource = await translateCoding(e.resource)
+      } else {
         logger.info`No Codings to Translate`
       }
     }
@@ -37,27 +37,26 @@ async function addAllCodings(labBundle: ILaboratoryBundle): Promise<ILaboratoryB
   return labBundle
 }
 
-
 async function translateCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
   let ipmsCoding, cielCoding, loincCoding, pimsCoding
 
   try {
     if (sr && sr.code && sr.code.coding && sr.code.coding.length > 0) {
-      pimsCoding = this.getCoding(sr, config.get('bwConfig:pimsSystemUrl'))
-      cielCoding = this.getCoding(sr, config.get('bwConfig:cielSystemUrl'))
+      pimsCoding = getCoding(sr, config.get('bwConfig:pimsSystemUrl'))
+      cielCoding = getCoding(sr, config.get('bwConfig:cielSystemUrl'))
 
       logger.info(`PIMS Coding: ${JSON.stringify(pimsCoding)}`)
       logger.info(`CIEL Coding: ${JSON.stringify(cielCoding)}`)
 
       if (pimsCoding && pimsCoding.code) {
         // Translate from PIMS to CIEL and IPMS
-        ipmsCoding = await this.getIpmsCode(
+        ipmsCoding = await getIpmsCode(
           `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${pimsCoding.code}&toConceptSource=PIMSLAB`,
           pimsCoding.code,
         )
 
         if (ipmsCoding && ipmsCoding.code) {
-          cielCoding = await this.getMappedCode(
+          cielCoding = await getMappedCode(
             `/orgs/I-TECH-UW/sources/IPMSLAB/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCoding.code}`,
           )
         }
@@ -71,7 +70,7 @@ async function translateCoding(sr: R4.IServiceRequest): Promise<R4.IServiceReque
         }
       } else if (cielCoding && cielCoding.code) {
         // Translate from CIEL to IPMS
-        ipmsCoding = await this.getIpmsCode(
+        ipmsCoding = await getIpmsCode(
           `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${cielCoding.code}&toConceptSource=CIEL`,
           cielCoding.code,
         )
@@ -96,7 +95,7 @@ async function translateCoding(sr: R4.IServiceRequest): Promise<R4.IServiceReque
 
       // Get LOINC Coding
       if (cielCoding && cielCoding.code) {
-        loincCoding = await this.getMappedCode(
+        loincCoding = await getMappedCode(
           `/orgs/CIEL/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCoding.code}`,
         )
         if (loincCoding && loincCoding.code) {
@@ -118,8 +117,6 @@ async function translateCoding(sr: R4.IServiceRequest): Promise<R4.IServiceReque
     return sr
   }
 }
-
-
 
 async function getIpmsCode(q: string, c = '') {
   try {
@@ -190,12 +187,14 @@ async function getOclMapping(queryString: string): Promise<any[]> {
 
   logger.info(`${config.get('bwConfig:oclUrl')}${queryString}`)
 
+  // TODO: Add retry logic
   return got.get(`${config.get('bwConfig:oclUrl')}${queryString}`, options).json()
 }
 
 async function getOclConcept(conceptCode: string): Promise<any> {
   const options = { timeout: config.get('bwConfig:requestTimeout') | 1000 }
 
+  // TODO: Add retry logic
   return got
     .get(
       `${config.get('bwConfig:oclUrl')}/orgs/I-TECH-UW/sources/IPMSLAB/concepts/${conceptCode}`,
@@ -203,7 +202,6 @@ async function getOclConcept(conceptCode: string): Promise<any> {
     )
     .json()
 }
-
 
 function getCoding(sr: R4.IServiceRequest, system: string): R4.ICoding {
   if (sr.code && sr.code.coding) {

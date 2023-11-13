@@ -8,19 +8,19 @@ import config from '../lib/config'
 const util = import('util')
 
 import logger from '../lib/winston'
+import { postWithRetry } from '../workflows/botswana/helpers'
 
 let uri = URI(config.get('fhirServer:baseURL'))
 
 class HapiError extends Error {
   constructor(message: string) {
-    super(message); 
-    this.name = 'HapiError';
+    super(message)
+    this.name = 'HapiError'
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, HapiError);
+      Error.captureStackTrace(this, HapiError)
     }
-
   }
 }
 
@@ -83,13 +83,13 @@ export async function saveBundle(bundle: R4.IBundle): Promise<R4.IBundle> {
     bundle = translateToTransactionBundle(bundle)
   }
   try {
-    const ret = await got.post(uri.toString(), { json: bundle }).json()
-
+    const ret = await postWithRetry(uri.toString(), { json: bundle })
+    logger.info(`Saved bundle to FHIR store!`)
     return <R4.IBundle>ret
   } catch (error: any) {
     logger.error(`Could not save bundle: ${error.response.body}`)
-    
-    throw new HapiError("Could not save bundle to hapi server!")
+
+    throw new HapiError('Could not save bundle to hapi server!')
   }
 }
 
