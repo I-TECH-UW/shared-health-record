@@ -36,10 +36,10 @@ export class KafkaConsumerUtil {
       eachBatchAutoResolve: false,
       eachBatch: async ({ batch, resolveOffset, heartbeat, isRunning, isStale }: EachBatchPayload) => {
         const { topic, partition } = batch;
-
+  
         for (const message of batch.messages) {
           if (!isRunning() || isStale()) return;
-
+  
           logger.info({
             topic,
             partition,
@@ -47,10 +47,29 @@ export class KafkaConsumerUtil {
             value: message.value?.toString(),
           });
 
-          await eachMessageCallback(topic, partition, message)
-
-          resolveOffset(message.offset);
-          await heartbeat();
+          const maxRetries = 6;
+          let retryCount = 0;
+          let retryDelay = 1000; 
+  
+          while (retryCount < maxRetries) {
+            try {
+              await eachMessageCallback(topic, partition, message);
+              resolveOffset(message.offset);
+              await heartbeat();
+              break; // Break the loop if processing succeeds
+            } catch (error) {
+              logger.error(`Error processing message ${message.offset}: ${error}`);
+              retryCount++;
+              if (retryCount >= maxRetries) {
+                logger.error(`Max retries reached for message ${message.offset}, sending to dead letter queue or similar.`);
+                // TODO: handle with DLQ
+                break;
+              }
+              await new Promise(resolve => setTimeout(resolve, retryDelay));
+              retryDelay *= 2; // Double the delay for the next retry
+              await heartbeat(); // Important to call heartbeat to keep the session alive
+            }
+          }
         }
       },
     });

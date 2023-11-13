@@ -34,6 +34,8 @@
     "cielSystemUrl": "https://openconceptlab.org/orgs/CIEL/sources/CIEL",
     "loincSystemUrl": "https://api.openconceptlab.org/orgs/Regenstrief/sources/LOINC/",
     "omangSystemUrl": "http://moh.bw.org/ext/identifier/omang",
+    "brdsSystemUrl": "http://moh.bw.org/ext/identifier/bcn",
+    "immigrationSystemUrl": "http://moh.bw.org/ext/identifier/passportno",
     "oclUrl": "https://api.openconceptlab.org",
     "facilityCodeSystemUrl": "http://moh.bw.org/ext/identifier/facility-code",
     "ipmsProviderSystemUrl": "http://moh.bw.org/ext/ipms-provider",

@@ -1,6 +1,6 @@
 import { KafkaConfig, Message, logLevel } from 'kafkajs'
 import logger from '../lib/winston'
-import { LabWorkflowsBw, topicList } from '../workflows/labWorkflowsBw'
+import { WorkflowHandler, topicList } from '../workflows/botswana/workflowHandler'
 import { config } from '../lib/config'
 import { KafkaConsumerUtil } from '../lib/kafkaConsumerUtil'
 
@@ -70,20 +70,18 @@ const initAndConsume = async (topics: string[]) => {
 };
 
 async function processMessage(topic: string, partition: number, message: Message): Promise<void> {
+  // There is no additional error handling in this message, since any exceptions or problems will need to be 
+  // logged and handled by the Kafka consumer retry logic in the KafkaConsumerUtil class. 
+  
   logger.info(`Recieved message from topic ${topic} on partition ${partition}`)
 
-  try {
-    let val = ''
-    const res = null
+  let val = ''
+  const res = null
 
-    if (message.value) {
-      val = message.value.toString()
-    }
-
-    LabWorkflowsBw.executeTopicWorkflow(topic, val)
-  } catch (error) {
-    logger.error(`Could not complete task from topic ${topic}!`)
-
-    logger.error(error)
+  if (message.value) {
+    val = message.value.toString()
   }
+  
+  // This method needs to bubble up any exceptions to the Kafka consumer retry logic in the KafkaConsumerUtil class.
+  WorkflowHandler.executeTopicWorkflow(topic, val)
 }

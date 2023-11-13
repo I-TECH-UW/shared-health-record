@@ -3,9 +3,9 @@
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
 import got from 'got/dist/source'
-import config from '../lib/config'
-import logger from '../lib/winston'
-import { LabWorkflowsBw, topicList } from './labWorkflowsBw'
+import config from '../../lib/config'
+import logger from '../../lib/winston'
+import { WorkflowHandler, topicList } from './workflowHandler'
 import sleep from 'sleep-promise'
 
 export default class Hl7WorkflowsBw {
@@ -30,7 +30,7 @@ export default class Hl7WorkflowsBw {
       )
 
       if (translatedBundle != this.errorBundle && translatedBundle.entry) {
-        LabWorkflowsBw.sendPayload({ bundle: translatedBundle }, topicList.HANDLE_ORU_FROM_IPMS)
+        WorkflowHandler.sendPayload({ bundle: translatedBundle }, topicList.HANDLE_ORU_FROM_IPMS)
         return translatedBundle
       } else {
         return this.errorBundle
@@ -41,30 +41,16 @@ export default class Hl7WorkflowsBw {
     }
   }
 
-  static async handleAdtMessage(hl7Msg: string): Promise<R4.IBundle> {
+  static async handleAdtMessage(hl7Msg: string): Promise<void> {
     try {
-      const translatedBundle: R4.IBundle = await Hl7WorkflowsBw.translateBundle(
-        hl7Msg,
-        'bwConfig:fromIpmsAdtTemplate',
-      )
-
-      if (translatedBundle != this.errorBundle) {
-        // Save to SHR??
-        // let resultBundle: R4.IBundle = await saveBundle(translatedBundle)
-
-        LabWorkflowsBw.sendPayload({ bundle: translatedBundle }, topicList.SAVE_IPMS_PATIENT)
-
-        return translatedBundle
-      } else {
-        return this.errorBundle
-      }
+      WorkflowHandler.sendPayload({ message: hl7Msg }, topicList.HANDLE_ADT_FROM_IPMS)
     } catch (error: any) {
+      // TODO: Major Error - send to DMQ or handle otherwise
       logger.error(`Could not translate and save ADT message!\n${JSON.stringify(error)}`)
-      return this.errorBundle
     }
   }
 
-  private static async translateBundle(hl7Msg: string, template: string) {
+  static async translateBundle(hl7Msg: string, template: string) {
     let tries = 0
     let translatedBundle: R4.IBundle = this.errorBundle
 

@@ -4,7 +4,7 @@ import shrApp from '../lib/shr'
 import logger from '../lib/winston'
 
 import medUtils from 'openhim-mediator-utils'
-import { LabWorkflowsBw } from '../workflows/labWorkflowsBw'
+import { WorkflowHandler } from '../workflows/botswana/workflowHandler'
 
 
 const errorTypes = ['unhandledRejection', 'uncaughtException']
@@ -27,7 +27,7 @@ export class ShrMediator {
   public async start(callback: any) {
     logger.info('Running SHR as a mediator with' + `${__dirname}/${this.config}`)
     try {
-      await LabWorkflowsBw.initKafkaProducer()
+      await WorkflowHandler.initKafkaProducer()
       medUtils.registerMediator(
         config.get('mediator:api'),
         this.config,
@@ -35,7 +35,7 @@ export class ShrMediator {
       )
     } catch (e: any) {
       logger.error(`Could not start SHR as a Mediator!\n${JSON.stringify(e)}`)
-      await LabWorkflowsBw.shutdownKafkaProducer()
+      await WorkflowHandler.shutdownKafkaProducer()
       process.exit(1)
     }
 
@@ -44,7 +44,7 @@ export class ShrMediator {
         try {
           logger.error(`process.on ${type}`)
           logger.error(e)
-          await LabWorkflowsBw.shutdownKafkaProducer()
+          await WorkflowHandler.shutdownKafkaProducer()
           process.exit(0)
         } catch (_) {
           process.exit(1)
@@ -55,7 +55,7 @@ export class ShrMediator {
     signalTraps.map(type => {
       process.once(type, async () => {
         try {
-          await LabWorkflowsBw.shutdownKafkaProducer()
+          await WorkflowHandler.shutdownKafkaProducer()
         } finally {
           process.kill(process.pid, type)
         }

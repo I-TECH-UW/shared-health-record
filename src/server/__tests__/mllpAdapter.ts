@@ -1,7 +1,7 @@
 import { BundleTypeKind, IBundle } from '@ahryman40k/ts-fhir-types/lib/R4'
 import fs from 'fs/promises'
 import path from 'path'
-import Hl7Workflows from '../../workflows/hl7WorkflowsBw'
+import Hl7Workflows from '../../workflows/botswana/hl7Workflows'
 import MllpAdapter from '../mllpAdapter'
 
 describe('MllpAdapter#handleMessage', () => {
@@ -21,11 +21,11 @@ describe('MllpAdapter#handleMessage', () => {
 
     const saveAdtMessageSpy = jest
       .spyOn(Hl7Workflows, 'handleAdtMessage')
-      .mockReturnValue(returnPromise)
+      .mockReturnValue(Promise.resolve<void>(undefined))
 
     const result: any = await mllp.handleMessage(msg)
 
-    expect(result).toEqual(returnBundle)
+    expect(result).toEqual(undefined)
     expect(saveAdtMessageSpy).toHaveBeenCalledTimes(1)
 
     saveAdtMessageSpy.mockRestore()
