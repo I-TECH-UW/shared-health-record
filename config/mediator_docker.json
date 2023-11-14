@@ -1,6 +1,6 @@
 {
   "urn": "urn:mediator:shared-health-record",
-  "version": "v0.12.0-rc.1",
+  "version": "v0.12.0-rc.2",
   "name": "Shared Health Record",
   "description": "Shared Health Record",
   "defaultChannelConfig": [

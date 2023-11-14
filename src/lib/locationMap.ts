@@ -26,7 +26,7 @@ async function getFacilityMappings() {
   const rowStartIndex = 2
   const rowEndIndex = 90
 
-  const rows = worksheet.getRows(rowStartIndex, rowEndIndex) ?? []
+  const rows = worksheet?.getRows(rowStartIndex, rowEndIndex) ?? []
 
   const mappings = rows.map((row: Excel.Row): FacilityMapping => {
     return {
