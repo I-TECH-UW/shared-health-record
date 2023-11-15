@@ -26,6 +26,8 @@ async function getFacilityMappings() {
   const rowStartIndex = 2
   const rowEndIndex = 90
 
+  if (!worksheet) throw new Error('Could not find worksheet')
+
   const rows = worksheet?.getRows(rowStartIndex, rowEndIndex) ?? []
 
   const mappings = rows.map((row: Excel.Row): FacilityMapping => {
