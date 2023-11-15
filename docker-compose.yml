@@ -14,7 +14,7 @@ services:
   shr:
     container_name: shr
     hostname: shr
-    image: ghcr.io/i-tech-uw/shared-health-record:${SHR_VERSION-latest}
+    image: itechuw/shared-health-record:${SHR_VERSION-latest}
     build: .
     ports:
       - 3000:3000
