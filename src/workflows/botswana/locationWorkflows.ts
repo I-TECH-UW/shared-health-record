@@ -62,13 +62,29 @@ export async function addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
         )
       }
 
-      const orderingLocation = <R4.ILocation>getBundleEntry(bundle.entry, 'Location', locationId)
-      const orderingOrganization = <R4.IOrganization>(
+      let orderingLocation = <R4.ILocation>getBundleEntry(bundle.entry, 'Location', locationId)
+      let orderingOrganization = <R4.IOrganization>(
         getBundleEntry(bundle.entry, 'Organization', uniqueOrgIds[0])
       )
 
-      if (orderingLocation && orderingOrganization) {
-        if (
+      if (!orderingLocation) {
+        logger.error('Could not find ordering Location! Using Omrs Location instead.')
+        orderingLocation = <R4.ILocation>getBundleEntry(bundle.entry, 'Location')
+      }
+
+      if (orderingLocation) {
+        if (!orderingOrganization) {
+          logger.error('No ordering Organization found - copying location info!')
+          orderingOrganization = {
+            resourceType: 'Organization',
+            id: crypto
+              .createHash('md5')
+              .update('Organization/' + orderingLocation.name)
+              .digest('hex'),
+            identifier: orderingLocation.identifier,
+            name: orderingLocation.name,
+          }
+        } else if (
           !orderingLocation.managingOrganization ||
           orderingLocation.managingOrganization.reference?.split('/')[1] != orderingOrganization.id
         ) {
