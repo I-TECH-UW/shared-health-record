@@ -19,7 +19,11 @@ services:
     restart: unless-stopped
     hostname: shr
     restart: unless-stopped
+<<<<<<< HEAD
     image: itechuw/shared-health-record:debug
+=======
+    image: ghcr.io/i-tech-uw/shared-health-record:debug-5
+>>>>>>> 84e0761... Pilot update
     build:
       context: ./
       args:
