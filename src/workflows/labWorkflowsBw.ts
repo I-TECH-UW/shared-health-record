@@ -49,7 +49,7 @@ export const topicList = {
 
 export class LabWorkflowsBw extends LabWorkflows {
   private static kafka = new KafkaProducerUtil(producerConfig, report => {
-    logger.info('Delivery report:', report)
+    logger.info('Delivery report:')
   })
 
   // Static instance of the Kafka producer.
@@ -971,7 +971,7 @@ export class LabWorkflowsBw extends LabWorkflows {
     ]
 
     try {
-      logger.info(`Sending payload to topic ${topic}: ${JSON.stringify(payload)}`)
+      //logger.info(`Sending payload to topic ${topic}: ${JSON.stringify(payload)}`)
       await this.kafka.sendMessageTransactionally(records)
     } catch (err) {
       console.error('Failed to send message:', err)

@@ -1,13 +1,13 @@
-import { Kafka, KafkaConfig, Producer, ProducerRecord, Transaction } from 'kafkajs';
-import logger from './winston';
+import { Kafka, KafkaConfig, Producer, ProducerRecord, Transaction } from 'kafkajs'
+import logger from './winston'
 
-type DeliveryReportCallback = (report: any) => void;
+type DeliveryReportCallback = (report: any) => void
 
 /**
  * KafkaUtil class provides utility functions to interact with Kafka producer.
  */
 export class KafkaProducerUtil {
-  private producer: Producer | null = null;
+  private producer: Producer | null = null
 
   /**
    * Creates an instance of KafkaUtil.
@@ -23,10 +23,10 @@ export class KafkaProducerUtil {
    */
   public async init(): Promise<void> {
     try {
-      this.producer = await this.createProducer();
+      this.producer = await this.createProducer()
     } catch (err) {
-      console.error('Failed to initialize producer:', err);
-      throw err;
+      console.error('Failed to initialize producer:', err)
+      throw err
     }
   }
 
@@ -35,13 +35,17 @@ export class KafkaProducerUtil {
    * @returns {Promise<Producer>} Promise that resolves with Kafka producer instance.
    */
   private async createProducer(): Promise<Producer> {
-    logger.info('Creating Kafka producer...');
-    const kafka = new Kafka(this.config);
-    const producer = kafka.producer({transactionalId: 'shr-producer-transaction', idempotent: true, maxInFlightRequests: 1});
-    await producer.connect();
-    return producer;
+    logger.info('Creating Kafka producer...')
+    const kafka = new Kafka(this.config)
+    const producer = kafka.producer({
+      transactionalId: 'shr-producer-transaction',
+      idempotent: true,
+      maxInFlightRequests: 1,
+    })
+    await producer.connect()
+    return producer
   }
-  
+
   /**
    * Sends message using transaction.
    * @param {ProducerRecord[]} records - Array of producer records to send.
@@ -51,22 +55,22 @@ export class KafkaProducerUtil {
   public async sendMessageTransactionally(records: ProducerRecord[]): Promise<void> {
     if (!this.producer) {
       logger.error('Producer is not initialized.')
-      throw new Error('Producer is not initialized.');
+      throw new Error('Producer is not initialized.')
     }
 
-    const transaction: Transaction = await this.producer.transaction();
+    const transaction: Transaction = await this.producer.transaction()
     try {
-      logger.info('Sending the following records transactionally:');
-      logger.info(JSON.stringify(records, null, 2));
+      //logger.info('Sending the following records transactionally:');
+      //logger.info(JSON.stringify(records, null, 2));
       for (const record of records) {
-        await transaction.send(record);
+        await transaction.send(record)
       }
-      await transaction.commit();
-      this.onDeliveryReport({ status: 'committed' }); 
+      await transaction.commit()
+      this.onDeliveryReport({ status: 'committed' })
     } catch (err) {
-      await transaction.abort();
-      this.onDeliveryReport({ status: 'aborted' }); 
-      throw err;
+      await transaction.abort()
+      this.onDeliveryReport({ status: 'aborted' })
+      throw err
     }
   }
 
@@ -75,9 +79,9 @@ export class KafkaProducerUtil {
    * @returns {Promise<void>} Promise that resolves when producer is disconnected.
    */
   public async shutdown(): Promise<void> {
-    logger.info('Shutting down Kafka producer...');
+    logger.info('Shutting down Kafka producer...')
     if (this.producer) {
-      await this.producer.disconnect();
+      await this.producer.disconnect()
     }
   }
 }
