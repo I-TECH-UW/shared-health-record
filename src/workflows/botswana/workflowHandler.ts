@@ -201,8 +201,11 @@ export class WorkflowHandler {
     await this.initKafkaProducer()
     let val = ''
 
-    if (JSON.parse(payload)) val = JSON.stringify(payload)
-    else val = payload
+    if (payload && (payload.bundle || payload.resourceType)) {
+      val = JSON.stringify(payload)
+    } else {
+      val = payload
+    }
 
     const records: ProducerRecord[] = [
       {
@@ -235,7 +238,14 @@ export class WorkflowHandler {
     retryDelay = 1000,
   ) {
     await this.initKafkaProducer()
-    const val = JSON.parse(payload) ? JSON.stringify(payload) : payload
+    let val = ''
+
+    if (payload && (payload.bundle || payload.resourceType)) {
+      val = JSON.stringify(payload)
+    } else {
+      val = payload
+    }
+
     let error
     const records: ProducerRecord[] = [
       {
@@ -276,7 +286,7 @@ export class WorkflowHandler {
   // Entrypoint wrapper function for Lab Order Workflows
   static async handleLabOrder(orderBundle: R4.IBundle): Promise<void> {
     try {
-      await this.sendPayload({ bundle: orderBundle }, topicList.SEND_ADT_TO_IPMS)
+      await this.sendPayloadWithRetryDMQ({ bundle: orderBundle }, topicList.SEND_ADT_TO_IPMS)
     } catch (e) {
       logger.error(`Could not handle lab order!\n${JSON.stringify(e)}`)
       throw new Error(`Could not handle lab order!\n${JSON.stringify(e)}`)

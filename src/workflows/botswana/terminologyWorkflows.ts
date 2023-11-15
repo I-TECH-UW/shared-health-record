@@ -27,8 +27,6 @@ async function addAllCodings(labBundle: IBundle): Promise<IBundle> {
       ) {
         logger.info`Translating ServiceRequest Codings`
         e.resource = await translateCoding(e.resource)
-      } else {
-        logger.info`No Codings to Translate`
       }
     }
   } catch (e) {

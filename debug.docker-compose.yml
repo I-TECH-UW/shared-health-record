@@ -19,11 +19,10 @@ services:
     restart: unless-stopped
     hostname: shr
     restart: unless-stopped
-    image: ghcr.io/i-tech-uw/shared-health-record:debug-2
+    image: itechuw/shared-health-record:debug
     build:
       context: ./
       args:
-        - NODE_AUTH_TOKEN
         - NODE_ENV=docker
     ports:
       - 4000:3000
