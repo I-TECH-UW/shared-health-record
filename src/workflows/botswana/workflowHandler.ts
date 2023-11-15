@@ -37,6 +37,11 @@ class KafkaCallbackError extends Error {
   }
 }
 
+export interface WorkflowResult {
+  success: boolean
+  result: string
+}
+
 export const topicList = {
   SEND_ADT_TO_IPMS: 'send-adt-to-ipms',
   SEND_ORM_TO_IPMS: 'send-orm-to-ipms',
@@ -89,7 +94,7 @@ export const topicList = {
  */
 export class WorkflowHandler {
   private static kafka = new KafkaProducerUtil(producerConfig, report => {
-    logger.info('Delivery report:', report)
+    logger.info('Message delivered!')
   })
 
   // Static instance of the Kafka producer.
@@ -111,7 +116,7 @@ export class WorkflowHandler {
     }
   }
 
-  static async executeTopicWorkflow(topic: string, val: any) {
+  static async executeTopicWorkflow(topic: string, val: any): Promise<WorkflowResult> {
     let response: any
     let enrichedBundle
     let origBundle
@@ -182,12 +187,13 @@ export class WorkflowHandler {
       }
       await new Promise(resolve => setTimeout(resolve, 300))
 
-      return response
+      return { success: true, result: response }
     } catch (e) {
       logger.error('Could not execute Kafka consumer callback workflow!\nerror: ' + e)
-      throw new KafkaCallbackError(
-        'Could not execute Kafka consumer callback workflow!\nerror: ' + e,
-      )
+      return { success: false, result: `${e}` }
+      // throw new KafkaCallbackError(
+      //   'Could not execute Kafka consumer callback workflow!\nerror: ' + e,
+      // )
     }
   }
 
@@ -215,7 +221,7 @@ export class WorkflowHandler {
     ]
 
     try {
-      logger.info(`Sending payload to topic ${topic}: ${JSON.stringify(payload)}`)
+      logger.info(`Sending payload to topic ${topic}!`)
       await this.kafka.sendMessageTransactionally(records)
     } catch (err) {
       console.error(`Error sending payload to topic ${topic}: ${err}`)
@@ -242,6 +248,8 @@ export class WorkflowHandler {
 
     if (payload && (payload.bundle || payload.resourceType)) {
       val = JSON.stringify(payload)
+    } else if (payload && payload.message) {
+      val = payload.message
     } else {
       val = payload
     }
@@ -258,9 +266,7 @@ export class WorkflowHandler {
 
     while (attempt < maxRetries) {
       try {
-        logger.info(
-          `Attempt ${attempt + 1}: Sending payload to topic ${topic}: ${JSON.stringify(payload)}`,
-        )
+        logger.info(`Attempt ${attempt + 1}: Sending payload to topic ${topic}!`)
         await this.kafka.sendMessageTransactionally(records)
         return // Success, exit the function.
       } catch (err) {

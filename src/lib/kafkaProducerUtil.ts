@@ -66,6 +66,7 @@ export class KafkaProducerUtil {
         await transaction.send(record)
       }
       await transaction.commit()
+      logger.info('Message sent transactionally.')
       this.onDeliveryReport({ status: 'committed' })
     } catch (err) {
       await transaction.abort()

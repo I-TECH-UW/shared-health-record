@@ -92,8 +92,9 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
           'based-on': entry.resource.id,
         }
 
-        const fetchedBundle = <R4.IBundle>// TODO: Retry logic
-        await got.get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options).json()
+        const fetchedBundle = <
+          R4.IBundle // TODO: Retry logic
+        >await got.get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options).json()
 
         if (fetchedBundle && fetchedBundle.entry && srBundle.entry) {
           // Add child ServiceRequests if any exist
@@ -187,13 +188,15 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
         i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
       )
 
-      if (omangEntry) {
-        omang = omangEntry.value!
+      if (omangEntry && omangEntry.value) {
+        omang = omangEntry.value
       } else {
         logger.error(
           'Missing Omang - currently, only matching on Omang supported, but patient does not have an Omang number.',
         )
-        return registrationBundle
+        throw new IpmsWorkflowError(
+          `Missing Omang - currently, only matching on Omang supported, but patient does not have an Omang number.`,
+        )
       }
 
       // Find all patients with this Omang.
@@ -230,12 +233,14 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
             return { patient: patient, taskBundle: taskBundle }
           }
         }
+      } else {
+        logger.error('Could not find patient tasks!')
+        return { patient: undefined, taskBundle: undefined }
       }
     }
   } catch (e) {
     logger.error('Could not process ADT!\n' + e)
     throw new IpmsWorkflowError('Could not process ADT!\n' + e)
-    return { patient: undefined, taskBundle: undefined }
   }
 }
 

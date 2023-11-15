@@ -8,3 +8,10 @@ ROL|1|AD|AT|K^Naicker^Kalvin^^^^^^^^^^XX|
 ROL|2|AD|PP|GENPRI00^Doctor^Private^^^^^^^^^^XX|
 GT1|1||Test^ADT^Message||PLOT 123^^Gaborone^B^0101|00267891608025|||||SF|OMANG123|
 IN1|1|Citizens||Citizens|Botswana Government^Ministry of Health^Gaborone^B^0101|
+
+MSH|^~\&|ADM||||202311150750||ADT^A04|292304|D|2.4|||AL|NE|
+EVN||202311150749|||INFCE^INTERFACE|202311150000|
+PID|1||GG00042904^^^^MR^GGC~677827885^^^^SS^GGC~GG42786^^^^PI^GGC~TEST0106399^^^^HUB^GGC||TestPatient201^Testing201^^^^^L||20051017|F||CT|Plot 40095^^Gaborone^B^0101||123456789|||M||ZG0000044670|
+PV1|1|O|XEXTE15||||ZZHIEPROV^Provider^HIE^^^^^^^^^^XX|||||||||||POV||U|||||||||||||||||||GGC||REG|||202311150000|
+PV2|||||||||||1|||||||||||||||||||||||||N|
+ROL|1|AD|AT|ZZHIEPROV^Provider^HIE^^^^^^^^^^XX|
