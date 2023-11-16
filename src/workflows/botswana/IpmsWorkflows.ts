@@ -219,7 +219,7 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
           if (
             e.resource &&
             e.resource.resourceType == 'Task' &&
-            e.resource.status == TaskStatusKind._requested
+            (e.resource.status == TaskStatusKind._accepted || config.get('bwConfig:devTaskStatus'))
           ) {
             // Grab bundle for task:
             options.searchParams = {
@@ -233,6 +233,7 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
             return { patient: patient, taskBundle: taskBundle }
           }
         }
+        return { patient: undefined, taskBundle: undefined }
       } else {
         logger.error('Could not find patient tasks!')
         return { patient: undefined, taskBundle: undefined }

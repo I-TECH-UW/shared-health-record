@@ -1,7 +1,7 @@
-import { R4 } from "@ahryman40k/ts-fhir-types"
-import config from "../../lib/config"
-import { postWithRetry } from "./helpers"
-import logger from "../../lib/winston"
+import { R4 } from '@ahryman40k/ts-fhir-types'
+import config from '../../lib/config'
+import { postWithRetry } from './helpers'
+import logger from '../../lib/winston'
 
 /**
  * updateCrPatient
@@ -13,7 +13,7 @@ export async function updateCrPatient(bundle: R4.IBundle): Promise<R4.IBundle> {
   let pat: R4.IPatient
 
   const patResult = bundle.entry!.find(entry => {
-    return entry.resource && entry.resource.resourceType == 'Patient'
+    return entry.resource && entry.resource.resourceType === 'Patient'
   })
 
   const options = {
@@ -28,13 +28,17 @@ export async function updateCrPatient(bundle: R4.IBundle): Promise<R4.IBundle> {
     options.json = pat
   }
 
-  const crResult = await postWithRetry(crUrl, options, config.get('bwConfig:retryCount'), config.get('bwConfig:retryDelay'))
+  const crResult = await postWithRetry(
+    crUrl,
+    options,
+    config.get('bwConfig:retryCount'),
+    config.get('bwConfig:retryDelay'),
+  )
 
   logger.debug(`CR Patient Update Result: ${JSON.stringify(crResult)}`)
 
   return bundle
 }
-
 
 /**
  *
@@ -58,4 +62,3 @@ export async function saveIpmsPatient(registrationBundle: R4.IBundle): Promise<R
 
   return resultBundle
 }
-

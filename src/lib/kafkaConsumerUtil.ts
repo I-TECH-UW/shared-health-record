@@ -24,8 +24,14 @@ export class KafkaConsumerUtil {
 
   private async createConsumer(): Promise<Consumer> {
     const kafka = new Kafka(this.config)
-    const consumer = kafka.consumer({ groupId: this.groupId })
+    const consumer = kafka.consumer({
+      groupId: this.groupId,
+      sessionTimeout: 120000, // 2 minutes
+      heartbeatInterval: 30000, // 30 seconds
+    })
+
     await consumer.connect()
+
     for (const topic of this.topics) {
       await consumer.subscribe({ topic, fromBeginning: false })
     }
@@ -55,16 +61,18 @@ export class KafkaConsumerUtil {
             `Consumer | Recieved message from topic ${topic} on partition ${partition} with offset ${message.offset}`,
           )
 
-          const maxRetries = 6
+          const maxRetries = 2
           let retryCount = 0
-          let retryDelay = 1000
+          let retryDelay = 2000
           let res: WorkflowResult | null = null
 
           while (retryCount < maxRetries) {
+            logger.info(`Processing message for ${topic} with retry count ${retryCount}...`)
             try {
               res = await eachMessageCallback(topic, partition, message)
 
               if (res.success) {
+                logger.info(`Workflow result succeeded!`)
                 resolveOffset(message.offset)
                 await heartbeat()
                 break // Break the loop if processing succeeds              }
@@ -81,11 +89,13 @@ export class KafkaConsumerUtil {
               logger.error(
                 `Max retries reached for message ${message.offset}, sending to dead letter queue or similar.`,
               )
+              resolveOffset(message.offset)
+
               // TODO: handle with DLQ
               break
             }
             await new Promise(resolve => setTimeout(resolve, retryDelay))
-            retryDelay *= 2 // Double the delay for the next retry
+            retryDelay *= 20 // Double the delay for the next retry
             await heartbeat() // Important to call heartbeat to keep the session alive
           }
         }

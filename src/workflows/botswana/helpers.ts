@@ -71,8 +71,8 @@ export function getBundleEntries(
 export async function postWithRetry(
   crUrl: string,
   options: OptionsOfTextResponseBody,
-  retryLimit = 5,
-  timeout = 1000,
+  retryLimit = 2,
+  timeout = 3000,
 ) {
   for (let attempt = 1; attempt <= retryLimit; attempt++) {
     try {
