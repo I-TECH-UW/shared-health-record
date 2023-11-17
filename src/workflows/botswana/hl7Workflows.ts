@@ -43,7 +43,7 @@ export default class Hl7WorkflowsBw {
 
   static async handleAdtMessage(hl7Msg: string): Promise<void> {
     try {
-      WorkflowHandler.sendPayload({ message: hl7Msg }, topicList.HANDLE_ADT_FROM_IPMS)
+      WorkflowHandler.sendPayloadWithRetryDMQ({ message: hl7Msg }, topicList.HANDLE_ADT_FROM_IPMS)
     } catch (error: any) {
       // TODO: Major Error - send to DMQ or handle otherwise
       logger.error(`Could not translate and save ADT message!\n${JSON.stringify(error)}`)

@@ -13,6 +13,7 @@ import { mapLocations } from './locationWorkflows'
 import { saveIpmsPatient, updateCrPatient } from './patientIdentityWorkflows'
 import { saveBundle } from '../../hapi/lab'
 import { sleep } from './helpers'
+import { IBundle, IPatient } from '@ahryman40k/ts-fhir-types/lib/R4'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const hl7 = require('hl7')
@@ -35,6 +36,11 @@ class KafkaCallbackError extends Error {
       Error.captureStackTrace(this, KafkaCallbackError)
     }
   }
+}
+
+export interface WorkflowResult {
+  success: boolean
+  result: string
 }
 
 export const topicList = {
@@ -89,7 +95,7 @@ export const topicList = {
  */
 export class WorkflowHandler {
   private static kafka = new KafkaProducerUtil(producerConfig, report => {
-    logger.info('Delivery report:', report)
+    logger.info('Message delivered!')
   })
 
   // Static instance of the Kafka producer.
@@ -111,11 +117,12 @@ export class WorkflowHandler {
     }
   }
 
-  static async executeTopicWorkflow(topic: string, val: any) {
+  static async executeTopicWorkflow(topic: string, val: any): Promise<WorkflowResult> {
     let response: any
     let enrichedBundle
     let origBundle
     let hl7Message
+    let successFlag = true
 
     // Each of these topics holds a workflow that is atomic. If any required part fails, then
     // the entire workflow fails and the message is retried by the Kafka consumer logic.
@@ -149,12 +156,20 @@ export class WorkflowHandler {
 
           const adtRes = await handleAdtFromIpms(hl7Message)
 
-          this.sendPayloadWithRetryDMQ(adtRes.patient, topicList.SAVE_IPMS_PATIENT)
+          if (adtRes && adtRes.patient) {
+            this.sendPayloadWithRetryDMQ(adtRes.patient, topicList.SAVE_IPMS_PATIENT)
+          }
 
-          enrichedBundle = await sendOrmToIpms(adtRes)
+          if (adtRes && adtRes.taskBundle && adtRes.patient) {
+            enrichedBundle = await sendOrmToIpms(adtRes)
 
-          // Succeed only if this bundle saves successfully
-          response = await saveBundle(enrichedBundle)
+            // Succeed only if this bundle saves successfully
+            response = await saveBundle(enrichedBundle)
+          } else {
+            response = adtRes
+            successFlag = false
+            logger.error(`Could not handle ADT from IPMS!\n${JSON.stringify(adtRes)}`)
+          }
 
           break
         }
@@ -172,22 +187,29 @@ export class WorkflowHandler {
           break
         }
         case topicList.SAVE_IPMS_PATIENT: {
-          origBundle = JSON.parse(val).bundle
-          response = await saveIpmsPatient(origBundle)
+          const patient: IPatient = JSON.parse(val)
+          const bundle: IBundle = {
+            resourceType: 'Bundle',
+            entry: [
+              {
+                resource: patient,
+              },
+            ],
+          }
+          response = await saveIpmsPatient(bundle)
           break
         }
+
         default: {
           break
         }
       }
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise(resolve => setTimeout(resolve, 100))
 
-      return response
+      return { success: successFlag, result: response }
     } catch (e) {
       logger.error('Could not execute Kafka consumer callback workflow!\nerror: ' + e)
-      throw new KafkaCallbackError(
-        'Could not execute Kafka consumer callback workflow!\nerror: ' + e,
-      )
+      return { success: false, result: `${e}` }
     }
   }
 
@@ -215,7 +237,7 @@ export class WorkflowHandler {
     ]
 
     try {
-      logger.info(`Sending payload to topic ${topic}: ${JSON.stringify(payload)}`)
+      logger.info(`Sending payload to topic ${topic}!`)
       await this.kafka.sendMessageTransactionally(records)
     } catch (err) {
       console.error(`Error sending payload to topic ${topic}: ${err}`)
@@ -234,14 +256,16 @@ export class WorkflowHandler {
   public static async sendPayloadWithRetryDMQ(
     payload: any,
     topic: string,
-    maxRetries = 5,
-    retryDelay = 1000,
+    maxRetries = 2,
+    retryDelay = 3000,
   ) {
     await this.initKafkaProducer()
     let val = ''
 
     if (payload && (payload.bundle || payload.resourceType)) {
       val = JSON.stringify(payload)
+    } else if (payload && payload.message) {
+      val = payload.message
     } else {
       val = payload
     }
@@ -258,9 +282,7 @@ export class WorkflowHandler {
 
     while (attempt < maxRetries) {
       try {
-        logger.info(
-          `Attempt ${attempt + 1}: Sending payload to topic ${topic}: ${JSON.stringify(payload)}`,
-        )
+        logger.info(`Attempt ${attempt + 1}: Sending payload to topic ${topic}!`)
         await this.kafka.sendMessageTransactionally(records)
         return // Success, exit the function.
       } catch (err) {

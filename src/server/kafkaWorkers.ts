@@ -1,6 +1,6 @@
 import { KafkaConfig, Message, logLevel } from 'kafkajs'
 import logger from '../lib/winston'
-import { WorkflowHandler, topicList } from '../workflows/botswana/workflowHandler'
+import { WorkflowHandler, WorkflowResult, topicList } from '../workflows/botswana/workflowHandler'
 import { config } from '../lib/config'
 import { KafkaConsumerUtil } from '../lib/kafkaConsumerUtil'
 
@@ -8,15 +8,13 @@ const errorTypes = ['unhandledRejection', 'uncaughtException']
 const signalTraps: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2']
 const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
 
-let consumer: KafkaConsumerUtil | null = null;
+let consumer: KafkaConsumerUtil | null = null
 
 const consumerConfig: KafkaConfig = {
   clientId: 'shr-consumer',
   brokers: brokers,
-  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR
-};
-
-
+  logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR,
+}
 
 /**
  * Example Botswana Workflow: (synchronous for now)
@@ -58,21 +56,24 @@ export async function run() {
 }
 
 async function shutdownConsumer() {
-  if (consumer)
-    await consumer.shutdown()
+  if (consumer) await consumer.shutdown()
 }
 
 const initAndConsume = async (topics: string[]) => {
-  const consumer = new KafkaConsumerUtil(consumerConfig, topics, "shr-consumer-group");
-  await consumer.init();
-  consumer.consumeTransactionally(processMessage);  // No await here
-  return consumer;
-};
+  const consumer = new KafkaConsumerUtil(consumerConfig, topics, 'shr-consumer-group')
+  await consumer.init()
+  consumer.consumeTransactionally(processMessage) // No await here
+  return consumer
+}
 
-async function processMessage(topic: string, partition: number, message: Message): Promise<void> {
-  // There is no additional error handling in this message, since any exceptions or problems will need to be 
-  // logged and handled by the Kafka consumer retry logic in the KafkaConsumerUtil class. 
-  
+async function processMessage(
+  topic: string,
+  partition: number,
+  message: Message,
+): Promise<WorkflowResult> {
+  // There is no additional error handling in this message, since any exceptions or problems will need to be
+  // logged and handled by the Kafka consumer retry logic in the KafkaConsumerUtil class.
+
   logger.info(`Recieved message from topic ${topic} on partition ${partition}`)
 
   let val = ''
@@ -81,7 +82,7 @@ async function processMessage(topic: string, partition: number, message: Message
   if (message.value) {
     val = message.value.toString()
   }
-  
+
   // This method needs to bubble up any exceptions to the Kafka consumer retry logic in the KafkaConsumerUtil class.
-  WorkflowHandler.executeTopicWorkflow(topic, val)
+  return await WorkflowHandler.executeTopicWorkflow(topic, val)
 }
