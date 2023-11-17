@@ -68,13 +68,13 @@ export async function addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
       )
 
       if (!orderingLocation) {
-        logger.error('Could not find ordering Location! Using Omrs Location instead.')
+        logger.warning('Could not find ordering Location! Using Omrs Location instead.')
         orderingLocation = <R4.ILocation>getBundleEntry(bundle.entry, 'Location')
       }
 
       if (orderingLocation) {
         if (!orderingOrganization) {
-          logger.error('No ordering Organization found - copying location info!')
+          logger.warning('No ordering Organization found - copying location info!')
           orderingOrganization = {
             resourceType: 'Organization',
             id: crypto

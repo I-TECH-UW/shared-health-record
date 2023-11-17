@@ -72,7 +72,7 @@ export async function postWithRetry(
   crUrl: string,
   options: OptionsOfTextResponseBody,
   retryLimit = 2,
-  timeout = 3000,
+  timeout = 30000,
 ) {
   for (let attempt = 1; attempt <= retryLimit; attempt++) {
     try {
