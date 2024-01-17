@@ -7,6 +7,7 @@ import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
 import { getResourceTypeEnum, isValidResourceType } from '../lib/validate'
+import { getMetadata } from '../lib/helpers'
 
 export const router = express.Router()
 
@@ -14,7 +15,9 @@ router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
 })
 
-router.get('/:resource/:id?/:operation?', async (req, res) => {
+router.get('/metadata', getMetadata())
+
+router.get('/:resource/:id?/:operation?', async (req: Request, res: Response) => {
   let result = {}
   try {
     let uri = URI(config.get('fhirServer:baseURL'))
