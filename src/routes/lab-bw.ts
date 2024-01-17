@@ -3,7 +3,7 @@
 import { R4 } from '@ahryman40k/ts-fhir-types'
 import express, { Request, Response } from 'express'
 import { saveBundle } from '../hapi/lab'
-import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
+import { getMetadata, invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { WorkflowHandler } from '../workflows/botswana/workflowHandler'
 
