@@ -5,16 +5,18 @@ import fhirClient from 'fhirclient'
 import config from '../lib/config'
 import logger from '../lib/winston'
 import { generateIpsbundle, generateUpdateBundle } from '../workflows/ipsWorkflows'
+import { sprintf } from 'sprintf-js'
+import { getMetadata } from '../lib/helpers'
 
 export const router = express.Router()
-
-import { sprintf } from 'sprintf-js'
 
 const system = config.get('app:mpiSystem')
 
 router.get('/', (req: Request, res: Response) => {
   return res.status(200).send(req.url)
 })
+
+router.get('/metadata', getMetadata())
 
 router.get('/Patient/cruid/:id/:lastUpdated?', async (req: Request, res: Response) => {
   const cruid = req.params.id
@@ -134,7 +136,7 @@ router.get('/:location?/:lastUpdated?', (req: Request, res: Response) => {
    * 5. Combine them into a single bundle w/ composition
    *
    */
-
+  
   const patientP = client.request<R4.IPatient[]>(`Patient?${query}`, {
     flat: true,
   })
