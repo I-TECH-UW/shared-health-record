@@ -3,24 +3,22 @@ import { R4 } from '@ahryman40k/ts-fhir-types'
 import express, { Request, Response } from 'express'
 import got from 'got/dist/source'
 import { saveBundle } from '../hapi/lab'
-import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
+import { getMetadata, invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { LabWorkflows } from '../workflows/labWorkflows'
 
 export const router = express.Router()
 
+router.get('/metadata', getMetadata())
+
 router.all('/', async (req: Request, res: Response) => {
   if (req.method == 'GET') {
-    const task: R4.ITask = <R4.ITask>(
-      await got(
-        'https://b-techbw.github.io/bw-lab-ig/Task-example-laboratory-task-simple-requested.json',
-      ).json()
-    )
-    const patient: R4.IPatient = <R4.IPatient>(
-      await got(
-        'https://i-tech-uw.github.io/laboratory-workflows-ig/Patient-example-laboratory-patient.json',
-      ).json()
-    )
+    const task: R4.ITask = <R4.ITask><unknown>got(
+      'https://b-techbw.github.io/bw-lab-ig/Task-example-laboratory-task-simple-requested.json'
+    ).json()
+    const patient: R4.IPatient = <R4.IPatient><unknown>got(
+      'https://i-tech-uw.github.io/laboratory-workflows-ig/Patient-example-laboratory-patient.json'
+    ).json()
 
     // Temporary Testing Bundle
     return res.status(200).send(LabWorkflows.generateLabBundle(task, patient))
