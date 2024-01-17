@@ -9,6 +9,8 @@ import { WorkflowHandler } from '../workflows/botswana/workflowHandler'
 
 export const router = express.Router()
 
+router.get('/metadata', getMetadata())
+
 router.all('/', async (req: Request, res: Response) => {
   let orderBundle: R4.IBundle
   if (req.method == 'POST' || req.method == 'PUT') {
