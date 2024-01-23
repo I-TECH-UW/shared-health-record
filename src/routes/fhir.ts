@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express'
 import got from 'got'
 import URI from 'urijs'
 import config from '../lib/config'
-import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
+import { hapiPassthrough, invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
 import { getResourceTypeEnum, isValidResourceType } from '../lib/validate'
@@ -22,21 +22,27 @@ router.get('/:resource/:id?/:operation?', async (req: Request, res: Response) =>
   try {
     let uri = URI(config.get('fhirServer:baseURL'))
 
-    if(isValidResourceType(req.params.resource)) {
+    if (isValidResourceType(req.params.resource)) {
       uri = uri.segment(getResourceTypeEnum(req.params.resource).toString())
     } else {
-      return res.status(400).json({ message: `Invalid resource type ${req.params.resource}` })
+      if (config.get('app:hapiPassthrough')) 
+        return hapiPassthrough(req)
+      else 
+        return res.status(400).json({ message: `Invalid resource type ${req.params.resource}` })
     }
 
     if (req.params.id && /^[a-zA-Z0-9\-_]+$/.test(req.params.id)) {
       uri = uri.segment(encodeURIComponent(req.params.id))
     } else {
-      return res.status(400).json({ message: `Invalid resource id ${req.params.id}` })
+      if (config.get('app:hapiPassthrough')) 
+        return hapiPassthrough(req)
+      else
+        return res.status(400).json({ message: `Invalid resource id ${req.params.id}` })
     }
 
     for (const param in req.query) {
       const value = req.query[param]
-      if(value && /^[a-zA-Z0-9\-_]+$/.test(value.toString())) {
+      if (value && /^[a-zA-Z0-9\-_]+$/.test(value.toString())) {
         uri.addQuery(param, encodeURIComponent(value.toString()))
       } else {
         return res.status(400).json({ message: `Invalid query parameter ${param}=${value}` })
@@ -79,6 +85,7 @@ router.get('/:resource/:id?/:operation?', async (req: Request, res: Response) =>
 
     res.status(200).json(result)
   } catch (error) {
+
     return res.status(500).json(error)
   }
 })

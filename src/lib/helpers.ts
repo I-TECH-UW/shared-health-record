@@ -47,3 +47,17 @@ export function getMetadata(): any {
     }
   }
 }
+
+export function hapiPassthrough(req: Request): any {
+  const requestUrl = new URL(req.url)
+  const targetUri = config.get('fhirServer:baseURL') + requestUrl.pathname + requestUrl.search
+  
+  logger.info(`Getting ${targetUri}`)
+
+  const options = {
+    username: config.get('fhirServer:username'),
+    password: config.get('fhirServer:password'),
+  }
+
+  return got(targetUri, options)
+}
