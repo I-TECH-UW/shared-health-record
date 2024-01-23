@@ -103,7 +103,7 @@ export class WorkflowHandler {
 
   // Initialize Kafka producer when the class is first used.
   public static async initKafkaProducer() {
-    if (!this.kafkaProducerInitialized) {
+    if (!this.kafkaProducerInitialized && config.get('taskRunner:brokers')) {
       await this.kafka.init()
       this.kafkaProducerInitialized = true
     }
