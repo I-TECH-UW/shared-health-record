@@ -1,9 +1,8 @@
 'use strict'
-import config from "../lib/config"
-import { Request, Response } from "express"
-import got from "got"
-import logger from "../lib/winston"
-
+import config from '../lib/config'
+import { Request, Response } from 'express'
+import got from 'got'
+import logger from '../lib/winston'
 
 export function invalidBundle(resource: any): boolean {
   return (
@@ -29,21 +28,35 @@ export function invalidBundleMessage(): any {
     },
   }
 }
+
+export async function hapiPassthrough(targetUri: any, res: Response): Promise<any> {
+  logger.info(`Getting ${targetUri}`)
+
+  const options = {
+    username: config.get('fhirServer:username'),
+    password: config.get('fhirServer:password'),
+  }
+
+  try {
+    const result = await got.get(targetUri, options).json()
+    return res.status(200).json(result)
+  } catch (error) {
+    return res.status(500).json(error)
+  }
+}
+
+export function getHapiPassthrough(): any {
+  return async (req: Request, res: Response) => {
+    const targetUri = config.get('fhirServer:baseURL') + req.url
+
+    return hapiPassthrough(targetUri, res)
+  }
+}
+
 export function getMetadata(): any {
   return async (req: Request, res: Response) => {
     const targetUri = config.get('fhirServer:baseURL') + '/metadata'
-    logger.info(`Getting ${targetUri}`)
 
-    const options = {
-      username: config.get('fhirServer:username'),
-      password: config.get('fhirServer:password'),
-    }
-
-    try {
-      const result = await got.get(targetUri, options).json()
-      res.status(200).json(result)
-    } catch (error) {
-      return res.status(500).json(error)
-    }
+    return hapiPassthrough(targetUri, res)
   }
 }
