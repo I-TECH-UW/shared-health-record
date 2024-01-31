@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express'
 import got from 'got'
 import URI from 'urijs'
 import config from '../lib/config'
-import { invalidBundle, invalidBundleMessage } from '../lib/helpers'
+import { getHapiPassthrough, invalidBundle, invalidBundleMessage } from '../lib/helpers'
 import logger from '../lib/winston'
 import { generateSimpleIpsBundle } from '../workflows/ipsWorkflows'
 import { getResourceTypeEnum, isValidResourceType } from '../lib/validate'
@@ -22,7 +22,7 @@ router.get('/:resource/:id?/:operation?', async (req: Request, res: Response) =>
   try {
     let uri = URI(config.get('fhirServer:baseURL'))
 
-    if(isValidResourceType(req.params.resource)) {
+    if (isValidResourceType(req.params.resource)) {
       uri = uri.segment(getResourceTypeEnum(req.params.resource).toString())
     } else {
       return res.status(400).json({ message: `Invalid resource type ${req.params.resource}` })
@@ -31,15 +31,19 @@ router.get('/:resource/:id?/:operation?', async (req: Request, res: Response) =>
     if (req.params.id && /^[a-zA-Z0-9\-_]+$/.test(req.params.id)) {
       uri = uri.segment(encodeURIComponent(req.params.id))
     } else {
-      return res.status(400).json({ message: `Invalid resource id ${req.params.id}` })
+      logger.info(`Invalid id ${req.params.id} - falling back on pass-through to HAPI FHIR server`)
+      return getHapiPassthrough()(req, res)
     }
 
     for (const param in req.query) {
       const value = req.query[param]
-      if(value && /^[a-zA-Z0-9\-_]+$/.test(value.toString())) {
+      if (value && /^[a-zA-Z0-9\-_]+$/.test(value.toString())) {
         uri.addQuery(param, encodeURIComponent(value.toString()))
       } else {
-        return res.status(400).json({ message: `Invalid query parameter ${param}=${value}` })
+        logger.info(
+          `Invalid query parameter ${param}=${value} - falling back on pass-through to HAPI FHIR server`,
+        )
+        return getHapiPassthrough()(req, res)
       }
     }
 
@@ -98,13 +102,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json(invalidBundleMessage())
     }
 
-    const uri = URI(config.get("fhirServer:baseURL"));
-
+    const uri = URI(config.get('fhirServer:baseURL'))
 
     const ret = await got.post(uri.toString(), { json: resource })
 
     res.status(ret.statusCode).json(ret.body)
-
   } catch (error) {
     return res.status(500).json(error)
   }
@@ -132,12 +134,12 @@ async function saveResource(req: any, res: any) {
 
   logger.info('Received a request to add resource type ' + resourceType + ' with id ' + id)
 
-  const ret = await got.post(config.get('fhirServer:baseURL') + '/' + getResourceTypeEnum(resourceType).toString, { json: resource })
+  const ret = await got.post(
+    config.get('fhirServer:baseURL') + '/' + getResourceTypeEnum(resourceType).toString,
+    { json: resource },
+  )
 
   res.status(ret.statusCode).json(ret.body)
 }
-
-
-
 
 export default router
