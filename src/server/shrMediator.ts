@@ -42,10 +42,9 @@ export class ShrMediator {
     errorTypes.map(type => {
       process.on(type, async e => {
         try {
-          logger.error(`process.on ${type}`)
+          logger.error(`Caught error: process.on ${type}`)
           logger.error(e)
-          await WorkflowHandler.shutdownKafkaProducer()
-          process.exit(0)
+          logger.error(e.stack)
         } catch (_) {
           process.exit(1)
         }

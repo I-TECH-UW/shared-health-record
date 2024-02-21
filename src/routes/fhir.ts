@@ -113,18 +113,18 @@ router.post('/', async (req, res) => {
 })
 
 // Create resource
-router.post('/:resourceType', (req, res) => {
+router.post('/:resourceType', (req: any, res: any) => {
   saveResource(req, res)
 })
 
 // Update resource
-router.put('/:resourceType/:id', (req, res) => {
+router.put('/:resourceType/:id', (req: any, res: any) => {
   saveResource(req, res)
 })
 
 /** Helpers */
 
-async function saveResource(req: any, res: any) {
+export async function saveResource(req: any, res: any, operation?: string) {
   const resource = req.body
   const resourceType = req.params.resourceType
   const id = req.params.id
@@ -133,13 +133,42 @@ async function saveResource(req: any, res: any) {
   }
 
   logger.info('Received a request to add resource type ' + resourceType + ' with id ' + id)
+  
+  let ret, uri, errorFromHapi
+  try {
+    if (req.method === 'POST') {
+      uri = config.get('fhirServer:baseURL') + '/' + getResourceTypeEnum(resourceType).toString()
+    } else if (req.method === 'PUT') {
+      uri = config.get('fhirServer:baseURL') + '/' + getResourceTypeEnum(resourceType).toString() + '/' + id
+    } else {
+      // Invalid request method
+      res.status(400).json({ error: 'Invalid request method' })
+      return
+    }
 
-  const ret = await got.post(
-    config.get('fhirServer:baseURL') + '/' + getResourceTypeEnum(resourceType).toString,
-    { json: resource },
-  )
+    // Perform  request
+    logger.info('Sending ' + req.method + ' request to ' + uri)
+    ret = await got({
+      method: req.method,
+      url: uri,
+      json: resource,
+      hooks: {
+        beforeError: [
+          error => {
+            if (error.response) {
+              logger.error('Error response from FHIR server: ' + JSON.stringify(error.response.body))
+              errorFromHapi = JSON.parse(error.response.body as string)
+            }
+            return error
+          },
+        ],
+      },
+    });
 
-  res.status(ret.statusCode).json(ret.body)
+    res.status(ret.statusCode).json(JSON.parse(ret.body))
+  } catch (error) {
+    res.status(500).json(errorFromHapi || error)
+  }
 }
-
+    
 export default router
