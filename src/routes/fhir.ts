@@ -124,7 +124,7 @@ router.put('/:resourceType/:id', (req, res) => {
 
 /** Helpers */
 
-async function saveResource(req: any, res: any) {
+export async function saveResource(req: any, res: any) {
   const resource = req.body
   const resourceType = req.params.resourceType
   const id = req.params.id
