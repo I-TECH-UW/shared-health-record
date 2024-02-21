@@ -18,7 +18,7 @@ services:
     container_name: shr
     restart: unless-stopped
     hostname: shr
-    image: itechuw/shared-health-record:debug
+    image: itechuw/shared-health-record:debug-1
     build:
       context: ./
       args:

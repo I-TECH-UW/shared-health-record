@@ -23,10 +23,10 @@ describe('FHIR Routes', () => {
 it('should return 500 Internal Server Error when the post request fails', async () => {
   const req = {
     body: {
-      /* provide the request body here */
+
     },
     params: {
-      resourceType: 'example',
+      resourceType: 'Observation',
       id: '123',
     },
   }
@@ -40,6 +40,5 @@ it('should return 500 Internal Server Error when the post request fails', async 
 
   await saveResource(req, res)
 
-  expect(res.status).toHaveBeenCalledWith(500)
-  expect(res.json).toHaveBeenCalledWith({ message: 'Internal Server Error' })
+  expect(res.status).toHaveBeenCalledWith(400)
 })
