@@ -157,7 +157,7 @@ export async function saveResource(req: any, res: any, operation?: string) {
           error => {
             if (error.response) {
               logger.error('Error response from FHIR server: ' + JSON.stringify(error.response.body))
-              errorFromHapi = error.response.body
+              errorFromHapi = JSON.parse(error.response.body as string)
             }
             return error
           },
@@ -165,7 +165,7 @@ export async function saveResource(req: any, res: any, operation?: string) {
       },
     });
 
-    res.status(ret.statusCode).body(ret.body)
+    res.status(ret.statusCode).json(JSON.parse(ret.body))
   } catch (error) {
     res.status(500).json(errorFromHapi || error)
   }
