@@ -165,6 +165,7 @@ export class WorkflowHandler {
 
             // Succeed only if this bundle saves successfully
             response = await saveBundle(enrichedBundle)
+            
           } else {
             response = adtRes
             successFlag = false
