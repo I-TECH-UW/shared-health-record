@@ -40,7 +40,7 @@
     "fast-levenshtein": "^2.0.6",
     "fhir": "^4.7.10",
     "fhirclient": "^2.3.10",
-    "formidable": "^1.2.1",
+    "formidable": "^3.2.4",
     "got": "^11.8.2",
     "hl7": "^1.1.1",
     "is-json": "^2.0.1",
