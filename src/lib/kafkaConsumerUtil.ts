@@ -1,7 +1,7 @@
 import { Consumer, EachBatchPayload, Kafka, KafkaConfig, Message } from 'kafkajs'
 import logger from './winston'
 import { WorkflowHandler, WorkflowResult, topicList } from '../workflows/botswana/workflowHandler'
-
+import { config } from '../lib/config'
 export type EachMessageCallback = (
   topic: string,
   partition: number,
@@ -61,9 +61,9 @@ export class KafkaConsumerUtil {
             `Consumer | Recieved message from topic ${topic} on partition ${partition} with offset ${message.offset}`,
           )
 
-          const maxRetries = 2
+          const maxRetries = config.get("retryConfig:kafkaMaxRetries") || 2
           let retryCount = 0
-          let retryDelay = 2000
+          let retryDelay = config.get("retryConfig:kafkaRetryDelay") || 1000
           let res: WorkflowResult | null = null
 
           while (retryCount < maxRetries) {

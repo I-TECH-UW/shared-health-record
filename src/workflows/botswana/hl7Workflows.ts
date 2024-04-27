@@ -69,6 +69,9 @@ export default class Hl7WorkflowsBw {
   }
 
   static async translateBundle(hl7Msg: string, templateConfigKey: string) {
+    let maxRetries = config.get('retryConfig:translatorMaxRetries') || 5;
+    let delay = config.get('retryConfig:translatorRetryDelay') || 2000;
+
     // The errorCheck function defines the criteria for retrying based on the operation's result
     const errorCheck = (result: R4.IBundle) => result === this.errorBundle;
 
@@ -78,8 +81,8 @@ export default class Hl7WorkflowsBw {
     // Use the retryOperation method with the new errorCheck criteria
     return await this.retryOperation(
         () => this.getHl7Translation(hl7Msg, config.get(templateConfigKey)),
-        5, // maxRetries
-        1000, // delay in milliseconds
+        maxRetries, 
+        delay, 
         errorCheck,
         payloadForDMQ
     );
@@ -140,8 +143,8 @@ export default class Hl7WorkflowsBw {
 
   static async getFhirTranslationWithRetry(bundle: R4.IBundle, template: string): Promise<string> {
     // Define your retry parameters
-    const maxRetries = 3;
-    const delay = 1000; // Starting delay in ms
+    const maxRetries = config.get('retryConfig:translatorMaxRetries') || 5
+    const delay = config.get('retryConfig:translatorRetryDelay') || 2000
 
     const errorCheck = (result: R4.IBundle) => result === this.errorBundle;
 
@@ -149,8 +152,8 @@ export default class Hl7WorkflowsBw {
 
     return await this.retryOperation(
       () => this.getFhirTranslation(bundle, template),
-      5, // maxRetries
-      2000, // delay in milliseconds
+      maxRetries,
+      delay,
       errorCheck,
       payloadForDMQ
     );

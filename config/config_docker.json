@@ -28,6 +28,14 @@
       "kafka:9092"
     ]
   },
+  "retryConfig": {
+    "translatorMaxRetries": 5,
+    "translatorRetryDelay": 10000,
+    "hl7MaxRetries": 5,
+    "hl7RetryDelay": 10000,
+    "kafkaMaxRetries": 5,
+    "kafkaRetryDelay": 10000
+  },
   "bwConfig": {
     "pimsSystemUrl": "https://api.openconceptlab.org/orgs/I-TECH-UW/sources/PIMSLAB/",
     "ipmsSystemUrl": "https://api.openconceptlab.org/orgs/I-TECH-UW/sources/IPMSLAB/",
