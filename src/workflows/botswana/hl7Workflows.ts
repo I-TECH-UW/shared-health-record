@@ -6,9 +6,28 @@ import got from 'got/dist/source'
 import config from '../../lib/config'
 import logger from '../../lib/winston'
 import { WorkflowHandler, topicList } from './workflowHandler'
-import sleep from 'sleep-promise'
+import { KafkaProducerUtil } from '../../lib/kafkaProducerUtil'
+import { KafkaConfig, logLevel } from 'kafkajs'
+
+const brokers = config.get('taskRunner:brokers') || ['kafka:9092']
 
 export default class Hl7WorkflowsBw {
+  private static kafkaProducer: KafkaProducerUtil | null = null;
+
+  public static async initKafkaProducer() {
+    if (!this.kafkaProducer) {
+      const hl7ProducerConfig: KafkaConfig = {
+        clientId: 'dead-message-producer',
+        brokers: brokers,
+        logLevel: config.get('taskRunner:logLevel') || logLevel.ERROR,
+      }
+      this.kafkaProducer = new KafkaProducerUtil(hl7ProducerConfig, (report) => {
+        logger.info('HL7 message delivery report:', report);
+      })
+      await this.kafkaProducer.init();
+    }
+  }
+
   public static errorBundle: IBundle = {
     resourceType: 'Bundle',
     type: BundleTypeKind._transactionResponse,
@@ -45,23 +64,25 @@ export default class Hl7WorkflowsBw {
     try {
       WorkflowHandler.sendPayloadWithRetryDMQ({ message: hl7Msg }, topicList.HANDLE_ADT_FROM_IPMS)
     } catch (error: any) {
-      // TODO: Major Error - send to DMQ or handle otherwise
       logger.error(`Could not translate and save ADT message!\n${JSON.stringify(error)}`)
     }
   }
 
-  static async translateBundle(hl7Msg: string, template: string) {
-    let tries = 0
-    let translatedBundle: R4.IBundle = this.errorBundle
+  static async translateBundle(hl7Msg: string, templateConfigKey: string) {
+    // The errorCheck function defines the criteria for retrying based on the operation's result
+    const errorCheck = (result: R4.IBundle) => result === this.errorBundle;
 
-    while (tries < 5 && translatedBundle == this.errorBundle) {
-      tries = tries + 1
-      translatedBundle = await this.getHl7Translation(hl7Msg, config.get(template))
-      if (translatedBundle == this.errorBundle) {
-        await sleep(1000)
-      }
-    }
-    return translatedBundle
+    // Define the payload for DMQ in case of failure
+    const payloadForDMQ = { hl7Msg, templateConfigKey };
+
+    // Use the retryOperation method with the new errorCheck criteria
+    return await this.retryOperation(
+        () => this.getHl7Translation(hl7Msg, config.get(templateConfigKey)),
+        5, // maxRetries
+        1000, // delay in milliseconds
+        errorCheck,
+        payloadForDMQ
+    );
   }
 
   static async getHl7Translation(hl7Message: string, template: string): Promise<R4.IBundle> {
@@ -116,4 +137,59 @@ export default class Hl7WorkflowsBw {
       return ''
     }
   }
+
+  static async getFhirTranslationWithRetry(bundle: R4.IBundle, template: string): Promise<string> {
+    // Define your retry parameters
+    const maxRetries = 3;
+    const delay = 1000; // Starting delay in ms
+
+    const errorCheck = (result: R4.IBundle) => result === this.errorBundle;
+
+    const payloadForDMQ = { bundle, template };
+
+    return await this.retryOperation(
+      () => this.getFhirTranslation(bundle, template),
+      5, // maxRetries
+      2000, // delay in milliseconds
+      errorCheck,
+      payloadForDMQ
+    );
+  }
+
+  static async retryOperation(func: () => any, maxRetries: number, delay: number, errorCheck: (result: any) => boolean, payloadForDMQ: any) {
+    let attempts = 0;
+    let result: any;
+    while (attempts < maxRetries) {
+      try {
+        result = await func();
+        // Check if the result meets the criteria to be considered successful
+        if (!errorCheck(result)) {
+          return result; // If result is satisfactory, return it
+        }
+        // If result is not satisfactory, log and prepare for a retry
+        logger.info(`Retry criteria not met, attempt ${attempts + 1} of ${maxRetries}`);
+      } catch (error) {
+        logger.error(`Error on attempt ${attempts + 1}: ${error}`);
+        // If this was the last attempt, handle DMQ logic
+        if (attempts === maxRetries - 1) {
+          logger.error(`Max retries reached, sending to Kafka DMQ topic. Error: ${error}`);
+          await this.initKafkaProducer();
+          if (this.kafkaProducer) {
+            await this.kafkaProducer.sendMessageTransactionally([{
+              topic: 'dmq',
+              messages: [{ value: JSON.stringify(payloadForDMQ) }],
+            }]);
+          }
+          throw new Error('Operation failed after maximum retries, message sent to DMQ.');
+        }
+      }
+      // Prepare for the next attempt
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay *= 2; // Exponential backoff
+    }
+    // If max retries are reached and the result is still not satisfactory, consider it a failure
+    throw new Error('Operation failed after maximum retries based on result criteria.');
+  }
+
 }

@@ -1,6 +1,6 @@
 import { Consumer, EachBatchPayload, Kafka, KafkaConfig, Message } from 'kafkajs'
 import logger from './winston'
-import { WorkflowResult } from '../workflows/botswana/workflowHandler'
+import { WorkflowHandler, WorkflowResult, topicList } from '../workflows/botswana/workflowHandler'
 
 export type EachMessageCallback = (
   topic: string,
@@ -87,11 +87,13 @@ export class KafkaConsumerUtil {
             retryCount++
             if (retryCount >= maxRetries) {
               logger.error(
-                `Max retries reached for message ${message.offset}, sending to dead letter queue or similar.`,
+                `Max retries reached for message ${message.offset}, sending to dead message queue.`,
               )
               resolveOffset(message.offset)
 
-              // TODO: handle with DLQ
+              // Send to DMQ
+              WorkflowHandler.sendPayload({ topic: topic, partition: partition, message: message }, topicList.DMQ)
+
               break
             }
             await new Promise(resolve => setTimeout(resolve, retryDelay))

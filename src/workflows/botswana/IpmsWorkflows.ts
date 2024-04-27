@@ -2,7 +2,7 @@ import { R4 } from '@ahryman40k/ts-fhir-types'
 import config from '../../lib/config'
 import logger from '../../lib/winston'
 import { getTaskStatus, setTaskStatus } from './helpers'
-import Hl7MllpSender from '../../lib/hl7MllpSender'
+import { hl7Sender } from '../../lib/hl7MllpSender'
 import Hl7WorkflowsBw from '../botswana/hl7Workflows'
 import got from 'got'
 import {
@@ -14,6 +14,7 @@ import {
   IPatient,
   IReference,
   IServiceRequest,
+  ITask,
   TaskStatusKind,
 } from '@ahryman40k/ts-fhir-types/lib/R4'
 import { saveBundle } from '../../hapi/lab'
@@ -37,22 +38,20 @@ export async function sendAdtToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> 
   if (status && status === R4.TaskStatusKind._requested) {
     logger.info('Sending ADT message to IPMS!')
 
-    const sender = new Hl7MllpSender(
-      config.get('bwConfig:mllp:targetIp'),
-      config.get('bwConfig:mllp:targetAdtPort'),
-    )
-
-    const adtMessage = await Hl7WorkflowsBw.getFhirTranslation(
+    const adtMessage = await Hl7WorkflowsBw.getFhirTranslationWithRetry(
       labBundle,
       config.get('bwConfig:toIpmsAdtTemplate'),
     )
 
     logger.info(`adt:\n${adtMessage}`)
 
-    const adtResult: string = <string>await sender.send(adtMessage)
+    const targetIp = config.get('bwConfig:mllp:targetIp')
+    const targetPort = config.get('bwConfig:mllp:targetAdtPort')
+
+    const adtResult: string = <string>await hl7Sender.send(adtMessage, targetIp, targetPort)
 
     if (adtResult.includes && adtResult.includes('AA')) {
-      labBundle = setTaskStatus(labBundle, R4.TaskStatusKind._accepted)
+      labBundle = setTaskStatus(labBundle, R4.TaskStatusKind._received)
     }
   } else {
     logger.info('Order not ready for IPMS.')
@@ -125,24 +124,22 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
       const outBundle = { ...sendBundle }
       outBundle.entry.push(sr)
 
-      const ormMessage = await Hl7WorkflowsBw.getFhirTranslation(
+      const ormMessage = await Hl7WorkflowsBw.getFhirTranslationWithRetry(
         outBundle,
         config.get('bwConfig:toIpmsOrmTemplate'),
       )
 
-      const sender = new Hl7MllpSender(
-        config.get('bwConfig:mllp:targetIp'),
-        config.get('bwConfig:mllp:targetOrmPort'),
-      )
+      const targetIp = config.get('bwConfig:mllp:targetIp')
+      const targetPort = config.get('bwConfig:mllp:targetOrmPort')
 
       logger.info('Sending ORM message to IPMS!')
 
       logger.info(`orm:\n${ormMessage}\n`)
 
       if (ormMessage && ormMessage != '') {
-        const result: any = await sender.send(ormMessage)
+        const result: any = await hl7Sender.send(ormMessage, targetIp, targetPort)
         if (result.includes('AA')) {
-          labBundle = setTaskStatus(labBundle, R4.TaskStatusKind._inProgress)
+          labBundle = setTaskStatus(labBundle, R4.TaskStatusKind._accepted)
         }
         logger.info(`*result:\n${result}\n`)
       }
@@ -156,6 +153,9 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
 
 /**
  * Handles ADT (Admission, Discharge, Transfer) messages received from IPMS (Integrated Patient Management System).
+ *
+ * This method needs to be able to match the patient coming back to the patient going in.
+ *
  * @param registrationBundle - The registration bundle containing the patient information.
  * @returns A Promise that resolves to the registration bundle.
  */
@@ -176,7 +176,8 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
     }
 
     // Get patient from registration Bundle
-    let patient: R4.IPatient, omang: string
+    let patient: R4.IPatient, omang: string, ppn: string, bcn: string, identifierParam: string
+
     const patEntry = registrationBundle.entry!.find(entry => {
       return entry.resource && entry.resource.resourceType == 'Patient'
     })
@@ -184,47 +185,91 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
     if (patEntry && patEntry.resource) {
       patient = <R4.IPatient>patEntry.resource
 
+      // Find patient identifiers, if they exist
       const omangEntry = patient.identifier?.find(
         i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
       )
 
+      const ppnEntry = patient.identifier?.find(
+        i => i.system && i.system == config.get('bwConfig:immigrationSystemUrl'),
+      )
+
+      const bcnEntry = patient.identifier?.find(
+        i => i.system && i.system == config.get('bwConfig:bdrsSystemUrl'),
+      )
+
       if (omangEntry && omangEntry.value) {
         omang = omangEntry.value
+        identifierParam = `${config.get('bwConfig:omangSystemUrl')}|${omang}`
+      } else if (bcnEntry && bcnEntry.value) {
+        bcn = bcnEntry.value
+        identifierParam = `${config.get('bwConfig:bdrsSystemUrl')}|${bcn}`
+      } else if (ppnEntry && ppnEntry.value) {
+        ppn = ppnEntry.value
+        identifierParam = `${config.get('bwConfig:immigrationSystemUrl')}|${ppn}`
       } else {
-        logger.error(
-          'Missing Omang - currently, only matching on Omang supported, but patient does not have an Omang number.',
-        )
-        throw new IpmsWorkflowError(
-          `Missing Omang - currently, only matching on Omang supported, but patient does not have an Omang number.`,
-        )
+        const errorMessage =
+          'Patient missing a required identifier - matching supported only on Omang, birth certificate number, or passport number.'
+
+        logger.error(errorMessage)
+
+        throw new IpmsWorkflowError(errorMessage)
       }
 
-      // Find all patients with this Omang.
+      // Find all patients with these identifiers and grab the related Tasks
       options.searchParams = {
-        identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
+        identifier: `${identifierParam}`,
         _revinclude: 'Task:patient',
       }
 
-      let patientTasks: R4.IBundle
+      let potentialPatientTasks: R4.IBundle
       try {
-        patientTasks = await got.get(`${config.get('fhirServer:baseURL')}/Patient`, options).json()
+        potentialPatientTasks = await got
+          .get(`${config.get('fhirServer:baseURL')}/Patient`, options)
+          .json()
       } catch (e) {
-        patientTasks = { resourceType: 'Bundle' }
+        potentialPatientTasks = { resourceType: 'Bundle' }
         logger.error(e)
       }
 
-      if (patientTasks && patientTasks.entry) {
-        // Get all Tasks with `requested` status
-        for (const e of patientTasks.entry!) {
-          if (
-            e.resource &&
-            e.resource.resourceType == 'Task' &&
-            (e.resource.status == TaskStatusKind._accepted || config.get('bwConfig:devTaskStatus'))
-          ) {
+      if (potentialPatientTasks && potentialPatientTasks.entry) {
+        // Get all Tasks with `recieved` status, which indicates the patient ADT has been sent to IPMS
+
+        // Filter and Sort all resources in entry to have tasks by decending order or creation
+        const patientTasks = potentialPatientTasks.entry
+          .filter(
+            e =>
+              e.resource &&
+              e.resource.resourceType == 'Task' &&
+              e.resource.status == TaskStatusKind._received,
+          )
+          .sort((a, b) => {
+            if (a.resource && b.resource) {
+              const at = <ITask>a.resource
+              const bt = <ITask>b.resource
+
+              return new Date(bt.authoredOn || 0).getTime() - new Date(at.authoredOn || 0).getTime()
+            }
+            return 0
+          })
+
+        // TODO: Account for multiple task results!
+
+        // For now, if multiple tasks exist, grab the most recent one and log a warning
+        if (patientTasks.length > 1) {
+          logger.warn(
+            `More than one task found for patient ${patient.id} with identifier ${identifierParam}! Processing most recent.`,
+          )
+        }
+
+        if (patientTasks.length > 0) {
+          const targetTask = patientTasks[0].resource
+
+          if (targetTask) {
             // Grab bundle for task:
             options.searchParams = {
               _include: '*',
-              _id: e.resource.id,
+              _id: targetTask.id,
             }
 
             const taskBundle: IBundle = await got
@@ -235,7 +280,9 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
         }
         return { patient: undefined, taskBundle: undefined }
       } else {
-        logger.error('Could not find patient tasks!')
+        logger.error(
+          'Could not find any patient tasks for patient with identifier ' + identifierParam + '!',
+        )
         return { patient: undefined, taskBundle: undefined }
       }
     }
