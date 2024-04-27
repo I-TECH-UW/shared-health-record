@@ -64,7 +64,6 @@ export default class Hl7WorkflowsBw {
     try {
       WorkflowHandler.sendPayloadWithRetryDMQ({ message: hl7Msg }, topicList.HANDLE_ADT_FROM_IPMS)
     } catch (error: any) {
-      // TODO: Major Error - send to DMQ or handle otherwise
       logger.error(`Could not translate and save ADT message!\n${JSON.stringify(error)}`)
     }
   }

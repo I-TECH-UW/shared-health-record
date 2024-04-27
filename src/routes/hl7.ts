@@ -1,7 +1,7 @@
 'use strict'
 
 import express, { Request, Response } from 'express'
-import Hl7MllpSender from '../lib/hl7MllpSender'
+import { hl7Sender } from '../lib/hl7MllpSender'
 
 export const router = express.Router()
 
@@ -11,9 +11,7 @@ router.post('/forward/:targetIp/:targetPort', async (req: Request, res: Response
     const targetIp: string = req.params.targetIp
     const targetPort = Number(req.params.targetPort)
 
-    const sender = new Hl7MllpSender(targetIp, targetPort)
-
-    const ack = await sender.send(hl7Msg)
+    const ack = await hl7Sender.send(hl7Msg, targetIp, targetPort)
 
     res.status(200)
     res.send(ack)

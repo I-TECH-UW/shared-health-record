@@ -2,7 +2,7 @@ import { R4 } from '@ahryman40k/ts-fhir-types'
 import config from '../../lib/config'
 import logger from '../../lib/winston'
 import { getTaskStatus, setTaskStatus } from './helpers'
-import Hl7MllpSender from '../../lib/hl7MllpSender'
+import { hl7Sender } from '../../lib/hl7MllpSender'
 import Hl7WorkflowsBw from '../botswana/hl7Workflows'
 import got from 'got'
 import {
@@ -38,11 +38,6 @@ export async function sendAdtToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> 
   if (status && status === R4.TaskStatusKind._requested) {
     logger.info('Sending ADT message to IPMS!')
 
-    const sender = new Hl7MllpSender(
-      config.get('bwConfig:mllp:targetIp'),
-      config.get('bwConfig:mllp:targetAdtPort'),
-    )
-
     const adtMessage = await Hl7WorkflowsBw.getFhirTranslationWithRetry(
       labBundle,
       config.get('bwConfig:toIpmsAdtTemplate'),
@@ -50,7 +45,10 @@ export async function sendAdtToIpms(labBundle: R4.IBundle): Promise<R4.IBundle> 
 
     logger.info(`adt:\n${adtMessage}`)
 
-    const adtResult: string = <string>await sender.send(adtMessage)
+    const targetIp = config.get('bwConfig:mllp:targetIp')
+    const targetPort = config.get('bwConfig:mllp:targetAdtPort')
+
+    const adtResult: string = <string>await hl7Sender.send(adtMessage, targetIp, targetPort)
 
     if (adtResult.includes && adtResult.includes('AA')) {
       labBundle = setTaskStatus(labBundle, R4.TaskStatusKind._received)
@@ -131,17 +129,15 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
         config.get('bwConfig:toIpmsOrmTemplate'),
       )
 
-      const sender = new Hl7MllpSender(
-        config.get('bwConfig:mllp:targetIp'),
-        config.get('bwConfig:mllp:targetOrmPort'),
-      )
-
+      const targetIp = config.get('bwConfig:mllp:targetIp')
+      const targetPort = config.get('bwConfig:mllp:targetOrmPort')
+    
       logger.info('Sending ORM message to IPMS!')
 
       logger.info(`orm:\n${ormMessage}\n`)
 
       if (ormMessage && ormMessage != '') {
-        const result: any = await sender.send(ormMessage)
+        const result: any = await hl7Sender.send(ormMessage, targetIp, targetPort)
         if (result.includes('AA')) {
           labBundle = setTaskStatus(labBundle, R4.TaskStatusKind._accepted)
         }
@@ -163,7 +159,7 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
  * @param registrationBundle - The registration bundle containing the patient information.
  * @returns A Promise that resolves to the registration bundle.
  */
-export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
+export async function handleAdtFromIpms(adtMessage: string, sender?: Hl7MllpSender): Promise<any> {
   try {
     const registrationBundle: R4.IBundle = await Hl7WorkflowsBw.translateBundle(
       adtMessage,

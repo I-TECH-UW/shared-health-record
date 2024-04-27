@@ -50,6 +50,7 @@ export const topicList = {
   SAVE_IPMS_PATIENT: 'save-ipms-patient',
   HANDLE_ORU_FROM_IPMS: 'handle-oru-from-ipms',
   HANDLE_ADT_FROM_IPMS: 'handle-adt-from-ipms',
+  DMQ: 'dmq'
 }
 
 /**
@@ -298,7 +299,7 @@ export class WorkflowHandler {
     if (error && attempt === maxRetries) {
       logger.error(`All retries failed. Sending payload to DMQ!`)
       try {
-        logger.error('TODO: Implement DMQ!:\n' + JSON.stringify(payload))
+        WorkflowHandler.sendPayload({ payload: payload, topic: topic, error: error }, topicList.DMQ)
       } catch (dmqError) {
         logger.error(`Failed to send payload to DMQ: ${dmqError}`)
         throw new Error(`Failed to send payload to DMQ: ${dmqError}`)
