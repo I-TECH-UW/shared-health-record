@@ -29,7 +29,7 @@
     "async": "^3.2.1",
     "cookie-parser": "^1.4.5",
     "exceljs": "^4.3.0",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "fhir": "^4.7.10",
     "fhirclient": "^2.3.10",
     "got": "^11.8.2",
