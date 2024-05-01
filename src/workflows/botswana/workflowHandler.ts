@@ -178,7 +178,7 @@ export class WorkflowHandler {
         case topicList.HANDLE_ORU_FROM_IPMS: {
           hl7Message = val
 
-          response = await handleOruFromIpms(val)
+          const oruRes = await handleOruFromIpms(val)
 
           break
         }
@@ -261,8 +261,8 @@ export class WorkflowHandler {
     maxRetries?: number,
     retryDelay?: number,
   ) {
-    let myMaxRetries = maxRetries || config.get('retryConfig:kafkaMaxRetries') || 5
-    let myRetryDelay = retryDelay || config.get('retryConfig:kafkaRetryDelay') || 2000
+    const myMaxRetries = maxRetries || config.get('retryConfig:kafkaMaxRetries') || 5
+    const myRetryDelay = retryDelay || config.get('retryConfig:kafkaRetryDelay') || 2000
 
     await this.initKafkaProducer()
     let val = ''

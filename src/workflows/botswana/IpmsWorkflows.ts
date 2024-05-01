@@ -240,8 +240,8 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
           .filter(
             e =>
               e.resource &&
-              e.resource.resourceType == 'Task' &&
-              e.resource.status == TaskStatusKind._received,
+              e.resource.resourceType == 'Task' // &&
+              // e.resource.status == TaskStatusKind._received,
           )
           .sort((a, b) => {
             if (a.resource && b.resource) {
@@ -292,53 +292,42 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
   }
 }
 
-export async function handleOruFromIpms(translatedBundle: R4.IBundle): Promise<R4.IBundle> {
+export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
+  let translatedBundle: R4.IBundle = { resourceType: 'Bundle'}
+
   // Get Patient By Omang
 
   // Get ServiceRequests by status and code
 
   // Match Results to Service Requests
   try {
+    if(!message)
+      throw new Error('No message provided!')
+    
+    if(!message.bundle)
+      message = JSON.parse(message)
+    
+    translatedBundle = message.bundle
+
     if (translatedBundle && translatedBundle.entry) {
       const patient: IPatient = <IPatient>(
-        translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Patient')!
+        translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Patient')!
           .resource!
       )
 
       const dr: IDiagnosticReport = <IDiagnosticReport>(
-        translatedBundle.entry.find(
-          e => e.resource && e.resource.resourceType == 'DiagnosticReport',
-        )!.resource!
+        translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'DiagnosticReport')!.resource!
       )
 
       const obs: IObservation = <IObservation>(
-        translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Observation')!
+        translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Observation')!
           .resource!
       )
       const drCode =
         dr.code && dr.code.coding && dr.code.coding.length > 0 ? dr.code.coding[0].code : ''
 
-      let omang
-      const omangEntry = patient.identifier?.find(
-        i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
-      )
-
-      if (omangEntry) {
-        omang = omangEntry.value!
-      } else {
-        omang = ''
-      }
-
-      const options = {
-        timeout: config.get('bwConfig:requestTimeout'),
-        searchParams: {},
-      }
-
-      // Find all active service requests with dr code with this Omang.
-      options.searchParams = {
-        identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
-        _revinclude: ['ServiceRequest:patient', 'Task:patient'],
-      }
+      
+      const {omang, bcn, ppn, options} = processIpmsPatient(patient)
 
       const patientBundle = <R4.IBundle>(
         await got
@@ -420,4 +409,57 @@ export async function handleOruFromIpms(translatedBundle: R4.IBundle): Promise<R
   }
 
   return translatedBundle
+}
+
+function processIpmsPatient(patient: R4.IPatient): any {
+  // TODO: Figure out how IPMS stores bcn and ppn
+  let omang, bcn, ppn
+
+  const omangEntry = patient.identifier?.find(
+    i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
+  )
+  const bcnEntry = patient.identifier?.find(
+    i => i.system && i.system == config.get('bwConfig:bdrsSystemUrl'),
+  )
+
+  const ppnEntry = patient.identifier?.find(
+    i => i.system && i.system == config.get('bwConfig:immigrationSystemUrl'),
+  ) 
+
+  const identifierQuery = []
+
+  if (omangEntry) {
+    omang = omangEntry.value!
+    identifierQuery.push(`${config.get('bwConfig:omangSystemUrl')}|${omang}`)
+  } else {
+    omang = ''
+  }
+
+  if (bcnEntry) {
+    bcn = bcnEntry.value!
+    identifierQuery.push(`${config.get('bwConfig:bdrsSystemUrl')}|${bcn}`)
+  } else {
+    bcn = ''
+  }
+
+  if(ppnEntry) {
+    ppn = ppnEntry.value!
+    identifierQuery.push(`${config.get('bwConfig:immigrationSystemUrl')}|${ppn}`)
+  } else {
+    ppn = '' 
+  }
+
+  const identifierQueryString = identifierQuery.join(',')
+
+  const options = {
+    timeout: config.get('bwConfig:requestTimeout'),
+    searchParams: {},
+  }
+
+  options.searchParams = {
+    identifier: identifierQueryString,
+    _revinclude: ['ServiceRequest:patient', 'Task:patient'],
+  }
+
+  return {omang: omang, bcn: bcn, ppn: ppn, options: options}
 }

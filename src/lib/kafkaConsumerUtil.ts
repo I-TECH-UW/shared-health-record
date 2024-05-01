@@ -77,7 +77,7 @@ export class KafkaConsumerUtil {
                 await heartbeat()
                 break // Break the loop if processing succeeds              }
               } else {
-                logger.error(`Workflow result did not succeed: ${res.result}`)
+                logger.error(`Workflow result did not succeed: ${JSON.stringify(res.result)}`)
               }
             } catch (error) {
               logger.error(`Error processing message ${message.offset}: ${error}`)

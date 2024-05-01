@@ -69,8 +69,8 @@ export default class Hl7WorkflowsBw {
   }
 
   static async translateBundle(hl7Msg: string, templateConfigKey: string) {
-    let maxRetries = config.get('retryConfig:translatorMaxRetries') || 5;
-    let delay = config.get('retryConfig:translatorRetryDelay') || 2000;
+    const maxRetries = config.get('retryConfig:translatorMaxRetries') || 5;
+    const delay = config.get('retryConfig:translatorRetryDelay') || 2000;
 
     // The errorCheck function defines the criteria for retrying based on the operation's result
     const errorCheck = (result: R4.IBundle) => result === this.errorBundle;
