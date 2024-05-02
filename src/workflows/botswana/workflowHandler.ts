@@ -178,7 +178,7 @@ export class WorkflowHandler {
         case topicList.HANDLE_ORU_FROM_IPMS: {
           hl7Message = val
 
-          const oruRes = await handleOruFromIpms(val)
+          const respose = await handleOruFromIpms(val)
 
           break
         }
