@@ -5,6 +5,7 @@ import { getTaskStatus, setTaskStatus } from './helpers'
 import { hl7Sender } from '../../lib/hl7MllpSender'
 import Hl7WorkflowsBw from '../botswana/hl7Workflows'
 import got from 'got'
+import { translateCoding } from './terminologyWorkflows'
 import {
   BundleTypeKind,
   Bundle_RequestMethodKind,
@@ -342,23 +343,22 @@ export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
     if (translatedBundle && translatedBundle.entry) {
 
       // Extract Patient, DiagnosticReport, and Observation
-      const patient: IPatient = <IPatient>(
+      let patient: IPatient = <IPatient>(
         translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Patient')!
           .resource!
       )
 
-      const dr: IDiagnosticReport = <IDiagnosticReport>(
+      let dr: IDiagnosticReport = <IDiagnosticReport>(
         translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'DiagnosticReport')!.resource!
       )
 
-      const obs: IObservation = <IObservation>(
+      let obs: IObservation = <IObservation>(
         translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Observation')!
           .resource!
       )
 
-      // Extract Diagnostic Report Code
-      const drCode =
-        dr.code && dr.code.coding && dr.code.coding.length > 0 ? dr.code.coding[0].code : ''
+      // Enrich DiagnosticReport with Terminology Mappings
+      dr = <R4.IDiagnosticReport> (await  translateCoding(dr))
 
       // Process Patient information
       const { omang, bcn, ppn, patOptions } = processIpmsPatient(patient)

@@ -35,84 +35,120 @@ async function addAllCodings(labBundle: IBundle): Promise<IBundle> {
   return labBundle
 }
 
-async function translateCoding(sr: R4.IServiceRequest): Promise<R4.IServiceRequest> {
-  let ipmsCoding, cielCoding, loincCoding, pimsCoding
+export async function translateCoding(r: R4.IServiceRequest | R4.IDiagnosticReport): Promise<R4.IServiceRequest | R4.IDiagnosticReport> {
+  let ipmsCoding, cielCoding, loincCoding, pimsCoding: any
 
   try {
-    if (sr && sr.code && sr.code.coding && sr.code.coding.length > 0) {
-      pimsCoding = getCoding(sr, config.get('bwConfig:pimsSystemUrl'))
-      cielCoding = getCoding(sr, config.get('bwConfig:cielSystemUrl'))
+    // Check if any codings exist
+    if (r && r.code && r.code.coding && r.code.coding.length > 0) {
+
+      // Extract PIMS and CIEL Codings, if available
+      pimsCoding = getCoding(r, config.get('bwConfig:pimsSystemUrl'))
+      cielCoding = getCoding(r, config.get('bwConfig:cielSystemUrl'))
+      ipmsCoding = getCoding(r, config.get('bwConfig:ipmsSystemUrl'))
 
       logger.info(`PIMS Coding: ${JSON.stringify(pimsCoding)}`)
       logger.info(`CIEL Coding: ${JSON.stringify(cielCoding)}`)
 
-      if (pimsCoding && pimsCoding.code) {
-        // Translate from PIMS to CIEL and IPMS
-        ipmsCoding = await getIpmsCode(
-          `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${pimsCoding.code}&toConceptSource=PIMSLAB`,
-          pimsCoding.code,
+      if(ipmsCoding && ipmsCoding.code) {
+        // 1. IPMS Resulting Workflow: 
+        //    Translation from IPMS --> PIMS and CIEL
+        pimsCoding = await getMappedCode(
+          `/orgs/I-TECH-UW/sources/IPMSLAB/mappings/?toConceptSource=PIMSLAB&fromConcept=${ipmsCoding.code}`,
         )
 
-        if (ipmsCoding && ipmsCoding.code) {
-          cielCoding = await getMappedCode(
-            `/orgs/I-TECH-UW/sources/IPMSLAB/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCoding.code}`,
-          )
+        if(pimsCoding && pimsCoding.code) { 
+          r.code.coding.push({
+            system: config.get('bwConfig:pimsSystemUrl'),
+            code: pimsCoding.code,
+            display: pimsCoding.display,
+          })
         }
 
+        cielCoding = await getMappedCode(
+          `/orgs/I-TECH-UW/sources/IPMSLAB/mappings/?toConceptSource=CIEL&fromConcept=${ipmsCoding.code}`,
+        )
+
         if (cielCoding && cielCoding.code) {
-          sr.code.coding.push({
+          r.code.coding.push({
             system: config.get('bwConfig:cielSystemUrl'),
             code: cielCoding.code,
             display: cielCoding.display,
           })
         }
-      } else if (cielCoding && cielCoding.code) {
-        // Translate from CIEL to IPMS
-        ipmsCoding = await getIpmsCode(
-          `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${cielCoding.code}&toConceptSource=CIEL`,
-          cielCoding.code,
-        )
-      }
 
-      // Add IPMS Coding
-      if (ipmsCoding && ipmsCoding.code) {
-        const ipmsOrderTypeExt = {
-          url: config.get('bwConfig:ipmsOrderTypeSystemUrl'),
-          valueString: ipmsCoding.hl7Flag,
+      } else {
+        let computedIpmsCoding
+        // Lab Order Workflows
+        if (pimsCoding && pimsCoding.code) {
+          // 2. PIMS Order Workflow: 
+          //    Translation from PIMS --> IMPS and CIEL
+          computedIpmsCoding = await getIpmsCode(
+            `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${pimsCoding.code}&toConceptSource=PIMSLAB`,
+            pimsCoding.code,
+          )
+
+          if (computedIpmsCoding && computedIpmsCoding.code) {
+            cielCoding = await getMappedCode(
+              `/orgs/I-TECH-UW/sources/IPMSLAB/mappings/?toConceptSource=CIEL&fromConcept=${computedIpmsCoding.code}`,
+            )
+          }
+
+          if (cielCoding && cielCoding.code) {
+            r.code.coding.push({
+              system: config.get('bwConfig:cielSystemUrl'),
+              code: cielCoding.code,
+              display: cielCoding.display,
+            })
+          }
+        } else if (cielCoding && cielCoding.code) {
+          // 3. OpenMRS Order Workflow: 
+          //    Translation from CIEL to IPMS
+          computedIpmsCoding = await getIpmsCode(
+            `/orgs/I-TECH-UW/sources/IPMSLAB/mappings?toConcept=${cielCoding.code}&toConceptSource=CIEL`,
+            cielCoding.code,
+          )
         }
 
-        const srCoding = {
-          system: config.get('bwConfig:ipmsSystemUrl'),
-          code: ipmsCoding.mnemonic,
-          display: ipmsCoding.display,
-          extension: [ipmsOrderTypeExt],
-        }
+        // Add IPMS Coding if found successfully
+        if (computedIpmsCoding && computedIpmsCoding.code) {
+          const ipmsOrderTypeExt = {
+            url: config.get('bwConfig:ipmsOrderTypeSystemUrl'),
+            valueString: computedIpmsCoding.hl7Flag,
+          }
 
-        sr.code.coding.push(srCoding)
+          const srCoding = {
+            system: config.get('bwConfig:ipmsSystemUrl'),
+            code: computedIpmsCoding.mnemonic,
+            display: computedIpmsCoding.display,
+            extension: [ipmsOrderTypeExt],
+          }
+
+          r.code.coding.push(srCoding)
+        }
       }
 
-      // Get LOINC Coding
+      // Get LOINC Coding for all Workflows
       if (cielCoding && cielCoding.code) {
         loincCoding = await getMappedCode(
           `/orgs/CIEL/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCoding.code}`,
         )
         if (loincCoding && loincCoding.code) {
-          sr.code.coding.push({
+          r.code.coding.push({
             system: config.get('bwConfig:loincSystemUrl'),
             code: loincCoding.code,
             display: loincCoding.display,
           })
         }
       }
-
-      return sr
+      return r
     } else {
-      logger.error('Could not find coding to translate in:\n' + JSON.stringify(sr))
-      return sr
+      logger.error('Could not any codings to translate in:\n' + JSON.stringify(r))
+      return r
     }
   } catch (e) {
-    logger.error(`Could not translate ServiceRequest codings: \n ${e}`)
-    return sr
+    logger.error(`Error whil translating ServiceRequest codings: \n ${JSON.stringify(e)}`)
+    return r
   }
 }
 
@@ -201,9 +237,9 @@ async function getOclConcept(conceptCode: string): Promise<any> {
     .json()
 }
 
-function getCoding(sr: R4.IServiceRequest, system: string): R4.ICoding {
-  if (sr.code && sr.code.coding) {
-    return <R4.ICoding>sr.code.coding.find(e => e.system && e.system == system)
+function getCoding(r: R4.IServiceRequest | R4.IDiagnosticReport, system: string): R4.ICoding {
+  if (r.code && r.code.coding) {
+    return <R4.ICoding>r.code.coding.find(e => e.system && e.system == system)
   } else {
     return {}
   }
