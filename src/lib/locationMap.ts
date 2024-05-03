@@ -3,7 +3,8 @@ import * as Excel from 'exceljs'
 
 type FacilityMapping = {
   index: number
-  orderingFacility: string
+  orderingFacilityMflCode: string
+  orderingFacilityName: string
   receivingFacility: string
   provider: string
   patientType: string
@@ -33,11 +34,12 @@ async function getFacilityMappings() {
   const mappings = rows.map((row: Excel.Row): FacilityMapping => {
     return {
       index: parseInt(getCellValue(row, 1)),
-      orderingFacility: getCellValue(row, 4),
+      orderingFacilityMflCode: getCellValue(row, 4),
+      orderingFacilityName: getCellValue(row, 5),
       receivingFacility: getCellValue(row, 2),
-      provider: getCellValue(row, 6),
-      patientType: getCellValue(row, 8),
-      patientStatus: getCellValue(row, 7),
+      provider: getCellValue(row, 7),
+      patientType: getCellValue(row, 9),
+      patientStatus: getCellValue(row, 8),
       xLocation: getCellValue(row, 3),
     }
   })

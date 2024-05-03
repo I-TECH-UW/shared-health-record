@@ -13,12 +13,11 @@ import {
   IDiagnosticReport,
   IObservation,
   IPatient,
-  IReference,
-  IServiceRequest,
   ITask,
   TaskStatusKind,
 } from '@ahryman40k/ts-fhir-types/lib/R4'
 import { saveBundle } from '../../hapi/lab'
+import { hapiGet } from '../../lib/helpers'
 
 // New Error Type for IPMS Workflow Errors
 export class IpmsWorkflowError extends Error {
@@ -327,9 +326,15 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
   }
 }
 
+/**
+ * Handles ORU (Observation Result) messages received from IPMS (Integrated Patient Management System).
+ */
 export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
-  let translatedBundle, resultBundle: R4.IBundle = { resourceType: 'Bundle' }
-  let taskPatient, task;
+  let translatedBundle: R4.IBundle = { resourceType: 'Bundle' }
+  let resultBundle: R4.IBundle = { resourceType: 'Bundle' }
+  let serviceRequestBundle: R4.IBundle = { resourceType: 'Bundle' }
+
+  let taskPatient, task
 
   try {
     if (!message)
@@ -343,7 +348,7 @@ export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
     if (translatedBundle && translatedBundle.entry) {
 
       // Extract Patient, DiagnosticReport, and Observation
-      let patient: IPatient = <IPatient>(
+      const patient: IPatient = <IPatient>(
         translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Patient')!
           .resource!
       )
@@ -352,7 +357,7 @@ export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
         translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'DiagnosticReport')!.resource!
       )
 
-      let obs: IObservation = <IObservation>(
+      const obs: IObservation = <IObservation>(
         translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Observation')!
           .resource!
       )
@@ -368,26 +373,24 @@ export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
       */
 
       // Extract Lab Order ID from Diagnostic Report
-      const labOrderId = dr.identifier && dr.identifier.length > 0 ? dr.identifier.find((i: any) => config.get('bwConfig:labOrderSystemUrl') && i.system == config.get('bwConfig:labOrderSystemUrl').value) : undefined
-      const labOrderMrn = dr.identifier && dr.identifier.length > 0 ? dr.identifier.find((i: any) => config.get('bwConfig:mrnSystemUrl') && i.system == config.get('bwConfig:mrnSystemUrl').value) : undefined
+      const labOrderId = dr.identifier && dr.identifier.length > 0 ? dr.identifier.find((i: any) => i.system == config.get('bwConfig:labOrderSystemUrl')) : undefined
+      const labOrderMrn = dr.identifier && dr.identifier.length > 0 ? dr.identifier.find((i: any) => i.system == config.get('bwConfig:mrnSystemUrl')) : undefined
       
-      let options = {
-        timeout: config.get('bwConfig:requestTimeout'),
-        searchParams: {},
-      }     
-      
-      // Grab service request with Task:
-      options.searchParams = {
-        _revInclude: 'Task:basedOn',
-        _include: 'ServiceRequest.patient',
-        _id: labOrderId,
+      if(labOrderId && labOrderId.value) {
+        const options = {
+          timeout: config.get('bwConfig:requestTimeout'),
+          searchParams: new URLSearchParams(),
+        }     
+
+        options.searchParams.append('_include','Task:patient')
+        options.searchParams.append('_include','Task:based-on')
+        options.searchParams.append('based-on',labOrderId.value)
+        
+        serviceRequestBundle = <R4.IBundle> (await hapiGet('Task', options))
       }
 
-      const serviceRequestBundle: IBundle = await got
-        .get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options)
-        .json()
-      
       if(serviceRequestBundle && serviceRequestBundle.entry && serviceRequestBundle.entry.length > 0) {  
+        
         // Extract Task and Patient Resources from ServiceRequest Bundle
         taskPatient = <IPatient>(
           serviceRequestBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Patient')!
@@ -399,14 +402,19 @@ export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
         )
 
         // TODO: Validate Patient Match by Identifier/CR match
+        // taskPatient.identifier == patient.identifier (for omang/brn/ppn) or make sure the two are linked in CR
 
       } else {
-        logger.error('Could not find ServiceRequest with Lab Order ID ' + labOrderId + '!')
+        logger.error('Could not find ServiceRequest with Lab Order ID ' + JSON.stringify(labOrderId) + '!')
         return new IpmsErrorBundle('Could not find ServiceRequest with Lab Order ID ' + labOrderId + '!').bundle;
       }
 
+      // Update Obs and DR with Patient Reference
+      obs.subject = { reference: 'Patient/' + taskPatient.id }
+      dr.subject = { reference: 'Patient/' + taskPatient.id }
+
       // Generate SendBundle with Task, DiagnosticReport, Patient, and Observation
-      let entry = createSendBundleEntry(task, patient, dr, obs)
+      const entry = createSendBundleEntry(task, dr, obs)
 
       // TODO: Only send if valid details available
       const sendBundle: R4.IBundle = {
@@ -479,19 +487,13 @@ function processIpmsPatient(patient: R4.IPatient): any {
   return { omang: omang, bcn: bcn, ppn: ppn, options: options }
 }
 
-function createSendBundleEntry(task: R4.ITask | undefined, patient: R4.IPatient | undefined, dr: R4.IDiagnosticReport | undefined, obs: R4.IObservation | undefined): R4.IBundle_Entry[] {
-  let entry = []
+function createSendBundleEntry(task: R4.ITask | undefined, dr: R4.IDiagnosticReport | undefined, obs: R4.IObservation | undefined): R4.IBundle_Entry[] {
+  const entry = []
 
   if (task) {
     entry.push({
       resource: task,
       request: { method: Bundle_RequestMethodKind._put, url: 'Task/' + task.id }
-    })
-  }
-  if(patient) {
-    entry.push({
-      resource: patient,
-      request: { method: Bundle_RequestMethodKind._put, url: 'Patient/' + patient.id },
     })
   }
   if(dr) {

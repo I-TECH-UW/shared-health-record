@@ -49,7 +49,8 @@ export async function translateCoding(r: R4.IServiceRequest | R4.IDiagnosticRepo
 
       logger.info(`PIMS Coding: ${JSON.stringify(pimsCoding)}`)
       logger.info(`CIEL Coding: ${JSON.stringify(cielCoding)}`)
-
+      logger.info(`IPMS Coding: ${JSON.stringify(ipmsCoding)}`)
+      
       if(ipmsCoding && ipmsCoding.code) {
         // 1. IPMS Resulting Workflow: 
         //    Translation from IPMS --> PIMS and CIEL
@@ -128,19 +129,6 @@ export async function translateCoding(r: R4.IServiceRequest | R4.IDiagnosticRepo
         }
       }
 
-      // Get LOINC Coding for all Workflows
-      if (cielCoding && cielCoding.code) {
-        loincCoding = await getMappedCode(
-          `/orgs/CIEL/sources/CIEL/mappings/?toConceptSource=LOINC&fromConcept=${cielCoding.code}`,
-        )
-        if (loincCoding && loincCoding.code) {
-          r.code.coding.push({
-            system: config.get('bwConfig:loincSystemUrl'),
-            code: loincCoding.code,
-            display: loincCoding.display,
-          })
-        }
-      }
       return r
     } else {
       logger.error('Could not any codings to translate in:\n' + JSON.stringify(r))
