@@ -412,6 +412,13 @@ export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
       // Update Obs and DR with Patient Reference
       obs.subject = { reference: 'Patient/' + taskPatient.id }
       dr.subject = { reference: 'Patient/' + taskPatient.id }
+      
+      // Update DR with based-on
+      if(!dr.basedOn) dr.basedOn = []
+      if(!task.basedOn) task.basedOn = []
+
+      dr.basedOn.push({ reference: 'ServiceRequest/' + labOrderId })
+      task.basedOn.push({ reference: 'DiagnosticReport/' + dr.id })
 
       // Generate SendBundle with Task, DiagnosticReport, Patient, and Observation
       const entry = createSendBundleEntry(task, dr, obs)
@@ -489,23 +496,30 @@ function processIpmsPatient(patient: R4.IPatient): any {
 
 function createSendBundleEntry(task: R4.ITask | undefined, dr: R4.IDiagnosticReport | undefined, obs: R4.IObservation | undefined): R4.IBundle_Entry[] {
   const entry = []
+  const output = []
 
-  if (task) {
-    entry.push({
-      resource: task,
-      request: { method: Bundle_RequestMethodKind._put, url: 'Task/' + task.id }
-    })
-  }
   if(dr) {
+    output.push({ type: { text: 'DiagnosticReport' }, valueReference: { reference: 'DiagnosticReport/' + dr.id } })  
+
     entry.push({
       resource: dr,
       request: { method: Bundle_RequestMethodKind._put, url: 'DiagnosticReport/' + dr.id },
     })
   }
+
   if(obs) {
     entry.push({
       resource: obs,
       request: { method: Bundle_RequestMethodKind._put, url: 'Observation/' + obs.id },
+    })
+  }
+
+  if (task) {
+    task.status = TaskStatusKind._completed
+    task.output = output
+    entry.push({
+      resource: task,
+      request: { method: Bundle_RequestMethodKind._put, url: 'Task/' + task.id }
     })
   }
 
