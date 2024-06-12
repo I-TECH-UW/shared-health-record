@@ -7500,6 +7500,7 @@ __metadata:
     typescript: ^4.0.3
     urijs: ^1.19.11
     uuid: ^3.3.3
+    uuid4: ^1.1.4
     winston: ^3.2.1
     winston-daily-rotate-file: ^4.4.2
   languageName: unknown
@@ -8345,6 +8346,13 @@ __metadata:
   version: 1.0.1
   resolution: "utils-merge@npm:1.0.1"
   checksum: c81095493225ecfc28add49c106ca4f09cdf56bc66731aa8dabc2edbbccb1e1bfe2de6a115e5c6a380d3ea166d1636410b62ef216bb07b3feb1cfde1d95d5080
+  languageName: node
+  linkType: hard
+
+"uuid4@npm:^1.1.4":
+  version: 1.1.4
+  resolution: "uuid4@npm:1.1.4"
+  checksum: 1a1c91651fa99ca7b9bd3453bd5f061838dc9861ea901c5c5f28c1939081c428a7476f24c4cdd1a78dad82987d8433782fb417fc4b2ef9a3b5c3ddfe5139d578
   languageName: node
   linkType: hard
 

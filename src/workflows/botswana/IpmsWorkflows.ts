@@ -5,6 +5,7 @@ import { getTaskStatus, setTaskStatus } from './helpers'
 import { hl7Sender } from '../../lib/hl7MllpSender'
 import Hl7WorkflowsBw from '../botswana/hl7Workflows'
 import got from 'got'
+import { translateCoding } from './terminologyWorkflows'
 import {
   BundleTypeKind,
   Bundle_RequestMethodKind,
@@ -12,18 +13,51 @@ import {
   IDiagnosticReport,
   IObservation,
   IPatient,
-  IReference,
-  IServiceRequest,
   ITask,
   TaskStatusKind,
 } from '@ahryman40k/ts-fhir-types/lib/R4'
 import { saveBundle } from '../../hapi/lab'
+import { hapiGet } from '../../lib/helpers'
 
 // New Error Type for IPMS Workflow Errors
 export class IpmsWorkflowError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'IpmsWorkflowError'
+  }
+}
+
+export class IpmsErrorBundle {
+  message: string
+  bundle: R4.IBundle
+  operationOutcome: R4.IOperationOutcome
+  constructor(message: string) {
+    this.message = message
+    this.operationOutcome = {
+      resourceType: 'OperationOutcome',
+      issue: [
+        {
+          severity: R4.OperationOutcome_IssueSeverityKind._error,
+          code: R4.OperationOutcome_IssueCodeKind._notFound,
+          details: {
+            text: message,
+          }
+        },
+      ],
+    }
+    this.bundle = {
+      resourceType: 'Bundle',
+      type: BundleTypeKind._transactionResponse,
+      entry: [
+        {
+          response: {
+            status: '500 Server Error',
+            outcome: this.operationOutcome,
+          },
+        },
+      ],
+    
+    }
   }
 }
 
@@ -93,7 +127,7 @@ export async function sendOrmToIpms(bundles: any): Promise<R4.IBundle> {
 
         const fetchedBundle = <
           R4.IBundle // TODO: Retry logic
-        >await got.get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options).json()
+          >await got.get(`${config.get('fhirServer:baseURL')}/ServiceRequest`, options).json()
 
         if (fetchedBundle && fetchedBundle.entry && srBundle.entry) {
           // Add child ServiceRequests if any exist
@@ -233,7 +267,7 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
       }
 
       if (potentialPatientTasks && potentialPatientTasks.entry) {
-        // Get all Tasks with `recieved` status, which indicates the patient ADT has been sent to IPMS
+        // Get all Tasks with `received` status, which indicates the patient ADT has been sent to IPMS
 
         // Filter and Sort all resources in entry to have tasks by decending order or creation
         const patientTasks = potentialPatientTasks.entry
@@ -292,132 +326,203 @@ export async function handleAdtFromIpms(adtMessage: string): Promise<any> {
   }
 }
 
-export async function handleOruFromIpms(translatedBundle: R4.IBundle): Promise<R4.IBundle> {
-  // Get Patient By Omang
+/**
+ * Handles ORU (Observation Result) messages received from IPMS (Integrated Patient Management System).
+ */
+export async function handleOruFromIpms(message: any): Promise<R4.IBundle> {
+  let translatedBundle: R4.IBundle = { resourceType: 'Bundle' }
+  let resultBundle: R4.IBundle = { resourceType: 'Bundle' }
+  let serviceRequestBundle: R4.IBundle = { resourceType: 'Bundle' }
 
-  // Get ServiceRequests by status and code
+  let taskPatient, task
 
-  // Match Results to Service Requests
   try {
+    if (!message)
+      throw new Error('No message provided!')
+
+    if (!message.bundle)
+      message = JSON.parse(message)
+
+    translatedBundle = message.bundle
+
     if (translatedBundle && translatedBundle.entry) {
+
+      // Extract Patient, DiagnosticReport, and Observation
       const patient: IPatient = <IPatient>(
-        translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Patient')!
+        translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Patient')!
           .resource!
       )
 
-      const dr: IDiagnosticReport = <IDiagnosticReport>(
-        translatedBundle.entry.find(
-          e => e.resource && e.resource.resourceType == 'DiagnosticReport',
-        )!.resource!
+      let dr: IDiagnosticReport = <IDiagnosticReport>(
+        translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'DiagnosticReport')!.resource!
       )
 
       const obs: IObservation = <IObservation>(
-        translatedBundle.entry.find(e => e.resource && e.resource.resourceType == 'Observation')!
+        translatedBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Observation')!
           .resource!
       )
-      const drCode =
-        dr.code && dr.code.coding && dr.code.coding.length > 0 ? dr.code.coding[0].code : ''
 
-      let omang
-      const omangEntry = patient.identifier?.find(
-        i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
-      )
+      // Enrich DiagnosticReport with Terminology Mappings
+      dr = <R4.IDiagnosticReport> (await  translateCoding(dr))
 
-      if (omangEntry) {
-        omang = omangEntry.value!
+      // Process Patient information
+      const { omang, bcn, ppn, patOptions } = processIpmsPatient(patient)
+
+      /** Matching Approach:
+       *  Use provided Lab Order Identifier to link ServiceRequest, Task, and Diagnostic Report together. 
+      */
+
+      // Extract Lab Order ID from Diagnostic Report
+      const labOrderId = dr.identifier && dr.identifier.length > 0 ? dr.identifier.find((i: any) => i.system == config.get('bwConfig:labOrderSystemUrl')) : undefined
+      const labOrderMrn = dr.identifier && dr.identifier.length > 0 ? dr.identifier.find((i: any) => i.system == config.get('bwConfig:mrnSystemUrl')) : undefined
+      
+      if(labOrderId && labOrderId.value) {
+        const options = {
+          timeout: config.get('bwConfig:requestTimeout'),
+          searchParams: new URLSearchParams(),
+        }     
+
+        options.searchParams.append('_include','Task:patient')
+        options.searchParams.append('_include','Task:based-on')
+        options.searchParams.append('based-on',labOrderId.value)
+        
+        serviceRequestBundle = <R4.IBundle> (await hapiGet('Task', options))
+      }
+
+      if(serviceRequestBundle && serviceRequestBundle.entry && serviceRequestBundle.entry.length > 0) {  
+        
+        // Extract Task and Patient Resources from ServiceRequest Bundle
+        taskPatient = <IPatient>(
+          serviceRequestBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Patient')!
+            .resource!
+        )
+
+        task = <ITask>(
+          serviceRequestBundle.entry.find((e: any) => e.resource && e.resource.resourceType == 'Task')!.resource!
+        )
+
+        // TODO: Validate Patient Match by Identifier/CR match
+        // taskPatient.identifier == patient.identifier (for omang/brn/ppn) or make sure the two are linked in CR
+
       } else {
-        omang = ''
+        logger.error('Could not find ServiceRequest with Lab Order ID ' + JSON.stringify(labOrderId) + '!')
+        return new IpmsErrorBundle('Could not find ServiceRequest with Lab Order ID ' + labOrderId + '!').bundle;
       }
 
-      const options = {
-        timeout: config.get('bwConfig:requestTimeout'),
-        searchParams: {},
-      }
+      // Update Obs and DR with Patient Reference
+      obs.subject = { reference: 'Patient/' + taskPatient.id }
+      dr.subject = { reference: 'Patient/' + taskPatient.id }
+      
+      // Update DR with based-on
+      if(!dr.basedOn) dr.basedOn = []
+      if(!task.basedOn) task.basedOn = []
 
-      // Find all active service requests with dr code with this Omang.
-      options.searchParams = {
-        identifier: `${config.get('bwConfig:omangSystemUrl')}|${omang}`,
-        _revinclude: ['ServiceRequest:patient', 'Task:patient'],
-      }
+      dr.basedOn.push({ reference: 'ServiceRequest/' + labOrderId })
+      task.basedOn.push({ reference: 'DiagnosticReport/' + dr.id })
 
-      const patientBundle = <R4.IBundle>(
-        await got
-          .get(
-            `${config.get('fhirServer:baseURL')}/Patient/identifier=${config.get(
-              'bwConfig:omangSystemUrl',
-            )}|${omang}&_revinclude=Task:patient&_revinclude=ServiceRequest:patient`,
-          )
-          .json()
-      )
-
-      if (patientBundle && patientBundle.entry && patientBundle.entry.length > 0) {
-        const candidates: IServiceRequest[] = patientBundle.entry
-          .filter(
-            e =>
-              e.resource &&
-              e.resource.resourceType == 'ServiceRequest' &&
-              e.resource.status &&
-              e.resource.status == 'active' &&
-              e.resource.code &&
-              e.resource.code.coding &&
-              e.resource.code.coding.length > 0,
-          )
-          .map(e => <IServiceRequest>e.resource)
-
-        const primaryCandidate: IServiceRequest | undefined = candidates.find(c => {
-          if (c && c.code && c.code.coding) {
-            const candidateCode = c.code.coding.find(
-              co => co.system == config.get('bwConfig:ipmsSystemUrl'),
-            )
-            return candidateCode && candidateCode.code == drCode
-          }
-          return false
-        })
-
-        // Update DR based on primary candidate details
-        // Update Obs based on primary candidate details
-        if (primaryCandidate && primaryCandidate.code && primaryCandidate.code.coding) {
-          if (dr.code && dr.code.coding)
-            dr.code.coding = dr.code.coding.concat(primaryCandidate.code.coding)
-          if (obs.code && obs.code.coding)
-            obs.code.coding = obs.code.coding.concat(primaryCandidate.code.coding)
-
-          const srRef: IReference = {}
-          srRef.type = 'ServiceRequest'
-          srRef.reference = 'ServiceRequest/' + primaryCandidate.id
-
-          dr.basedOn = [srRef]
-          obs.basedOn = [srRef]
-        }
-      }
+      // Generate SendBundle with Task, DiagnosticReport, Patient, and Observation
+      const entry = createSendBundleEntry(task, dr, obs)
 
       // TODO: Only send if valid details available
       const sendBundle: R4.IBundle = {
         resourceType: 'Bundle',
         type: BundleTypeKind._transaction,
-        entry: [
-          {
-            resource: patient,
-            request: { method: Bundle_RequestMethodKind._put, url: 'Patient/' + patient.id },
-          },
-          {
-            resource: dr,
-            request: { method: Bundle_RequestMethodKind._put, url: 'DiagnosticReport/' + dr.id },
-          },
-          {
-            resource: obs,
-            request: { method: Bundle_RequestMethodKind._put, url: 'Observation/' + obs.id },
-          },
-        ],
+        entry: entry,
       }
 
       // Save to SHR
-      const resultBundle: R4.IBundle = await saveBundle(sendBundle)
-      return resultBundle
+      resultBundle = await saveBundle(sendBundle)
     }
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`Could not process ORU!\n${error}`)
+    return new IpmsErrorBundle(error.toString()).bundle;
+  }
+  
+  return resultBundle
+}
+
+function processIpmsPatient(patient: R4.IPatient): any {
+  // TODO: Figure out how IPMS stores bcn and ppn
+  let omang, bcn, ppn
+
+  const omangEntry = patient.identifier?.find(
+    i => i.system && i.system == config.get('bwConfig:omangSystemUrl'),
+  )
+  const bcnEntry = patient.identifier?.find(
+    i => i.system && i.system == config.get('bwConfig:bdrsSystemUrl'),
+  )
+
+  const ppnEntry = patient.identifier?.find(
+    i => i.system && i.system == config.get('bwConfig:immigrationSystemUrl'),
+  )
+
+  const identifierQuery = []
+
+  if (omangEntry) {
+    omang = omangEntry.value!
+    identifierQuery.push(`${config.get('bwConfig:omangSystemUrl')}|${omang}`)
+  } else {
+    omang = ''
   }
 
-  return translatedBundle
+  if (bcnEntry) {
+    bcn = bcnEntry.value!
+    identifierQuery.push(`${config.get('bwConfig:bdrsSystemUrl')}|${bcn}`)
+  } else {
+    bcn = ''
+  }
+
+  if (ppnEntry) {
+    ppn = ppnEntry.value!
+    identifierQuery.push(`${config.get('bwConfig:immigrationSystemUrl')}|${ppn}`)
+  } else {
+    ppn = ''
+  }
+
+  const identifierQueryString = identifierQuery.join(',')
+
+  const options = {
+    timeout: config.get('bwConfig:requestTimeout'),
+    searchParams: {},
+  }
+
+  options.searchParams = {
+    identifier: identifierQueryString,
+    _revinclude: ['ServiceRequest:patient', 'Task:patient'],
+  }
+
+  return { omang: omang, bcn: bcn, ppn: ppn, options: options }
 }
+
+function createSendBundleEntry(task: R4.ITask | undefined, dr: R4.IDiagnosticReport | undefined, obs: R4.IObservation | undefined): R4.IBundle_Entry[] {
+  const entry = []
+  const output = []
+
+  if(dr) {
+    output.push({ type: { text: 'DiagnosticReport' }, valueReference: { reference: 'DiagnosticReport/' + dr.id } })  
+
+    entry.push({
+      resource: dr,
+      request: { method: Bundle_RequestMethodKind._put, url: 'DiagnosticReport/' + dr.id },
+    })
+  }
+
+  if(obs) {
+    entry.push({
+      resource: obs,
+      request: { method: Bundle_RequestMethodKind._put, url: 'Observation/' + obs.id },
+    })
+  }
+
+  if (task) {
+    task.status = TaskStatusKind._completed
+    task.output = output
+    entry.push({
+      resource: task,
+      request: { method: Bundle_RequestMethodKind._put, url: 'Task/' + task.id }
+    })
+  }
+
+  return entry;
+}
+

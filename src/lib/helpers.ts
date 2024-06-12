@@ -45,6 +45,24 @@ export async function hapiPassthrough(targetUri: any, res: Response): Promise<an
   }
 }
 
+export async function hapiGet(resource: string, options: any): Promise<any> {
+  const targetUri = config.get('fhirServer:baseURL') + '/' + resource
+  
+  logger.info(`Getting ${targetUri}`)
+
+  // Merge options
+  const sendOptions = {...options, username: config.get('fhirServer:username'), password: config.get('fhirServer:password')}
+
+  try {
+    const result = got.get(targetUri, sendOptions)
+    
+    return await result.json()
+  } catch (error) {
+    logger.error(`Could not get ${targetUri}:\n${JSON.stringify(error)}`)
+    return null
+  }
+}
+
 export function getHapiPassthrough(): any {
   return async (req: Request, res: Response) => {
     const targetUri = config.get('fhirServer:baseURL') + req.url

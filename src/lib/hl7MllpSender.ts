@@ -1,6 +1,7 @@
 import { MllpServer } from '@i-tech-uw/mllp-server'
 import logger from './winston'
 import { WorkflowHandler, topicList } from '../workflows/botswana/workflowHandler'
+import { config } from '../lib/config'
 
 export default class Hl7MllpSender {
   targetIp: string
@@ -19,9 +20,9 @@ export default class Hl7MllpSender {
     this.mllpServer = new MllpServer(targetIp, targetPort, logger)
   }
 
-  public static getInstance(targetIp: string, targetPort: number): Hl7MllpSender {
+  public static getInstance(targetIp: string, targetPort: number, retries?: number, retryInterval?: number): Hl7MllpSender {
     if (!Hl7MllpSender.instance) {
-      Hl7MllpSender.instance = new Hl7MllpSender(targetIp, targetPort)
+      Hl7MllpSender.instance = new Hl7MllpSender(targetIp, targetPort, retries, retryInterval)
     }
     return Hl7MllpSender.instance
   }
@@ -81,6 +82,6 @@ export default class Hl7MllpSender {
   }
 }
 
-const hl7Sender = Hl7MllpSender.getInstance('127.0.0.1', 3000)
+const hl7Sender = Hl7MllpSender.getInstance('127.0.0.1', 3000, config.get("retryConfig:hl7MaxRetries"), config.get("retryConfig:hl7RetryDelay"));
 
 export { hl7Sender }

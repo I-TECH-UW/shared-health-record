@@ -28,13 +28,23 @@
       "kafka:9092"
     ]
   },
+  "retryConfig": {
+    "translatorMaxRetries": 5,
+    "translatorRetryDelay": 10000,
+    "hl7MaxRetries": 5,
+    "hl7RetryDelay": 10000,
+    "kafkaMaxRetries": 5,
+    "kafkaRetryDelay": 10000
+  },
   "bwConfig": {
     "pimsSystemUrl": "https://api.openconceptlab.org/orgs/I-TECH-UW/sources/PIMSLAB/",
     "ipmsSystemUrl": "https://api.openconceptlab.org/orgs/I-TECH-UW/sources/IPMSLAB/",
     "cielSystemUrl": "https://openconceptlab.org/orgs/CIEL/sources/CIEL",
     "loincSystemUrl": "https://api.openconceptlab.org/orgs/Regenstrief/sources/LOINC/",
     "omangSystemUrl": "http://moh.bw.org/ext/identifier/omang",
-    "brdsSystemUrl": "http://moh.bw.org/ext/identifier/bcn",
+    "bdrsSystemUrl": "http://moh.bw.org/ext/identifier/bcn",
+    "labOrderSystemUrl": "http://moh.bw.org/ext/identifier/lab-order-id",
+    "mrnSystemUrl": "http://moh.bw.org/ext/identifier/mrn",
     "immigrationSystemUrl": "http://moh.bw.org/ext/identifier/ppn",
     "oclUrl": "https://api.openconceptlab.org",
     "facilityCodeSystemUrl": "http://moh.bw.org/ext/identifier/facility-code",

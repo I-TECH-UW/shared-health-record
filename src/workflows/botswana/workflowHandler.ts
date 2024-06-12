@@ -178,7 +178,7 @@ export class WorkflowHandler {
         case topicList.HANDLE_ORU_FROM_IPMS: {
           hl7Message = val
 
-          response = await handleOruFromIpms(val)
+          const respose = await handleOruFromIpms(val)
 
           break
         }
@@ -258,9 +258,12 @@ export class WorkflowHandler {
   public static async sendPayloadWithRetryDMQ(
     payload: any,
     topic: string,
-    maxRetries = 2,
-    retryDelay = 3000,
+    maxRetries?: number,
+    retryDelay?: number,
   ) {
+    const myMaxRetries = maxRetries || config.get('retryConfig:kafkaMaxRetries') || 5
+    const myRetryDelay = retryDelay || config.get('retryConfig:kafkaRetryDelay') || 2000
+
     await this.initKafkaProducer()
     let val = ''
 
@@ -282,7 +285,7 @@ export class WorkflowHandler {
 
     let attempt = 0
 
-    while (attempt < maxRetries) {
+    while (attempt < myMaxRetries) {
       try {
         logger.info(`Attempt ${attempt + 1}: Sending payload to topic ${topic}!`)
         await this.kafka.sendMessageTransactionally(records)
@@ -291,7 +294,7 @@ export class WorkflowHandler {
         error = err
         logger.error(`Attempt ${attempt + 1}: Error sending payload to topic ${topic}: ${err}`)
         attempt++
-        await sleep(retryDelay * Math.pow(2, attempt - 1)) // Exponential back-off.
+        await sleep(myRetryDelay * Math.pow(2, attempt - 1)) // Exponential back-off.
       }
     }
 

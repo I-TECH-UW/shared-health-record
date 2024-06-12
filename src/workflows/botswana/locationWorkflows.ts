@@ -137,6 +137,30 @@ export async function addBwLocations(bundle: R4.IBundle): Promise<R4.IBundle> {
               : (sr.performer = [mappedOrganizationRef])
           }
         }
+        if(orderingOrganization && orderingOrganization.id) {
+          const orderingOrganizationRef: R4.IReference = { reference: `Organization/${orderingOrganization.id}` }
+
+          task.requester = orderingOrganizationRef
+
+          bundle.entry.push({
+            resource: orderingOrganization,
+            request: {
+              method: R4.Bundle_RequestMethodKind._put,
+              url: orderingOrganizationRef.reference,
+            }
+          })
+        }
+        if(orderingLocation && orderingLocation.id) {
+          const orderingLocationRef: R4.IReference = { reference: `Location/${orderingLocation.id}` }
+
+          bundle.entry.push({
+            resource: orderingLocation,
+            request: {
+              method: R4.Bundle_RequestMethodKind._put,
+              url: orderingLocationRef.reference,
+            }
+          })
+        }
       }
     }
   } catch (e) {
@@ -161,15 +185,19 @@ export async function translateLocation(location: R4.ILocation): Promise<R4.ILoc
   logger.info('Facility mappings: ' + mappings.length)
 
   for (const mapping of mappings) {
-    if (mapping.orderingFacility == location.name) {
+    // TODO: Match on system when we decide on MFL system
+    if(mapping.orderingFacilityMflCode && location.identifier && location.identifier.length > 0 && mapping.orderingFacilityMflCode == location.identifier[0].value) {
+      logger.info('Matching location by MFL Code')
       targetMapping = mapping
-    }
+    } else if (mapping.orderingFacilityName && mapping.orderingFacilityName == location.name) {
+      logger.warn('MFL Code not found. Falling back to matching location by facility name.')
+      targetMapping = mapping
+    } 
   }
 
   if (targetMapping) {
-    logger.info(
-      "Mapped location '" + location.name + "' to '" + targetMapping.orderingFacility + "'",
-    )
+    logger.info(`Mapped location '${location.name}' to '${targetMapping.orderingFacilityMflCode}'|'${targetMapping.orderingFacilityName}'`)
+ 
     returnLocation.id = crypto
       .createHash('md5')
       .update('Organization/' + returnLocation.name)
